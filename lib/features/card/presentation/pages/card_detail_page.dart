@@ -8,6 +8,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/format_util.dart';
 import '../../../../shared/widgets/bnk_app_bar.dart';
 import '../../../../shared/widgets/bnk_error_view.dart';
+import '../../domain/entities/card_detail.dart';
 import '../providers/card_detail_provider.dart';
 import '../providers/card_compare_provider.dart';
 
@@ -28,9 +29,7 @@ class CardDetailPage extends ConsumerWidget {
           IconButton(
             tooltip: isComparing ? '비교 취소' : '비교 담기',
             icon: Icon(
-              isComparing
-                  ? Icons.compare_arrows
-                  : Icons.add_chart_outlined,
+              isComparing ? Icons.compare_arrows : Icons.add_chart_outlined,
               color: isComparing ? AppColors.primary : null,
             ),
             onPressed: () =>
@@ -44,6 +43,7 @@ class CardDetailPage extends ConsumerWidget {
           message: '카드 정보를 불러오지 못했습니다.',
           onRetry: () => ref.invalidate(cardDetailProvider(cardId)),
         ),
+        // ★ data 타입: CardDetail Entity — Map 접근 전면 제거
         data: (card) => _CardDetailBody(card: card),
       ),
       bottomNavigationBar: _ApplyBar(cardId: cardId),
@@ -51,29 +51,28 @@ class CardDetailPage extends ConsumerWidget {
   }
 }
 
-// ── 본문 ─────────────────────────────────────────────────────────
+// ── 본문 ──────────────────────────────────────────────────────────
 
 class _CardDetailBody extends StatelessWidget {
-  final Map<String, dynamic> card;
+  final CardDetail card;
   const _CardDetailBody({required this.card});
 
   @override
   Widget build(BuildContext context) {
-    final images =
-        (card['images'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-
     return ListView(
       children: [
-        if (images.isNotEmpty)
+        // ── 이미지 캐러셀 ────────────────────────────────────────
+        if (card.images.isNotEmpty)
           CarouselSlider(
             options: CarouselOptions(height: 200, enlargeCenterPage: true),
-            items: images.map((img) {
-              final url = img['imageUrl'] as String? ?? '';
+            items: card.images.map((img) {
               return CachedNetworkImage(
-                imageUrl: url,
+                imageUrl: img.imageUrl,
                 fit: BoxFit.contain,
                 placeholder: (_, __) =>
                 const Center(child: CircularProgressIndicator()),
+                errorWidget: (_, __, ___) =>
+                const Icon(Icons.broken_image, size: 48),
               );
             }).toList(),
           )
@@ -84,59 +83,116 @@ class _CardDetailBody extends StatelessWidget {
             child: const Icon(Icons.credit_card,
                 size: 80, color: AppColors.primary),
           ),
+
+        // ── 기본 정보 ────────────────────────────────────────────
         Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                card['cardName'] as String? ?? '',
+                card.cardName,
                 style: const TextStyle(
                     fontSize: 22, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 4),
               Text(
-                card['companyName'] as String? ?? '',
-                style:
-                const TextStyle(color: AppColors.textMuted),
+                card.companyName,
+                style: const TextStyle(color: AppColors.textMuted),
               ),
               const SizedBox(height: 16),
               _InfoRow(
                 label: '국내 연회비',
-                value: FormatUtil.wonOrFree(
-                    card['annualFeeDomestic'] as int? ?? 0),
+                value: FormatUtil.wonOrFree(card.annualFeeDomestic),
               ),
-              if ((card['annualFeeOverseas'] as int? ?? 0) > 0)
+              if (card.annualFeeOverseas > 0)
                 _InfoRow(
                   label: '해외 연회비',
-                  value: FormatUtil.won(
-                      card['annualFeeOverseas'] as int),
+                  value: FormatUtil.won(card.annualFeeOverseas),
                 ),
-              const Divider(height: 32),
-              if (card['topBenefit'] != null) ...[
-                const Text('주요 혜택',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 8),
-                Text(card['topBenefit'] as String,
-                    style: const TextStyle(
-                        color: AppColors.textMuted, height: 1.5)),
+              if (card.previousMonthSpend > 0)
+                _InfoRow(
+                  label: '전월 실적',
+                  value: FormatUtil.won(card.previousMonthSpend),
+                ),
+              if (card.summaryDescription != null) ...[
                 const Divider(height: 32),
-              ],
-              if (card['mobileContentHtml'] != null) ...[
-                const Text('상세 내용',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 8),
-                Html(data: card['mobileContentHtml'] as String),
+                Text(
+                  card.summaryDescription!,
+                  style: const TextStyle(
+                      color: AppColors.textMuted, height: 1.6),
+                ),
               ],
             ],
           ),
         ),
+
+        // ── 혜택 목록 ────────────────────────────────────────────
+        if (card.benefits.isNotEmpty) ...[
+          const Divider(height: 1),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
+            child: Text('혜택',
+                style: TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.bold)),
+          ),
+          ...card.benefits.map((b) => ListTile(
+            leading: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.star_outline,
+                  color: AppColors.primary, size: 18),
+            ),
+            title: Text(b.benefitTitle,
+                style: const TextStyle(
+                    fontSize: 13, fontWeight: FontWeight.w500)),
+            subtitle: Text(b.displayText,
+                style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary)),
+            dense: true,
+          )),
+        ],
+
+        // ── 콘텐츠 (INTRO / GUIDE / NOTICE) ─────────────────────
+        if (card.contents.isNotEmpty) ...[
+          const Divider(height: 1),
+          ...card.contents.map((c) => ExpansionTile(
+            title: Text(
+              _contentLabel(c.contentType),
+              style: const TextStyle(
+                  fontWeight: FontWeight.w600, fontSize: 15),
+            ),
+            initiallyExpanded: c.contentType == 'INTRO',
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 4),
+                child: Html(
+                    data: c.mobileContentHtml ?? c.contentHtml ?? ''),
+              ),
+            ],
+          )),
+        ],
+
+        const SizedBox(height: 32),
       ],
     );
   }
+
+  static String _contentLabel(String type) => switch (type) {
+    'INTRO'  => '상품 소개',
+    'GUIDE'  => '발급 안내',
+    'NOTICE' => '유의사항',
+    _        => type,
+  };
 }
+
+// ── 정보 행 ──────────────────────────────────────────────────────
 
 class _InfoRow extends StatelessWidget {
   final String label;

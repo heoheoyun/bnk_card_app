@@ -13,6 +13,9 @@ class TermsPage extends ConsumerWidget {
   final String packageType;
   const TermsPage({super.key, required this.packageType});
 
+  // Material Design error red — AppColors에 error 상수 없으므로 직접 정의
+  static const Color _errorRed = Color(0xFFD32F2F);
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async    = ref.watch(termsPackageProvider(packageType));
@@ -23,12 +26,20 @@ class TermsPage extends ConsumerWidget {
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, __) => const Center(
-            child: Text('약관을 불러오지 못했습니다.')),
+          child: Text('약관을 불러오지 못했습니다.'),
+        ),
         data: (rawList) {
+          // safe 타입 변환 — 강제 캐스팅(e as Map) 제거
           final termsList = rawList
+              .whereType<Map>()
               .map((e) => TermsModel.fromJson(
-              Map<String, dynamic>.from(e as Map)))
+            Map<String, dynamic>.from(e),
+          ))
               .toList();
+
+          if (termsList.isEmpty) {
+            return const Center(child: Text('표시할 약관이 없습니다.'));
+          }
 
           final requiredIds = termsList
               .where((t) => t.required)
@@ -71,16 +82,16 @@ class TermsPage extends ConsumerWidget {
                           child: Text(
                             '필수 약관에 모두 동의해야 계속할 수 있습니다.',
                             style: TextStyle(
-                                color: AppColors.textMuted,
-                                fontSize: 12),
+                              color: _errorRed,
+                              fontSize: 12,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                         ),
                       BnkButton(
                         label: '동의하고 계속',
                         onPressed: allRequiredAgreed
-                            ? () =>
-                            _onConfirm(context, ref, termsList)
+                            ? () => context.pop(true)
                             : null,
                       ),
                     ],
@@ -92,25 +103,5 @@ class TermsPage extends ConsumerWidget {
         },
       ),
     );
-  }
-
-  void _onConfirm(
-      BuildContext context,
-      WidgetRef ref,
-      List<TermsModel> termsList,
-      ) {
-    final agreeMap = ref.read(termsAgreeProvider);
-    final agreedIds = termsList
-        .where((t) => agreeMap[t.termsId] == true)
-        .map((t) => t.termsId)
-        .toList();
-    debugPrint('[TermsPage] agreedIds: $agreedIds');
-
-    switch (packageType) {
-      case 'SIGNUP':
-        context.go('/signup');
-      default:
-        context.pop();
-    }
   }
 }

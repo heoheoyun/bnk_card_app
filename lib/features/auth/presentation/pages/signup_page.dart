@@ -1,0 +1,5 @@
+import 'package:flutter/material.dart';
+class SignupPage extends StatelessWidget {
+  const SignupPage({super.key});
+  @override Widget build(BuildContext context) => const Scaffold(body: Center(child: Text('회원가입')));
+}

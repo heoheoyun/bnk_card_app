@@ -1,5 +1,5 @@
 name: bnk_card_app
-description: "BNK 부산은행 카드 앱"
+description: "BNK 부산은행 카드 상품 조회·추천·비교 앱"
 publish_to: 'none'
 version: 1.0.0+1
 

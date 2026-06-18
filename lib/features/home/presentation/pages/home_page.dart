@@ -1,46 +1,47 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/home_provider.dart';
-import '../widgets/banner_carousel.dart';
-import '../widgets/top3_card_section.dart';
-import '../../../../shared/widgets/bnk_app_bar.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../widgets/home_header.dart';
+import '../widgets/my_card_carousel.dart';
+import '../widgets/spending_summary_card.dart';
+import '../widgets/quick_menu_grid.dart';
+import '../widgets/home_banner.dart';
 import '../../../../shared/widgets/bnk_bottom_nav.dart';
-import '../../../../shared/widgets/bnk_error_view.dart';
-import '../../data/models/banner_model.dart';
 
-class HomePage extends ConsumerWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final bannersAsync = ref.watch(homeBannersProvider);
+  State<HomePage> createState() => _HomePageState();
+}
 
+class _HomePageState extends State<HomePage> {
+  int _currentIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const BnkAppBar(title: 'BNK 카드', showBack: false),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(homeBannersProvider);
-          ref.invalidate(homeTop3Provider(null));
-        },
-        child: bannersAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => BnkErrorView(
-            message: '홈 화면을 불러오지 못했습니다.',
-            onRetry: () => ref.invalidate(homeBannersProvider),
-          ),
-          data: (banners) => ListView(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
             children: [
-              BannerCarousel(
-                banners: banners
-                    .map((e) => BannerModel.fromJson(Map<String, dynamic>.from(e as Map)))
-                    .toList(),
-              ),
-              const Top3CardSection(),
+              const HomeHeader(),
+              const MyCardCarousel(),
+              const SizedBox(height: 12),
+              const SpendingSummaryCard(),
+              const SizedBox(height: 8),
+              const QuickMenuGrid(),
+              const SizedBox(height: 8),
+              const HomeBanner(),
+              const SizedBox(height: 80),
             ],
           ),
         ),
       ),
-      bottomNavigationBar: const BnkBottomNav(currentIndex: 0),
+      bottomNavigationBar: BnkBottomNav(
+        currentIndex: _currentIndex,
+        onTap: (i) => setState(() => _currentIndex = i),
+      ),
     );
   }
 }

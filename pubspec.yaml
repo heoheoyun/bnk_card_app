@@ -4,7 +4,7 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.11.4
+  sdk: '>=3.5.0 <4.0.0'
 
 # ─────────────────────────────────────────────
 # 런타임 의존성
@@ -60,7 +60,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0               # 린트 규칙
 
   # ── 코드 생성 ─────────────────────────────
-  build_runner: ^2.4.13               # flutter pub run build_runner build
+  build_runner: ^2.4.13               # dart run build_runner build
   freezed: ^2.5.7                     # Freezed 코드 생성기
   json_serializable: ^6.8.0           # fromJson/toJson 코드 생성기
   riverpod_generator: ^2.6.2          # @riverpod Provider 코드 생성기

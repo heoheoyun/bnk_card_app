@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/widgets/bnk_app_bar.dart';
 import '../../../../shared/widgets/bnk_button.dart';
+import '../../presentation/providers/mypage_provider.dart';
 
 class SpendingInputPage extends ConsumerStatefulWidget {
   const SpendingInputPage({super.key});
@@ -16,19 +17,21 @@ class SpendingInputPage extends ConsumerStatefulWidget {
 
 class _SpendingInputPageState extends ConsumerState<SpendingInputPage> {
   final Map<int, TextEditingController> _controllers = {};
-  bool _isLoading = false;
+  bool _isLoading  = false;
+  bool _isFetching = true; // 기존 데이터 로드 중
 
+  /// categoryId → categoryCode 매핑 (서버 응답 key 대응)
   static const _categories = [
-    (id: 1,  label: '식비',        icon: Icons.restaurant_outlined),
-    (id: 2,  label: '교통',        icon: Icons.directions_bus_outlined),
-    (id: 3,  label: '쇼핑',        icon: Icons.shopping_bag_outlined),
-    (id: 4,  label: '의료/약국',    icon: Icons.local_hospital_outlined),
-    (id: 5,  label: '여가/문화',    icon: Icons.movie_outlined),
-    (id: 6,  label: '카페/디저트',  icon: Icons.coffee_outlined),
-    (id: 7,  label: '주유',        icon: Icons.local_gas_station_outlined),
-    (id: 8,  label: '통신',        icon: Icons.phone_android_outlined),
-    (id: 9,  label: '여행/숙박',    icon: Icons.hotel_outlined),
-    (id: 10, label: '편의점',       icon: Icons.store_outlined),
+    (id: 1,  code: 'FOOD',          label: '식비',        icon: Icons.restaurant_outlined),
+    (id: 2,  code: 'TRANSPORT',     label: '교통',        icon: Icons.directions_bus_outlined),
+    (id: 3,  code: 'SHOPPING',      label: '쇼핑',        icon: Icons.shopping_bag_outlined),
+    (id: 4,  code: 'HEALTH',        label: '의료/약국',   icon: Icons.local_hospital_outlined),
+    (id: 5,  code: 'CULTURE',       label: '여가/문화',   icon: Icons.movie_outlined),
+    (id: 6,  code: 'EDUCATION',     label: '카페/디저트', icon: Icons.coffee_outlined),
+    (id: 7,  code: 'COMMUNICATION', label: '주유',        icon: Icons.local_gas_station_outlined),
+    (id: 8,  code: 'INSURANCE',     label: '통신',        icon: Icons.phone_android_outlined),
+    (id: 9,  code: 'HOUSING',       label: '여행/숙박',   icon: Icons.hotel_outlined),
+    (id: 10, code: 'ETC',           label: '편의점',      icon: Icons.store_outlined),
   ];
 
   @override
@@ -37,40 +40,70 @@ class _SpendingInputPageState extends ConsumerState<SpendingInputPage> {
     for (final c in _categories) {
       _controllers[c.id] = TextEditingController();
     }
+    _loadExisting();
   }
 
   @override
   void dispose() {
-    for (final c in _controllers.values) {
-      c.dispose();
-    }
+    for (final c in _controllers.values) c.dispose();
     super.dispose();
   }
 
-  Future<void> _save() async {
-    final amounts = <int, int>{};
-    for (final c in _categories) {
-      final raw    = _controllers[c.id]?.text.replaceAll(',', '') ?? '';
-      final amount = int.tryParse(raw) ?? 0;
-      if (amount > 0) amounts[c.id] = amount;
+  // ── 기존 저장 데이터 프리로드 ──────────────────────────────────
+  Future<void> _loadExisting() async {
+    try {
+      final ds = ref.read(mypageDatasourceProvider);
+      final list = await ds.getSpendingPatterns();
+      // categoryId 또는 categoryCode 기준으로 컨트롤러에 주입
+      final byId   = <int, int>{};
+      final byCode = <String, int>{};
+      for (final item in list) {
+        final id     = item['categoryId'] as int?;
+        final code   = item['categoryCode'] as String?;
+        final amount = (item['monthlyAmount'] as num?)?.toInt() ?? 0;
+        if (id   != null) byId[id]     = amount;
+        if (code != null) byCode[code] = amount;
+      }
+      for (final cat in _categories) {
+        final amount = byId[cat.id] ?? byCode[cat.code] ?? 0;
+        if (amount > 0) {
+          _controllers[cat.id]?.text = amount.toString();
+        }
+      }
+    } catch (_) {
+      // 로드 실패 시 빈 값으로 진행 (신규 입력과 동일)
+    } finally {
+      if (mounted) setState(() => _isFetching = false);
     }
-    if (amounts.isEmpty) {
+  }
+
+  // ── 저장 ──────────────────────────────────────────────────────
+  Future<void> _save() async {
+    final items = <Map<String, dynamic>>[];
+    for (final cat in _categories) {
+      final raw    = _controllers[cat.id]?.text.replaceAll(',', '') ?? '';
+      final amount = int.tryParse(raw) ?? 0;
+      if (amount > 0) {
+        items.add({'categoryId': cat.id, 'monthlyAmount': amount});
+      }
+    }
+    if (items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('최소 1개 카테고리의 금액을 입력해 주세요.')),
+        const SnackBar(content: Text('최소 1개 카테고리의 금액을 입력해 주세요.')),
       );
       return;
     }
+
     setState(() => _isLoading = true);
     try {
-      // TODO: POST /api/users/me/spending
-      // await ref.read(myPageDatasourceProvider).saveSpending(amounts);
-      await Future.delayed(const Duration(milliseconds: 500));
+      final ds = ref.read(mypageDatasourceProvider);
+      await ds.saveSpendingPatterns(items);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('소비 패턴이 저장되었습니다.'),
-              backgroundColor: AppColors.primary),
+            content: Text('소비 패턴이 저장되었습니다.'),
+            backgroundColor: AppColors.primary,
+          ),
         );
         context.pop();
       }
@@ -78,8 +111,9 @@ class _SpendingInputPageState extends ConsumerState<SpendingInputPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(e.toString()),
-              backgroundColor: Colors.red),
+            content: Text(e.toString()),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -91,16 +125,19 @@ class _SpendingInputPageState extends ConsumerState<SpendingInputPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const BnkAppBar(title: '소비 패턴 등록'),
-      body: Column(
+      body: _isFetching
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Text(
               '월 평균 지출 금액을 입력해 주세요.\nAI가 최적의 카드를 추천해 드립니다.',
               style: const TextStyle(
-                  color: AppColors.textMuted,
-                  height: 1.5,
-                  fontSize: 14),
+                color: AppColors.textMuted,
+                height: 1.5,
+                fontSize: 14,
+              ),
             ),
           ),
           Expanded(
@@ -114,37 +151,27 @@ class _SpendingInputPageState extends ConsumerState<SpendingInputPage> {
                   padding: const EdgeInsets.symmetric(vertical: 6),
                   child: Row(
                     children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary
-                              .withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(cat.icon,
-                            color: AppColors.primary, size: 20),
-                      ),
+                      Icon(cat.icon,
+                          size: 22, color: AppColors.textSecondary),
                       const SizedBox(width: 12),
                       Expanded(
-                        flex: 2,
                         child: Text(cat.label,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w500)),
+                            style: const TextStyle(fontSize: 14)),
                       ),
-                      Expanded(
-                        flex: 3,
+                      SizedBox(
+                        width: 120,
                         child: TextField(
                           controller: ctrl,
                           keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                          ],
                           textAlign: TextAlign.right,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
                           decoration: const InputDecoration(
                             suffixText: '원',
-                            hintText: '0',
                             isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 10),
                           ),
                         ),
                       ),
@@ -156,7 +183,8 @@ class _SpendingInputPageState extends ConsumerState<SpendingInputPage> {
           ),
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              padding:
+              const EdgeInsets.fromLTRB(16, 8, 16, 16),
               child: BnkButton(
                 label: '저장하기',
                 isLoading: _isLoading,

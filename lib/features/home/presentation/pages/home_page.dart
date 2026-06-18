@@ -7,15 +7,8 @@ import '../widgets/quick_menu_grid.dart';
 import '../widgets/home_banner.dart';
 import '../../../../shared/widgets/bnk_bottom_nav.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends StatelessWidget {
   const HomePage({super.key});
-
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -38,10 +31,8 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
-      bottomNavigationBar: BnkBottomNav(
-        currentIndex: _currentIndex,
-        onTap: (i) => setState(() => _currentIndex = i),
-      ),
+      // currentIndex: 0 = 홈, onTap 은 BnkBottomNav 내부 GoRouter 로 처리
+      bottomNavigationBar: const BnkBottomNav(currentIndex: 0),
     );
   }
 }

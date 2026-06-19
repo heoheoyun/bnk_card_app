@@ -100,5 +100,6 @@ class CardRepositoryImpl implements CardRepository {
     annualFeeOverseas:  m.annualFeeOverseas,
     summaryDescription: m.summaryDescription,
     thumbnailUrl:       m.thumbnailUrl,
+    topBenefit:         m.topBenefit,
   );
 }

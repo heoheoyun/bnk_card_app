@@ -13,7 +13,7 @@ class CardRemoteDatasource {
     int size = 20,
   }) async {
     final res = await _dio.get(ApiPaths.cards, queryParameters: {
-      if (keyword != null && keyword.isNotEmpty) 'keyword': keyword,
+      if (keyword != null && keyword.isNotEmpty) 'q': keyword,
       if (cardType != null && cardType.isNotEmpty) 'cardType': cardType,
       'page': page,
       'size': size,
@@ -52,4 +52,13 @@ class CardRemoteDatasource {
     // 혹시 List 로 응답 오는 경우 래핑
     return {'data': raw};
   }
+  // ── 카드별 약관 ──────────────────────────────────────────────────
+  Future<List<dynamic>> getCardTerms(int cardId) async {
+    final res = await _dio.get('/api/cards/$cardId/terms');
+    return res.data['data'] as List<dynamic>;
+  }
+
+
+
+
 }

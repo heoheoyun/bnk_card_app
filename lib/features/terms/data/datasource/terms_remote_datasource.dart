@@ -10,6 +10,11 @@ class TermsRemoteDatasource {
     return res.data['data'] as List<dynamic>;
   }
 
+  Future<List<dynamic>> getTermsFiles(int termsId) async {
+    final res = await _dio.get('/api/terms/$termsId/files');
+    return res.data['data'] as List<dynamic>;
+  }
+
   Future<void> agreeTerms(List<Map<String, dynamic>> agreements) async {
     await _dio.post('/api/terms/agree', data: {'agreements': agreements});
   }

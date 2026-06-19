@@ -32,3 +32,9 @@ final termsAgreeProvider =
 StateNotifierProvider<TermsAgreeNotifier, Map<int, bool>>(
       (_) => TermsAgreeNotifier(),
 );
+
+final termsFilesProvider =
+FutureProvider.family<List<dynamic>, int>((ref, termsId) {
+  final ds = ref.watch(termsDatasourceProvider);
+  return ds.getTermsFiles(termsId);
+});

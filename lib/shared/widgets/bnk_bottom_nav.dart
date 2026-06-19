@@ -33,9 +33,9 @@ class BnkBottomNav extends StatelessWidget {
           label: '홈',
         ),
         BottomNavigationBarItem(
-          icon:       Icon(Icons.search_outlined),
-          activeIcon: Icon(Icons.search),
-          label: '검색',
+          icon:       Icon(Icons.credit_card_outlined),
+          activeIcon: Icon(Icons.credit_card),
+          label: '카드',
         ),
         BottomNavigationBarItem(
           icon:       Icon(Icons.smart_toy_outlined),

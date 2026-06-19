@@ -7,7 +7,8 @@ class Card {
   final int     annualFeeOverseas;
   final String? summaryDescription;
   final String? thumbnailUrl;
+  final String? topBenefit;
   const Card({required this.cardId, required this.cardName, required this.companyName,
     required this.cardType, required this.annualFeeDomestic, required this.annualFeeOverseas,
-    this.summaryDescription, this.thumbnailUrl});
+    this.summaryDescription, this.thumbnailUrl, this.topBenefit});
 }

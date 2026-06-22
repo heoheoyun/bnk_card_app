@@ -2,18 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../shared/widgets/bnk_app_bar.dart';
-import '../../../../shared/widgets/bnk_button.dart';
 import '../providers/auth_provider.dart';
 
-/// 이메일 인증 코드 확인 페이지.
-///
-/// SignupForm 에서 이메일 인증 발송 후 이 페이지로 이동한다.
-/// 이메일은 GoRouter extra 또는 쿼리파라미터로 전달받는다.
-///
-/// 현재는 쿼리파라미터 방식 사용: /signup/verify?email=xxx@yyy.com
 class SignupVerifyPage extends ConsumerStatefulWidget {
-  const SignupVerifyPage({super.key});
+  final String? email;
+  const SignupVerifyPage({super.key, this.email});
 
   @override
   ConsumerState<SignupVerifyPage> createState() => _SignupVerifyPageState();
@@ -22,107 +15,137 @@ class SignupVerifyPage extends ConsumerStatefulWidget {
 class _SignupVerifyPageState extends ConsumerState<SignupVerifyPage> {
   final _codeCtrl = TextEditingController();
   bool _isLoading = false;
-
-  @override
-  void dispose() {
-    _codeCtrl.dispose();
-    super.dispose();
-  }
-
-  String? get _email {
-    // GoRouterState 쿼리파라미터에서 email 추출
-    final uri = Uri.base;
-    return uri.queryParameters['email'];
-  }
+  bool _isResending = false;
 
   Future<void> _verify() async {
-    final code  = _codeCtrl.text.trim();
-    final email = _email ?? '';
-
-    if (code.length != 6) {
-      _snack('6자리 인증 코드를 입력해 주세요.', error: true);
-      return;
-    }
-    if (email.isEmpty) {
-      _snack('이메일 정보가 없습니다. 다시 시도해 주세요.', error: true);
-      return;
-    }
-
+    if (_codeCtrl.text.trim().isEmpty) return;
     setState(() => _isLoading = true);
     try {
-      await ref.read(authRepositoryProvider).verifyEmail(email, code);
+      final repo = ref.read(authRepositoryProvider);
+      await repo.verifyEmail(widget.email ?? '', _codeCtrl.text.trim());
       if (mounted) {
-        _snack('이메일 인증이 완료되었습니다.');
-        context.go('/signup');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('인증이 완료되었습니다. 로그인해주세요.')),
+        );
+        context.go('/login');
       }
     } catch (e) {
-      _snack('인증 코드가 올바르지 않습니다.', error: true);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('인증번호가 올바르지 않습니다.')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _snack(String msg, {bool error = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      backgroundColor: error ? Colors.red : AppColors.primary,
-    ));
+  Future<void> _resend() async {
+    setState(() => _isResending = true);
+    try {
+      final repo = ref.read(authRepositoryProvider);
+      await repo.sendVerifyCode(widget.email ?? '');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('인증번호를 재발송했습니다.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isResending = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const BnkAppBar(title: '이메일 인증'),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Icon(Icons.mark_email_read_outlined,
-                size: 64, color: AppColors.primary),
-            const SizedBox(height: 24),
-            const Text(
-              '인증 코드를 입력하세요',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              '가입 이메일로 발송된 6자리 코드를 입력해 주세요.\n코드는 5분간 유효합니다.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textMuted, height: 1.5),
-            ),
-            const SizedBox(height: 40),
-            TextField(
-              controller: _codeCtrl,
-              keyboardType: TextInputType.number,
-              maxLength: 6,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 8),
-              decoration: InputDecoration(
-                hintText: '------',
-                hintStyle: TextStyle(
-                    color: Colors.grey.shade300, letterSpacing: 8),
-                counterText: '',
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12)),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        foregroundColor: AppColors.gray800,
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 56, height: 56,
+                decoration: BoxDecoration(
+                  color: AppColors.teal50,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(Icons.mark_email_read_outlined,
+                    color: AppColors.teal600, size: 28),
               ),
-            ),
-            const SizedBox(height: 24),
-            BnkButton(
-              label: '인증 확인',
-              isLoading: _isLoading,
-              onPressed: _verify,
-            ),
-            const SizedBox(height: 16),
-            TextButton(
-              onPressed: () => context.pop(),
-              child: const Text('이전으로 돌아가기'),
-            ),
-          ],
+              const SizedBox(height: 20),
+              const Text('이메일 인증',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              Text(
+                '${widget.email ?? ''} 으로\n발송된 인증번호 6자리를 입력해주세요',
+                style: const TextStyle(fontSize: 13, color: AppColors.gray600, height: 1.5),
+              ),
+              const SizedBox(height: 28),
+
+              TextField(
+                controller: _codeCtrl,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 20, letterSpacing: 8, fontWeight: FontWeight.w600),
+                decoration: InputDecoration(
+                  counterText: '',
+                  filled: true,
+                  fillColor: AppColors.gray100,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: AppColors.teal600, width: 1.2),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: _isResending ? null : _resend,
+                  child: Text(_isResending ? '발송중...' : '인증번호 재발송',
+                      style: const TextStyle(fontSize: 12, color: AppColors.teal600)),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _verify,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.teal600,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                    width: 18, height: 18,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white),
+                  )
+                      : const Text('인증 완료',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

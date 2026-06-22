@@ -1,46 +1,90 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../shared/widgets/bnk_app_bar.dart';
-import '../../../../shared/widgets/bnk_button.dart';
-import '../../presentation/providers/mypage_provider.dart';
+import '../providers/mypage_provider.dart';
 
 class SpendingInputPage extends ConsumerStatefulWidget {
   const SpendingInputPage({super.key});
 
   @override
-  ConsumerState<SpendingInputPage> createState() =>
-      _SpendingInputPageState();
+  ConsumerState<SpendingInputPage> createState() => _SpendingInputPageState();
 }
 
 class _SpendingInputPageState extends ConsumerState<SpendingInputPage> {
-  final Map<int, TextEditingController> _controllers = {};
-  bool _isLoading  = false;
-  bool _isFetching = true; // 기존 데이터 로드 중
-
-  /// categoryId → categoryCode 매핑 (서버 응답 key 대응)
   static const _categories = [
-    (id: 1,  code: 'FOOD',          label: '식비',        icon: Icons.restaurant_outlined),
-    (id: 2,  code: 'TRANSPORT',     label: '교통',        icon: Icons.directions_bus_outlined),
-    (id: 3,  code: 'SHOPPING',      label: '쇼핑',        icon: Icons.shopping_bag_outlined),
-    (id: 4,  code: 'HEALTH',        label: '의료/약국',   icon: Icons.local_hospital_outlined),
-    (id: 5,  code: 'CULTURE',       label: '여가/문화',   icon: Icons.movie_outlined),
-    (id: 6,  code: 'EDUCATION',     label: '카페/디저트', icon: Icons.coffee_outlined),
-    (id: 7,  code: 'COMMUNICATION', label: '주유',        icon: Icons.local_gas_station_outlined),
-    (id: 8,  code: 'INSURANCE',     label: '통신',        icon: Icons.phone_android_outlined),
-    (id: 9,  code: 'HOUSING',       label: '여행/숙박',   icon: Icons.hotel_outlined),
-    (id: 10, code: 'ETC',           label: '편의점',      icon: Icons.store_outlined),
+    {'code': 'FOOD', 'label': '식음료/카페'},
+    {'code': 'SHOPPING', 'label': '쇼핑'},
+    {'code': 'TRANSPORT', 'label': '교통/대중교통'},
+    {'code': 'OIL', 'label': '주유/충전'},
+    {'code': 'LEISURE', 'label': '여가/문화'},
+    {'code': 'TELECOM', 'label': '통신/휴대폰'},
+    {'code': 'MEDICAL', 'label': '의료/건강'},
+    {'code': 'EDUCATION', 'label': '교육'},
   ];
+
+  final Map<String, TextEditingController> _controllers = {
+    for (final c in _categories) c['code']!: TextEditingController(text: '0'),
+  };
+
+  bool _isLoading = true;
+  bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
-    for (final c in _categories) {
-      _controllers[c.id] = TextEditingController();
-    }
     _loadExisting();
+  }
+
+  Future<void> _loadExisting() async {
+    try {
+      final ds = ref.read(mypageDatasourceProvider);
+      final items = await ds.getSpendingPatterns();
+      for (final item in items) {
+        final code = item['categoryCode'] as String?;
+        final amount = item['monthlyAmount'];
+        if (code != null && _controllers.containsKey(code)) {
+          _controllers[code]!.text = (amount ?? 0).toString();
+        }
+      }
+    } catch (_) {
+      // 기존 데이터 없으면 0으로 시작
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  int get _total => _controllers.values
+      .map((c) => int.tryParse(c.text) ?? 0)
+      .fold(0, (a, b) => a + b);
+
+  Future<void> _save() async {
+    setState(() => _isSaving = true);
+    try {
+      final ds = ref.read(mypageDatasourceProvider);
+      final items = _categories
+          .map((c) => {
+        'categoryCode': c['code'],
+        'monthlyAmount': int.tryParse(_controllers[c['code']]!.text) ?? 0,
+        'source': 'MANUAL',
+      })
+          .toList();
+      await ds.saveSpendingPatterns(items);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('소비 패턴이 저장되었습니다.')),
+        );
+        context.go('/mypage');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('저장 중 오류가 발생했습니다.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   @override
@@ -49,149 +93,132 @@ class _SpendingInputPageState extends ConsumerState<SpendingInputPage> {
     super.dispose();
   }
 
-  // ── 기존 저장 데이터 프리로드 ──────────────────────────────────
-  Future<void> _loadExisting() async {
-    try {
-      final ds = ref.read(mypageDatasourceProvider);
-      final list = await ds.getSpendingPatterns();
-      // categoryId 또는 categoryCode 기준으로 컨트롤러에 주입
-      final byId   = <int, int>{};
-      final byCode = <String, int>{};
-      for (final item in list) {
-        final id     = item['categoryId'] as int?;
-        final code   = item['categoryCode'] as String?;
-        final amount = (item['monthlyAmount'] as num?)?.toInt() ?? 0;
-        if (id   != null) byId[id]     = amount;
-        if (code != null) byCode[code] = amount;
-      }
-      for (final cat in _categories) {
-        final amount = byId[cat.id] ?? byCode[cat.code] ?? 0;
-        if (amount > 0) {
-          _controllers[cat.id]?.text = amount.toString();
-        }
-      }
-    } catch (_) {
-      // 로드 실패 시 빈 값으로 진행 (신규 입력과 동일)
-    } finally {
-      if (mounted) setState(() => _isFetching = false);
-    }
-  }
-
-  // ── 저장 ──────────────────────────────────────────────────────
-  Future<void> _save() async {
-    final items = <Map<String, dynamic>>[];
-    for (final cat in _categories) {
-      final raw    = _controllers[cat.id]?.text.replaceAll(',', '') ?? '';
-      final amount = int.tryParse(raw) ?? 0;
-      if (amount > 0) {
-        items.add({'categoryId': cat.id, 'monthlyAmount': amount});
-      }
-    }
-    if (items.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('최소 1개 카테고리의 금액을 입력해 주세요.')),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-    try {
-      final ds = ref.read(mypageDatasourceProvider);
-      await ds.saveSpendingPatterns(items);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('소비 패턴이 저장되었습니다.'),
-            backgroundColor: AppColors.primary,
-          ),
-        );
-        context.pop();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const BnkAppBar(title: '소비 패턴 등록'),
-      body: _isFetching
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        foregroundColor: AppColors.gray800,
+        title: const Text('소비 패턴 관리',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+      ),
+      body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Column(
+          : ListView(
+        padding: const EdgeInsets.all(16),
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(
-              '월 평균 지출 금액을 입력해 주세요.\nAI가 최적의 카드를 추천해 드립니다.',
-              style: const TextStyle(
-                color: AppColors.textMuted,
-                height: 1.5,
-                fontSize: 14,
-              ),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.teal50,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Text(
+              '입력한 금액은 수동(MANUAL) 출처로 저장되며 AI 카드 추천에 즉시 반영됩니다.',
+              style: TextStyle(fontSize: 12, color: AppColors.teal800, height: 1.4),
             ),
           ),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _categories.length,
-              itemBuilder: (_, i) {
-                final cat  = _categories[i];
-                final ctrl = _controllers[cat.id]!;
+          const SizedBox(height: 16),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Column(
+              children: _categories.map((c) {
                 return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
                   child: Row(
                     children: [
-                      Icon(cat.icon,
-                          size: 22, color: AppColors.textSecondary),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(cat.label,
-                            style: const TextStyle(fontSize: 14)),
+                      Container(
+                        width: 8, height: 8,
+                        decoration: const BoxDecoration(
+                          color: AppColors.teal600,
+                          shape: BoxShape.circle,
+                        ),
                       ),
-                      SizedBox(
-                        width: 120,
+                      const SizedBox(width: 10),
+                      Expanded(
+                        flex: 2,
+                        child: Text(c['label']!,
+                            style: const TextStyle(fontSize: 13, color: AppColors.gray800)),
+                      ),
+                      Expanded(
+                        flex: 3,
                         child: TextField(
-                          controller: ctrl,
+                          controller: _controllers[c['code']],
                           keyboardType: TextInputType.number,
                           textAlign: TextAlign.right,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly
-                          ],
-                          decoration: const InputDecoration(
-                            suffixText: '원',
+                          onChanged: (_) => setState(() {}),
+                          decoration: InputDecoration(
                             isDense: true,
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 10),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 8),
+                            suffixText: '원',
+                            suffixStyle: const TextStyle(
+                                fontSize: 11, color: AppColors.gray400),
+                            filled: true,
+                            fillColor: AppColors.gray100,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide.none,
+                            ),
                           ),
                         ),
                       ),
                     ],
                   ),
                 );
-              },
+              }).toList(),
             ),
           ),
-          SafeArea(
-            child: Padding(
-              padding:
-              const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: BnkButton(
-                label: '저장하기',
-                isLoading: _isLoading,
-                onPressed: _save,
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('월 합계',
+                    style: TextStyle(fontSize: 13, color: AppColors.gray600)),
+                Text('${_total.toString().replaceAllMapped(
+                  RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+                      (m) => '${m[1]},',
+                )}원',
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.teal800)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _isSaving ? null : _save,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.teal600,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
               ),
+              child: _isSaving
+                  ? const SizedBox(
+                width: 18, height: 18,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Colors.white),
+              )
+                  : const Text('저장하기',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
             ),
           ),
+          const SizedBox(height: 24),
         ],
       ),
     );

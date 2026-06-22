@@ -1,7 +1,9 @@
+import '../../../auth/data/models/signup_request_model.dart';
+
 abstract class AuthRepository {
   Future<void> sendVerifyCode(String email);
   Future<void> verifyEmail(String email, String code);
-  Future<int>  signup(String email, String password, String name, String phone);
+  Future<int>  signup(SignupRequestModel req);
   Future<void> login(String email, String password);
   Future<void> logout();
   Future<void> refreshToken();

@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../mypage/presentation/providers/mypage_provider.dart';
 
-class HomeHeader extends StatelessWidget {
+class HomeHeader extends ConsumerWidget {
   const HomeHeader({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final myInfoAsync       = ref.watch(myInfoProvider);
+    final monthlyAsync      = ref.watch(monthlySpendingProvider);
+
+    final name         = myInfoAsync.valueOrNull?['name'] as String? ?? '';
+    final totalAmount  = (monthlyAsync.valueOrNull?['totalAmount'] as num?)?.toInt() ?? 0;
+
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
@@ -44,60 +52,64 @@ class HomeHeader extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          const Text(
-            '홍길동 님, 이번달 총 이용금액',
-            style: TextStyle(
+          Text(
+            name.isNotEmpty ? '$name 님, 이번달 총 이용금액' : '이번달 총 이용금액',
+            style: const TextStyle(
               color: Colors.white70,
               fontSize: 12,
             ),
           ),
           const SizedBox(height: 4),
-          const Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '127,400',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 30,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: -1,
-                ),
+          monthlyAsync.when(
+            loading: () => const SizedBox(
+              height: 40,
+              child: Center(
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Colors.white70),
               ),
-              Padding(
-                padding: EdgeInsets.only(bottom: 4, left: 2),
-                child: Text(
-                  '원',
-                  style: TextStyle(color: Colors.white, fontSize: 14),
-                ),
+            ),
+            error: (_, __) => const Text(
+              '0원',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 30,
+                fontWeight: FontWeight.w500,
+                letterSpacing: -1,
               ),
-            ],
+            ),
+            data: (_) => Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  _formatAmount(totalAmount),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 30,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: -1,
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 4, left: 2),
+                  child: Text(
+                    '원',
+                    style: TextStyle(color: Colors.white, fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 10),
-          Row(
-            children: [
-              _chip('전월 대비 -12%'),
-              const SizedBox(width: 6),
-              _chip('카드 2장'),
-            ],
-          ),
           const SizedBox(height: 14),
         ],
       ),
     );
   }
 
-  Widget _chip(String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white24,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(color: Colors.white, fontSize: 11),
-      ),
+  String _formatAmount(int amount) {
+    return amount.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (m) => '${m[1]},',
     );
   }
 }

@@ -40,7 +40,7 @@ class CardGridItem extends StatelessWidget {
     final benefit = card.topBenefit ?? '';
 
     return InkWell(
-      onTap: () => context.go('/cards/${card.cardId}'),
+      onTap: () => context.push('/cards/${card.cardId}'),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: const BoxDecoration(

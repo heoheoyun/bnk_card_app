@@ -6,7 +6,7 @@ class AiRemoteDatasource {
   final Dio _dio = DioClient.instance;
 
   Future<Map<String, dynamic>> chat(String message, String sessionId) async {
-    final res = await _dio.post(ApiPaths.chat, data: {'message': message, 'sessionId': sessionId});
+    final res = await _dio.post(ApiPaths.chat, data: {'userInput': message, 'sessionId': sessionId});
     return res.data['data'] as Map<String, dynamic>;
   }
 

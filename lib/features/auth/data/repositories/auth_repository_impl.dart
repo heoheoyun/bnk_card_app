@@ -10,11 +10,10 @@ class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDatasource _ds;
   AuthRepositoryImpl(this._ds);
 
-  @override Future<void> sendVerifyCode(String email)         => _ds.sendVerifyCode(email);
+  @override Future<void> sendVerifyCode(String email) => _ds.sendVerifyCode(email);
   @override Future<void> verifyEmail(String email, String code) => _ds.verifyEmail(email, code);
 
-  @override Future<int> signup(String email, String password, String name, String phone) =>
-      _ds.signup(SignupRequestModel(email: email, password: password, name: name, phone: phone));
+  @override Future<int> signup(SignupRequestModel req) => _ds.signup(req);
 
   @override Future<void> login(String email, String password) async {
     await _ds.login(LoginRequestModel(email: email, password: password));

@@ -1,9 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/datasource/auth_remote_datasource.dart';
+import '../../data/models/signup_request_model.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/logout_usecase.dart';
+import '../../domain/usecases/signup_usecase.dart';
 import '../../../../core/providers/auth_state_provider.dart';
 
 final authDatasourceProvider = Provider<AuthRemoteDatasource>(
@@ -22,18 +24,22 @@ final logoutUsecaseProvider = Provider<LogoutUsecase>(
       (ref) => LogoutUsecase(ref.watch(authRepositoryProvider)),
 );
 
+final signupUsecaseProvider = Provider<SignupUsecase>(
+      (ref) => SignupUsecase(ref.watch(authRepositoryProvider)),
+);
+
 class AuthNotifier extends StateNotifier<AsyncValue<void>> {
   final LoginUsecase  _loginUsecase;
   final LogoutUsecase _logoutUsecase;
+  final SignupUsecase _signupUsecase;
   final Ref           _ref;
 
-  AuthNotifier(this._loginUsecase, this._logoutUsecase, this._ref)
+  AuthNotifier(this._loginUsecase, this._logoutUsecase, this._signupUsecase, this._ref)
       : super(const AsyncData(null));
 
   Future<void> login(String email, String password) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() => _loginUsecase(email, password));
-    // 로그인 성공 시 authStateProvider 에 알려 GoRouter redirect 재평가
     if (state is AsyncData) {
       _ref.read(authStateProvider.notifier).onLogin();
     }
@@ -42,8 +48,16 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
   Future<void> logout() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() => _logoutUsecase());
-    // 성공·실패 모두 로컬 상태 초기화
     await _ref.read(authStateProvider.notifier).onLogout();
+  }
+
+  Future<void> signup(SignupRequestModel req) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() => _signupUsecase(req).then((_) {}));
+    if (state is AsyncError) {
+      final err = (state as AsyncError).error;
+      throw err;
+    }
   }
 }
 
@@ -51,6 +65,7 @@ final authProvider = StateNotifierProvider<AuthNotifier, AsyncValue<void>>(
       (ref) => AuthNotifier(
     ref.watch(loginUsecaseProvider),
     ref.watch(logoutUsecaseProvider),
+    ref.watch(signupUsecaseProvider),
     ref,
   ),
 );

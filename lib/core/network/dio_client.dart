@@ -13,6 +13,7 @@ class DioClient {
       connectTimeout: AppConfig.connectTimeout,
       receiveTimeout: AppConfig.receiveTimeout,
       contentType:    Headers.jsonContentType,
+      extra: {'withCredentials': true},
     ));
     dio.interceptors.addAll([
       AuthInterceptor(dio),

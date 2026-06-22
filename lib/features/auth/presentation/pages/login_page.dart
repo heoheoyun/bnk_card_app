@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/storage_keys.dart';
+import '../../../../core/services/biometric_service.dart';
 import '../providers/auth_provider.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -13,14 +16,34 @@ class LoginPage extends ConsumerStatefulWidget {
 
 class _LoginPageState extends ConsumerState<LoginPage> {
   final _emailCtrl = TextEditingController();
-  final _pwCtrl = TextEditingController();
-  bool _obscure = true;
+  final _pwCtrl    = TextEditingController();
+  bool _obscure            = true;
+  bool _biometricAvailable = false;
+  bool _biometricEnabled   = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBiometric();
+  }
 
   @override
   void dispose() {
     _emailCtrl.dispose();
     _pwCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkBiometric() async {
+    final available = await BiometricService.isAvailable();
+    final prefs     = await SharedPreferences.getInstance();
+    final enabled   = prefs.getBool(StorageKeys.biometricEnabled) ?? false;
+    if (mounted) {
+      setState(() {
+        _biometricAvailable = available;
+        _biometricEnabled   = enabled;
+      });
+    }
   }
 
   Future<void> _login() async {
@@ -37,11 +60,38 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final state = ref.read(authProvider);
     if (state.hasError && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('로그인에 실패했습니다. 이메일/비밀번호를 확인해주세요.')),
+        const SnackBar(content: Text('로그인에 실패했습니다. 이메일/비밀번호를 확인해주세요.')),
       );
     } else if (mounted) {
+      // 생체인증용 자격증명 저장
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(StorageKeys.lastEmail, _emailCtrl.text.trim());
+      await prefs.setString(StorageKeys.lastPw, _pwCtrl.text);
       context.go('/');
     }
+  }
+
+  Future<void> _loginWithBiometric() async {
+    final success = await BiometricService.authenticate(
+      reason: 'BNK 카드 앱에 로그인합니다',
+    );
+    if (!success || !mounted) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final email = prefs.getString(StorageKeys.lastEmail) ?? '';
+    final pw    = prefs.getString(StorageKeys.lastPw) ?? '';
+
+    if (email.isEmpty || pw.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('먼저 이메일/비밀번호로 로그인해주세요.')),
+        );
+      }
+      return;
+    }
+
+    await ref.read(authProvider.notifier).login(email, pw);
+    if (mounted) context.go('/');
   }
 
   @override
@@ -105,7 +155,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 decoration: _inputDecoration(hint: '비밀번호 입력').copyWith(
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      _obscure
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
                       size: 18, color: AppColors.gray400,
                     ),
                     onPressed: () => setState(() => _obscure = !_obscure),
@@ -132,9 +184,30 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         strokeWidth: 2, color: Colors.white),
                   )
                       : const Text('로그인',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                      style: TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.w500)),
                 ),
               ),
+
+              // 생체인증 버튼 (등록된 경우에만 표시)
+              if (_biometricAvailable && _biometricEnabled) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _loginWithBiometric,
+                    icon: const Icon(Icons.fingerprint, size: 20),
+                    label: const Text('생체인증으로 로그인'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.teal600,
+                      side: const BorderSide(color: AppColors.teal600),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ),
+              ],
 
               const SizedBox(height: 16),
               Row(
@@ -143,13 +216,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   TextButton(
                     onPressed: () => context.go('/find-id'),
                     child: const Text('아이디 찾기',
-                        style: TextStyle(fontSize: 12, color: AppColors.gray600)),
+                        style: TextStyle(
+                            fontSize: 12, color: AppColors.gray600)),
                   ),
-                  const Text('|', style: TextStyle(color: AppColors.gray200)),
+                  const Text('|',
+                      style: TextStyle(color: AppColors.gray200)),
                   TextButton(
                     onPressed: () => context.go('/reset-password'),
                     child: const Text('비밀번호 재설정',
-                        style: TextStyle(fontSize: 12, color: AppColors.gray600)),
+                        style: TextStyle(
+                            fontSize: 12, color: AppColors.gray600)),
                   ),
                 ],
               ),
@@ -160,7 +236,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   Expanded(child: Divider(color: AppColors.gray200)),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 10),
-                    child: Text('또는', style: TextStyle(fontSize: 11, color: AppColors.gray400)),
+                    child: Text('또는',
+                        style: TextStyle(
+                            fontSize: 11, color: AppColors.gray400)),
                   ),
                   Expanded(child: Divider(color: AppColors.gray200)),
                 ],
@@ -179,7 +257,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         borderRadius: BorderRadius.circular(10)),
                   ),
                   child: const Text('회원가입',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                      style: TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.w500)),
                 ),
               ),
 
@@ -194,17 +273,20 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   InputDecoration _inputDecoration({required String hint}) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(fontSize: 13, color: AppColors.gray400),
+      hintStyle:
+      const TextStyle(fontSize: 13, color: AppColors.gray400),
       filled: true,
       fillColor: AppColors.gray100,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+      contentPadding:
+      const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: AppColors.teal600, width: 1.2),
+        borderSide:
+        const BorderSide(color: AppColors.teal600, width: 1.2),
       ),
     );
   }

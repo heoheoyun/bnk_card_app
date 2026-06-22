@@ -5,6 +5,9 @@ import '../providers/auth_state_provider.dart';
 import '../providers/router_notifier.dart';
 import 'route_guards.dart';
 
+// ── Splash ───────────────────────────────────────────────────────
+import '../../features/splash/presentation/pages/splash_page.dart';
+
 // ── Auth ──────────────────────────────────────────────────────────
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/signup_page.dart';
@@ -37,10 +40,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final isLoggedIn = ref.watch(authStateProvider);
 
   return GoRouter(
-    initialLocation: '/',
+    initialLocation: '/splash',
     refreshListenable: notifier,
-    redirect: (ctx, state) => RouteGuards.redirect(isLoggedIn, state),
+    redirect: (ctx, state) {
+      // 스플래시는 리다이렉트 제외
+      if (state.matchedLocation == '/splash') return null;
+      return RouteGuards.redirect(isLoggedIn, state);
+    },
     routes: [
+      // ── 스플래시 ────────────────────────────────────────────
+      GoRoute(
+        path: '/splash',
+        builder: (_, __) => const SplashPage(),
+      ),
+
       // ── 홈 ─────────────────────────────────────────────────────
       GoRoute(
         path: '/',
@@ -70,7 +83,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
 
       // ── 카드 ───────────────────────────────────────────────────
-      // /cards/compare 를 /cards/:id 보다 먼저 선언해야 충돌 없음
       GoRoute(
         path: '/cards/compare',
         builder: (_, __) => const CardComparePage(),

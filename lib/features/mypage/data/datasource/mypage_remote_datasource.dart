@@ -41,4 +41,19 @@ class MypageRemoteDatasource {
   Future<void> saveSpendingPatterns(List<Map<String, dynamic>> items) async {
     await _dio.post(ApiPaths.mySpendingPatterns, data: {'items': items});
   }
+
+  Future<Map<String, dynamic>> getMonthlySpending({int? year, int? month}) async {
+    final res = await _dio.get(
+      ApiPaths.myMonthlySpending,
+      queryParameters: {
+        if (year  != null) 'year':  year,
+        if (month != null) 'month': month,
+      },
+    );
+    return res.data['data'] as Map<String, dynamic>;
+  }
+
+
+
+
 }

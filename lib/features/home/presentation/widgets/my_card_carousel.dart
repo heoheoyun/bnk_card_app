@@ -81,6 +81,7 @@ class _MyCardCarouselState extends ConsumerState<MyCardCarousel> {
                     height: 130,
                     child: PageView.builder(
                       itemCount: ownedCards.length,
+                      physics: const BouncingScrollPhysics(),
                       onPageChanged: (i) => setState(() => _currentPage = i),
                       itemBuilder: (context, i) =>
                           _CardItem(card: ownedCards[i]),

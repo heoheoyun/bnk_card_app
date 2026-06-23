@@ -51,3 +51,7 @@ app.*.map.json
 /captures
 .externalNativeBuild
 .cds
+
+**/service-account.json
+
+**/google-services.json

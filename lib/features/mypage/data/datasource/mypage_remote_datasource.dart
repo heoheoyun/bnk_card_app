@@ -22,10 +22,28 @@ class MypageRemoteDatasource {
     return res.data['data'] as Map<String, dynamic>;
   }
 
+  // ── 알림 설정 저장 ─────────────────────────────────────────────
+  /// PUT /api/users/me  Body: { pushEnabled?: bool, marketingAgree?: bool }
+  /// 서버(UserService)는 알림 설정만 변경할 경우 currentPassword 검증을 생략한다.
+  /// User.applyUpdate 에서 Boolean → 'Y'/'N' 으로 변환되어 저장된다.
+  Future<void> updateNotificationSettings({
+    bool? pushEnabled,
+    bool? marketingAgree,
+  }) =>
+      _dio.put(ApiPaths.myInfo, data: {
+        if (pushEnabled != null) 'pushEnabled': pushEnabled,
+        if (marketingAgree != null) 'marketingAgree': marketingAgree,
+      });
+
+  // ── FCM 푸시 토큰 등록 / 해제 ──────────────────────────────────
+  /// PUT /api/users/me/push-token  Body: { pushToken }
+  Future<void> registerPushToken(String token) =>
+      _dio.put(ApiPaths.myPushToken, data: {'pushToken': token});
+
+  /// DELETE /api/users/me/push-token  (로그아웃·푸시 OFF 시)
+  Future<void> clearPushToken() => _dio.delete(ApiPaths.myPushToken);
+
   // ── 소비 패턴 조회 ─────────────────────────────────────────────
-  /// GET /api/users/me/spending-patterns
-  /// 서버 응답: { "data": [ { "categoryId": 1, "categoryCode": "FOOD",
-  ///              "monthlyAmount": 300000, "source": "MANUAL" }, ... ] }
   Future<List<Map<String, dynamic>>> getSpendingPatterns() async {
     final res = await _dio.get(ApiPaths.mySpendingPatterns);
     final raw = res.data['data'];
@@ -36,8 +54,6 @@ class MypageRemoteDatasource {
   }
 
   // ── 소비 패턴 저장 ─────────────────────────────────────────────
-  /// POST /api/users/me/spending-patterns
-  /// Body: { "items": [ { "categoryId": 1, "monthlyAmount": 300000 }, ... ] }
   Future<void> saveSpendingPatterns(List<Map<String, dynamic>> items) async {
     await _dio.post(ApiPaths.mySpendingPatterns, data: {'items': items});
   }
@@ -46,14 +62,10 @@ class MypageRemoteDatasource {
     final res = await _dio.get(
       ApiPaths.myMonthlySpending,
       queryParameters: {
-        if (year  != null) 'year':  year,
+        if (year != null) 'year': year,
         if (month != null) 'month': month,
       },
     );
     return res.data['data'] as Map<String, dynamic>;
   }
-
-
-
-
 }

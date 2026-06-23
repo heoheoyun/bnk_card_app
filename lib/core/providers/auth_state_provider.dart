@@ -2,12 +2,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../constants/storage_keys.dart';
 import '../storage/local_storage.dart';
 import '../storage/secure_storage.dart';
+import '../push/push_service.dart';
 
 /// 앱 전역 로그인 상태 Notifier.
 ///
 /// - 앱 시작: SecureStorage 에서 accessToken 존재 여부로 상태 복원
-/// - 로그인 성공: [onLogin] 호출 → state = true
-/// - 로그아웃 / 토큰 만료: [onLogout] 호출 → 토큰 삭제 + state = false
+/// - 로그인 성공: [onLogin] 호출 → state = true + FCM 토큰 등록
+/// - 로그아웃 / 토큰 만료: [onLogout] 호출 → FCM 토큰 해제 + 토큰 삭제 + state = false
 ///
 /// GoRouter [RouterNotifier] 가 이 상태를 구독하여
 /// 상태 변경 시 redirect 를 자동 재평가한다.
@@ -22,10 +23,16 @@ class AuthStateNotifier extends StateNotifier<bool> {
   }
 
   /// 로그인 성공 후 호출
-  void onLogin() => state = true;
+  Future<void> onLogin() async {
+    state = true;
+    // FCM 토큰을 서버에 등록 (실패해도 로그인 흐름에 영향 없음)
+    await PushService.instance.registerToken();
+  }
 
   /// 로그아웃 혹은 강제 만료 후 호출
   Future<void> onLogout() async {
+    // FCM 토큰을 서버에서 먼저 해제 (타인 기기 오발송 방지)
+    await PushService.instance.unregister();
     await SecureStorage.deleteAll();
     await LocalStorage.remove(StorageKeys.isLoggedIn);
     state = false;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../mypage/presentation/providers/mypage_provider.dart';
+import '../../../notification/presentation/widgets/notification_bell.dart';
 
 class HomeHeader extends ConsumerWidget {
   const HomeHeader({super.key});
@@ -40,15 +41,7 @@ class HomeHeader extends ConsumerWidget {
                   letterSpacing: 0.5,
                 ),
               ),
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.notifications_outlined,
-                    color: Colors.white, size: 22),
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.white24,
-                  padding: const EdgeInsets.all(6),
-                ),
-              ),
+              const NotificationBell(), // 미읽음 뱃지 + /notifications 이동
             ],
           ),
           const SizedBox(height: 8),

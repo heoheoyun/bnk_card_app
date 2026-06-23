@@ -17,6 +17,10 @@ import '../../features/auth/presentation/pages/reset_password_page.dart';
 import '../../features/quick_login/presentation/pages/quick_login_gate_page.dart';
 import '../../features/mypage/presentation/pages/quick_login_settings_page.dart';
 
+// Notification
+
+import '../../features/notification/presentation/pages/notification_page.dart';
+
 
 // ── Home ─────────────────────────────────────────────────────────
 import '../../features/home/presentation/pages/home_page.dart';
@@ -91,6 +95,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/mypage/quick-login',
         builder: (_, __) => const QuickLoginSettingsPage(),
+      ),
+
+      // ── 알림 ───────────────────────────────────────────────────
+      GoRoute(
+        path: '/notifications',
+        builder: (_, __) => const NotificationPage(),
       ),
 
       // ── 카드 ───────────────────────────────────────────────────

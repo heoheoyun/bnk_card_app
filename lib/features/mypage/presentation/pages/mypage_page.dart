@@ -198,6 +198,15 @@ class _MyPagePageState extends ConsumerState<MyPagePage>
 
           const SizedBox(height: 10),
 
+          // 인증 수단 관리
+          ListTile(
+            leading: const Icon(Icons.lock_outline, color: AppColors.primary),
+            title: const Text('간편로그인 설정'),
+            subtitle: const Text('지문 · 간편비밀번호 · 패턴'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/mypage/quick-login'),
+          ),
+
           // ── 금융 정보 ────────────────────────────────────────
           _sectionTitle('금융 정보'),
           Container(

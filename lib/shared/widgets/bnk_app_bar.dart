@@ -34,7 +34,7 @@ class BnkAppBar extends StatelessWidget implements PreferredSizeWidget {
         } else if (context.canPop()) {
           context.pop();
         } else {
-          Navigator.of(context).maybePop();
+          context.go('/'); // 스택이 비면 홈으로 (먹통·종료 방지)
         }
       },
     )

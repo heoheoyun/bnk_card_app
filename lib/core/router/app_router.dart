@@ -14,6 +14,9 @@ import '../../features/auth/presentation/pages/signup_page.dart';
 import '../../features/auth/presentation/pages/signup_verify_page.dart';
 import '../../features/auth/presentation/pages/find_id_page.dart';
 import '../../features/auth/presentation/pages/reset_password_page.dart';
+import '../../features/quick_login/presentation/pages/quick_login_gate_page.dart';
+import '../../features/mypage/presentation/pages/quick_login_settings_page.dart';
+
 
 // ── Home ─────────────────────────────────────────────────────────
 import '../../features/home/presentation/pages/home_page.dart';
@@ -80,6 +83,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/reset-password',
         builder: (_, __) => const ResetPasswordPage(),
+      ),
+      GoRoute(
+        path: '/unlock',
+        builder: (_, __) => const QuickLoginGatePage(),
+      ),
+      GoRoute(
+        path: '/mypage/quick-login',
+        builder: (_, __) => const QuickLoginSettingsPage(),
       ),
 
       // ── 카드 ───────────────────────────────────────────────────

@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/auth_state_provider.dart';
+import '../../../../core/constants/storage_keys.dart';
+import '../../../../core/storage/secure_storage.dart';
+import '../../../quick_login/data/quick_login_service.dart';
 
 class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
@@ -36,13 +39,20 @@ class _SplashPageState extends ConsumerState<SplashPage>
   }
 
   Future<void> _checkAuthAndNavigate() async {
-    // 스플래시 최소 노출 시간
     await Future.delayed(const Duration(milliseconds: 2000));
     if (!mounted) return;
 
-    final isLoggedIn = ref.read(authStateProvider);
-    if (isLoggedIn) {
+    final hasRefresh =
+        (await SecureStorage.read(StorageKeys.refreshToken)) != null;
+    final quickEnabled =
+    await QuickLoginService.instance.isAnyEnabled;
+
+    if (ref.read(authStateProvider)) {
+      // access_token 이 살아있는 정상 로그인 상태
       context.go('/');
+    } else if (hasRefresh && quickEnabled) {
+      // 토큰은 있고 간편로그인이 켜져 있으면 잠금 게이트로
+      context.go('/unlock');
     } else {
       context.go('/login');
     }

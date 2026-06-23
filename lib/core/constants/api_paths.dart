@@ -41,6 +41,16 @@ class ApiPaths {
   /// 월별 카드별 실제 결제 집계 (GET ?year=&month=)
   static const String myMonthlySpending = '/api/users/me/monthly-spending';
 
+  // ── 알림 ─────────────────────────────────────────────────────────
+  /// 내 알림 목록 + 미읽음수 (GET)
+  static const String notifications            = '/api/notifications';
+  /// 미읽음 수만 (GET, 헤더 뱃지 폴링용)
+  static const String notificationsUnreadCount = '/api/notifications/unread-count';
+  /// 전체 읽음 처리 (PATCH)
+  static const String notificationsReadAll     = '/api/notifications/read-all';
+  /// 단건 읽음 처리 (PATCH)
+  static String notificationRead(int id) => '/api/notifications/$id/read';
+
   // ── 약관 ─────────────────────────────────────────────────────────
   static String cardDetail(int id)     => '/api/cards/$id';
   static String termsPackage(String t) => '/api/terms/packages/$t';

@@ -42,17 +42,18 @@ class _SplashPageState extends ConsumerState<SplashPage>
     await Future.delayed(const Duration(milliseconds: 2000));
     if (!mounted) return;
 
+    // 임시 비활성화 ---------------------------------------------------------
     // 푸시 서비스 초기화 (라우터가 준비된 이후 시점)
-    PushService.instance.init(
-      onTap: (linkUrl) {
-        if (!mounted) return;
-        if (linkUrl != null && linkUrl.startsWith('/cards/')) {
-          context.go(linkUrl);
-        } else {
-          context.go('/notifications');
-        }
-      },
-    );
+    // PushService.instance.init(
+    //   onTap: (linkUrl) {
+    //     if (!mounted) return;
+    //     if (linkUrl != null && linkUrl.startsWith('/cards/')) {
+    //       context.go(linkUrl);
+    //     } else {
+    //       context.go('/notifications');
+    //     }
+    //   },
+    // );
 
     final hasRefresh   = await CookieStore.hasRefreshToken();
     final quickEnabled = await QuickLoginService.instance.isAnyEnabled;

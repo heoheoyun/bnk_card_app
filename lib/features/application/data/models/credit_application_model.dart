@@ -10,11 +10,17 @@ class CreditApplicationModel {
       cardName:          json['cardName'] as String?,
       cardImageUrl:      json['cardImageUrl'] as String?,
       applicationStatus: ApplicationStatus.fromString(json['applicationStatus'] as String),
+      idVerifiedYn: json['idVerifiedYn'] as String?,
       applicantSnapshot: json['applicantSnapshot'] != null
           ? ApplicantSnapshotModel.creditFromJson(json['applicantSnapshot'])
           : null,
       paymentSnapshot:   json['paymentSnapshot'] != null
           ? PaymentSnapshotModel.fromJson(json['paymentSnapshot'])
+          : null,
+      annualIncomeBand: json['annualIncomeBand'] as String?,
+      creditScoreBand:  json['creditScoreBand']  as String?,
+      linkedAccountId:  json['linkedAccountId'] != null
+          ? (json['linkedAccountId'] as num).toInt()
           : null,
       approvedLimit:     json['approvedLimit'] as int?,
       requestedLimit:    json['requestedLimit'] as int?,

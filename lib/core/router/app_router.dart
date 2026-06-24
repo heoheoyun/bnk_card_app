@@ -44,6 +44,9 @@ import '../../features/terms/presentation/pages/terms_page.dart';
 import '../../features/mypage/presentation/pages/mypage_page.dart';
 import '../../features/mypage/presentation/pages/spending_input_page.dart';
 
+// ── Account ───────────────────────────────────────────────────────
+import '../../features/application/presentation/pages/account_create_page.dart';
+
 // ── Application (신용) ───────────────────────────────────────────
 import '../../features/application/presentation/pages/credit/credit_step1_terms_page.dart';
 import '../../features/application/presentation/pages/credit/credit_step2_identity_page.dart';
@@ -166,11 +169,7 @@ import '../../features/application/presentation/pages/check/check_result_page.da
 
       GoRoute(
         path: '/accounts/create',
-        builder: (_, __) => Scaffold(
-          body: Center(
-            child: Text('계좌 개설 페이지 준비 중입니다.'),
-          ),
-        ),
+        builder: (_, __) => const AccountCreatePage(),
       ),
 
       // ── 소비 패턴 ──────────────────────────────────────────────

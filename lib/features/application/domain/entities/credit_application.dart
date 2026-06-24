@@ -116,9 +116,13 @@ class CreditApplication {
 
   /// Spring application_status 컬럼 → [ApplicationStatus] enum 변환
   final ApplicationStatus applicationStatus;
+  final String?           idVerifiedYn;
 
   final CreditApplicantSnapshot? applicantSnapshot;
   final PaymentSnapshot?         paymentSnapshot;
+  final String? annualIncomeBand;
+  final String? creditScoreBand;
+  final int?    linkedAccountId;
 
   /// 승인 한도 (APPROVED 이후 세팅)
   final int? approvedLimit;
@@ -141,8 +145,12 @@ class CreditApplication {
     this.cardName,
     this.cardImageUrl,
     required this.applicationStatus,
+    this.idVerifiedYn,
     this.applicantSnapshot,
     this.paymentSnapshot,
+    this.annualIncomeBand,
+    this.creditScoreBand,
+    this.linkedAccountId,
     this.approvedLimit,
     this.requestedLimit,
     this.rejectionReason,
@@ -153,6 +161,7 @@ class CreditApplication {
   // ── 편의 getter ──────────────────────────────────────────────────
 
   bool get isDraft      => applicationStatus == ApplicationStatus.draft;
+  bool get isIdVerified => idVerifiedYn == 'Y';
   bool get isRequested  => applicationStatus == ApplicationStatus.requested;
   bool get isReviewing  => applicationStatus == ApplicationStatus.reviewing;
   bool get isApproved   => applicationStatus == ApplicationStatus.approved;

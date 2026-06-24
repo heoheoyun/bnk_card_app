@@ -43,6 +43,12 @@ class CreditApplicationState {
   final int?             requestedLimit;
   final String?          cardPassword;
 
+  // draft 임시 저장 필드 추가
+  final CreditApplicantSnapshot? draftApplicantSnapshot;
+  final String? draftAnnualIncomeBand;
+  final String? draftCreditScoreBand;
+  final int?    draftLinkedAccountId;
+
   const CreditApplicationState({
     this.currentStep        = 1,
     this.creditAppId,
@@ -52,6 +58,10 @@ class CreditApplicationState {
     this.paymentSnapshot,
     this.requestedLimit,
     this.cardPassword,
+    this.draftApplicantSnapshot,
+    this.draftAnnualIncomeBand,
+    this.draftCreditScoreBand,
+    this.draftLinkedAccountId,
   });
 
   CreditApplicationState copyWith({
@@ -63,6 +73,10 @@ class CreditApplicationState {
     PaymentSnapshot? paymentSnapshot,
     int?             requestedLimit,
     String?          cardPassword,
+    CreditApplicantSnapshot? draftApplicantSnapshot,
+    String? draftAnnualIncomeBand,
+    String? draftCreditScoreBand,
+    int?    draftLinkedAccountId,
   }) {
     return CreditApplicationState(
       currentStep:        currentStep        ?? this.currentStep,
@@ -73,6 +87,10 @@ class CreditApplicationState {
       paymentSnapshot:    paymentSnapshot    ?? this.paymentSnapshot,
       requestedLimit:     requestedLimit     ?? this.requestedLimit,
       cardPassword:       cardPassword       ?? this.cardPassword,
+      draftApplicantSnapshot: draftApplicantSnapshot ?? this.draftApplicantSnapshot,
+      draftAnnualIncomeBand:  draftAnnualIncomeBand  ?? this.draftAnnualIncomeBand,
+      draftCreditScoreBand:   draftCreditScoreBand   ?? this.draftCreditScoreBand,
+      draftLinkedAccountId:   draftLinkedAccountId   ?? this.draftLinkedAccountId,
     );
   }
 }
@@ -89,6 +107,34 @@ class CreditApplicationNotifier extends StateNotifier<CreditApplicationState> {
       this._submitUsecase,
       this._repo,
       ) : super(const CreditApplicationState());
+
+  // DRAFT 조회 → 단계 분기
+  Future<int> checkDraftAndGetStep(int cardId) async {
+    try {
+      final draft = await _repo.getDraftApplication(cardId);
+      if (draft == null) return 1; // DRAFT 없음 → step1부터
+
+      // creditAppId 저장
+      state = state.copyWith(creditAppId: draft.creditAppId);
+
+      // 본인확인 안 했으면 step2부터
+      if (draft.idVerifiedYn != 'Y') return 2;
+
+      // 본인확인 했으면 무조건 step3부터 (값 채워서)
+      // step3 완료된 경우 draft 데이터 state에 저장 후 step3부터
+      if (draft.applicantSnapshot != null) {
+        state = state.copyWith(
+          draftApplicantSnapshot: draft.applicantSnapshot,
+          draftAnnualIncomeBand:  draft.annualIncomeBand,
+          draftCreditScoreBand:   draft.creditScoreBand,
+          draftLinkedAccountId:   draft.linkedAccountId,
+        );
+      }
+      return 3;
+    } catch (e) {
+      return 1;
+    }
+  }
 
   // STEP 1 - 약관 동의 → creditAppId 발급
   Future<void> createApplication({
@@ -218,6 +264,7 @@ class CreditApplicationNotifier extends StateNotifier<CreditApplicationState> {
   // 신청 처음부터 다시 시작
   void reset() => state = const CreditApplicationState();
 }
+
 
 // ── Provider ──────────────────────────────────────────────────────
 

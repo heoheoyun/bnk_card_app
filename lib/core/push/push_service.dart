@@ -33,7 +33,10 @@ class PushService {
   /// 알림 탭 시 linkUrl 로 라우팅하기 위한 콜백(앱에서 주입).
   void Function(String? linkUrl)? _onTap;
 
-  bool _initialized = false;
+  /// 진행 중이거나 완료된 init 작업을 캐싱.
+  /// 동시에 들어온 호출은 새 init 을 시작하지 않고 같은 Future 를 기다린다.
+  Future<void>? _initFuture;
+
   StreamSubscription<String>? _tokenRefreshSub;
   StreamSubscription<RemoteMessage>? _onMessageSub;
   StreamSubscription<RemoteMessage>? _onOpenedSub;
@@ -45,14 +48,18 @@ class PushService {
     importance: Importance.high,
   );
 
-  /// 앱 시작 시 1회 호출. 권한 요청 + 로컬알림 채널 + 메시지 리스너 등록.
-  Future<void> init({void Function(String? linkUrl)? onTap}) async {
-    if (_initialized) {
-      _onTap = onTap ?? _onTap;
-      return;
-    }
-    _onTap = onTap;
+  /// 앱 시작 시 호출. 권한 요청 + 로컬알림 채널 + 메시지 리스너 등록.
+  ///
+  /// 여러 번 호출되거나 동시에 호출돼도 실제 초기화는 단 1회만 수행된다.
+  Future<void> init({void Function(String? linkUrl)? onTap}) {
+    // 콜백은 매 호출마다 최신값으로 갱신(라우터 준비 후 주입되는 경우 대비).
+    if (onTap != null) _onTap = onTap;
 
+    // 이미 진행 중/완료된 init 이 있으면 그 Future 를 그대로 반환 → 중복 진입 차단.
+    return _initFuture ??= _doInit();
+  }
+
+  Future<void> _doInit() async {
     // 1) 알림 권한 (iOS/Android13+)
     await _fm.requestPermission(alert: true, badge: true, sound: true);
 
@@ -89,8 +96,6 @@ class PushService {
     _tokenRefreshSub = _fm.onTokenRefresh.listen((t) {
       _userDs.registerPushToken(t).catchError((_) {});
     });
-
-    _initialized = true;
   }
 
   /// 로그인 직후 호출 — 현재 디바이스 토큰을 서버에 등록.

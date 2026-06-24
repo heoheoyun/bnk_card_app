@@ -6,6 +6,7 @@ import '../../../../core/providers/auth_state_provider.dart';
 import '../../../../core/constants/storage_keys.dart';
 import '../../../../core/storage/secure_storage.dart';
 import '../../../quick_login/data/quick_login_service.dart';
+import '../../../../core/push/push_service.dart';
 
 class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
@@ -41,6 +42,18 @@ class _SplashPageState extends ConsumerState<SplashPage>
   Future<void> _checkAuthAndNavigate() async {
     await Future.delayed(const Duration(milliseconds: 2000));
     if (!mounted) return;
+
+    // 푸시 서비스 초기화 (라우터가 준비된 이후 시점)
+    PushService.instance.init(
+      onTap: (linkUrl) {
+        if (!mounted) return;
+        if (linkUrl != null && linkUrl.startsWith('/cards/')) {
+          context.go(linkUrl);
+        } else {
+          context.go('/notifications');
+        }
+      },
+    );
 
     final hasRefresh =
         (await SecureStorage.read(StorageKeys.refreshToken)) != null;

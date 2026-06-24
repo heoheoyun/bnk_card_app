@@ -34,6 +34,8 @@ class ApiPaths {
   static const String myInfo             = '/api/users/me';
   static const String myPassword         = '/api/users/me/password';
   static const String myCards            = '/api/users/me/cards';
+  /// FCM 디바이스 푸시 토큰 등록(PUT) / 해제(DELETE)
+  static const String myPushToken        = '/api/users/me/push-token';
   /// [deprecated] 단순 조회용으로만 사용하던 구 경로 — 하위 호환 유지
   static const String mySpending         = '/api/users/me/spending';
   /// 소비 패턴 조회·저장 (GET / POST)

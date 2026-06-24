@@ -113,8 +113,8 @@ class _CreditStep1TermsPageState extends ConsumerState<CreditStep1TermsPage> {
                       isRequired: true,
                       agreed: _memberTermsAgreed,
                       onToggle: () => setState(() => _memberTermsAgreed = !_memberTermsAgreed),
-                      content: '''
-                        제1장 총칙 제1조(목적) 이 약관은 주식회사 부산은행(이하 '은행'이라 한다)과 이용 고객(이하 '회원'이라 한다)간에
+                      content:
+                        '''제1장 총칙 제1조(목적) 이 약관은 주식회사 부산은행(이하 '은행'이라 한다)과 이용 고객(이하 '회원'이라 한다)간에
                         홈페이지 및 회원 개인홈페이지의 이용조건 및 절차에 관한 사항을 정함을 목적으로 합니다. 제2조(이용약관의 효력 및
                         변경) ① 이 약관은 부산은행 웹사이트에서 온라인으로 공시함으로써 효력을 발생합니다. ② 은행은 합리적인 사유가
                         발생될 경우에는 이 약관을 변경할 수 있으며, 약관이 변경된 경우에는 지체없이 제1항과 같은 방법으로 이를 공시 또는
@@ -149,8 +149,8 @@ class _CreditStep1TermsPageState extends ConsumerState<CreditStep1TermsPage> {
                         귀책사유로 인한 서비스 이용의 장애 또는 손해에 대하여 책임을 지지 않습니다. ⑩ 은행에서 회원에게 무료로 제공하는
                         서비스의 이용과 관련해서는 어떠한 손해도 책임을 지지 않습니다. 제17조(준거법 및 재판권) ① 이 약관에 명시되지
                         않은 사항은 전기통신사업법 등 관계법령과 상관습에 따릅니다. ② 서비스 이용으로 발생한 분쟁에 대해 소송이 제기되는
-                        경우 은행의 본사 소재지를 관할하는 법원을 관할 법원으로 합니다.
-                      '''
+                        경우 은행의 본사 소재지를 관할하는 법원을 관할 법원으로 합니다.'''
+
                     ),
                     const SizedBox(height: 8),
 
@@ -160,8 +160,8 @@ class _CreditStep1TermsPageState extends ConsumerState<CreditStep1TermsPage> {
                       isRequired: true,
                       agreed: _privacyTermsAgreed,
                       onToggle: () => setState(() => _privacyTermsAgreed = !_privacyTermsAgreed),
-                      content: '''
-                        ㈜부산은행(이하 '당행')은 개인정보보호법 제30조에 따라 고객의 개인정보 보호 및 권익을 보호하고 개인정보와 관련한 고객의 고충을
+                      content:
+                        '''㈜부산은행(이하 '당행')은 개인정보보호법 제30조에 따라 고객의 개인정보 보호 및 권익을 보호하고 개인정보와 관련한 고객의 고충을
                         원활하게 처리할 수 있도록 다음과 같은 처리방침을 두고 있습니다. 제1조(개인정보의 처리 목적) 당행은 개인정보를
                         다음 각 호의 목적을 위해 처리합니다. 처리한 개인정보는 다음의 목적 외의 용도로는 사용되지 않으며 이용 목적이
                         변경될 시에는 사전동의를 구할 예정입니다. 1.(금융)거래 관계 관련 (금융)거래와 관련하여 신용조회회사 또는
@@ -195,8 +195,8 @@ class _CreditStep1TermsPageState extends ConsumerState<CreditStep1TermsPage> {
                         (privacy.kisa.or.kr / 118) - 대검찰청 첨단범죄수사과 (www.spo.go.kr /
                         02-3480-2000) - 경찰청 사이버테러대응센터 (www.ctrc.go.kr / 182) 제13조(개인정보
                         보호책임자) - 소속/직책 : 정보보호부 / CISO - 담당부서 : 정보보호부 / 금융소비자보호부 - 연락처 :
-                        051-661-4370 / 080-522-2200
-                      '''
+                        051-661-4370 / 080-522-2200'''
+
                     ),
                     const SizedBox(height: 8),
 

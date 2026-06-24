@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../providers/auth_state_provider.dart';
 import '../providers/router_notifier.dart';
 import 'route_guards.dart';
+import '../../features/auth/presentation/pages/ip_verify_page.dart';
 
 // ── Splash ───────────────────────────────────────────────────────
 import '../../features/splash/presentation/pages/splash_page.dart';
@@ -245,6 +246,10 @@ import '../../features/application/presentation/pages/check/check_result_page.da
         builder: (context, state) => CheckResultPage(
           cardId: state.extra as int,
         ),
+      ),
+      GoRoute(
+        path: '/ip-verify',
+        builder: (_, state) => IpVerifyPage(args: state.extra as IpVerifyArgs),
       ),
     ],
   );

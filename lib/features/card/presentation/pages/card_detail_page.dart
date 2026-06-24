@@ -434,7 +434,12 @@ class _ApplyBar extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10)),
               ),
               onPressed: () {
-                // TODO: 카드 신청 플로우 연결
+                if (card == null) return;
+                if (card!.cardType == 'CREDIT') {
+                  context.push('/application/credit/step1', extra: cardId);
+                } else {
+                  context.push('/application/check/step1', extra: cardId);
+                }
               },
               child: const Text('카드 신청',
                   style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),

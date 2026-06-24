@@ -52,7 +52,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
     try {
       final res = await _ds.chat(message, _sessionId);
       final reply =
-          res['answer'] as String? ?? res['message'] as String? ?? '';
+          res['response'] as String? ?? res['answer'] as String? ?? res['message'] as String? ?? '';
       final botMsg = ChatMessageModel(
         role: ChatRole.assistant,
         content: reply,

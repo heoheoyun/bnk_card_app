@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "166520779650",
+    "project_id": "bnk-card-app",
+    "storage_bucket": "bnk-card-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:166520779650:android:79a8c6afc0882782d4559b",
+        "android_client_info": {
+          "package_name": "com.example.bnk_card_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDbRwqSKAyk4rZEYAM_bPsGtskCuyh31Kc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

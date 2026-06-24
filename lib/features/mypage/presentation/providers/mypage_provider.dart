@@ -14,3 +14,8 @@ final myCardsProvider = FutureProvider<Map<String, dynamic>>((ref) {
   final ds = ref.watch(mypageDatasourceProvider);
   return ds.getMyCards();
 });
+
+final monthlySpendingProvider = FutureProvider<Map<String, dynamic>>((ref) {
+  final ds = ref.watch(mypageDatasourceProvider);
+  return ds.getMonthlySpending();
+});

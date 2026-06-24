@@ -6,12 +6,22 @@ import '../providers/auth_state_provider.dart';
 import '../providers/router_notifier.dart';
 import 'route_guards.dart';
 
+// ── Splash ───────────────────────────────────────────────────────
+import '../../features/splash/presentation/pages/splash_page.dart';
+
 // ── Auth ──────────────────────────────────────────────────────────
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/signup_page.dart';
 import '../../features/auth/presentation/pages/signup_verify_page.dart';
 import '../../features/auth/presentation/pages/find_id_page.dart';
 import '../../features/auth/presentation/pages/reset_password_page.dart';
+import '../../features/quick_login/presentation/pages/quick_login_gate_page.dart';
+import '../../features/mypage/presentation/pages/quick_login_settings_page.dart';
+
+// Notification
+
+import '../../features/notification/presentation/pages/notification_page.dart';
+
 
 // ── Home ─────────────────────────────────────────────────────────
 import '../../features/home/presentation/pages/home_page.dart';
@@ -53,11 +63,20 @@ import '../../features/application/presentation/pages/check/check_result_page.da
   final isLoggedIn = ref.watch(authStateProvider);
 
   return GoRouter(
-    initialLocation: '/',
-    // initialLocation: '/application/credit/step1',
+    initialLocation: '/splash',
     refreshListenable: notifier,
-    redirect: (ctx, state) => RouteGuards.redirect(isLoggedIn, state),
+    redirect: (ctx, state) {
+      // 스플래시는 리다이렉트 제외
+      if (state.matchedLocation == '/splash') return null;
+      return RouteGuards.redirect(isLoggedIn, state);
+    },
     routes: [
+      // ── 스플래시 ────────────────────────────────────────────
+      GoRoute(
+        path: '/splash',
+        builder: (_, __) => const SplashPage(),
+      ),
+
       // ── 홈 ─────────────────────────────────────────────────────
       GoRoute(
         path: '/',
@@ -84,6 +103,20 @@ import '../../features/application/presentation/pages/check/check_result_page.da
       GoRoute(
         path: '/reset-password',
         builder: (_, __) => const ResetPasswordPage(),
+      ),
+      GoRoute(
+        path: '/unlock',
+        builder: (_, __) => const QuickLoginGatePage(),
+      ),
+      GoRoute(
+        path: '/mypage/quick-login',
+        builder: (_, __) => const QuickLoginSettingsPage(),
+      ),
+
+      // ── 알림 ───────────────────────────────────────────────────
+      GoRoute(
+        path: '/notifications',
+        builder: (_, __) => const NotificationPage(),
       ),
 
       // ── 카드 ───────────────────────────────────────────────────

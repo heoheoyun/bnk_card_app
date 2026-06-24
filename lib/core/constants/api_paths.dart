@@ -73,5 +73,10 @@ class ApiPaths {
   static const String saveCheckApplicantInfo      = '/api/applications/check/applicant-info';
   static const String submitCheckApplication      = '/api/applications/check/submit';
 
+  // ── IP 2단계 인증 ────────────────────────────────────────────────
+  static const String ipVerifyEmailSend    = '/api/auth/ip-verify/email/send';
+  static const String ipVerifyEmailConfirm = '/api/auth/ip-verify/email/confirm';
+  static const String ipVerifyCi           = '/api/auth/ip-verify/ci';
+
 
 }

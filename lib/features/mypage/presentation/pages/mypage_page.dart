@@ -9,6 +9,8 @@ import '../providers/mypage_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/storage_keys.dart';
 import '../../../../core/services/biometric_service.dart';
+import '../../data/datasource/mypage_remote_datasource.dart';
+import '../../../../core/push/push_service.dart';
 
 class MyPagePage extends ConsumerStatefulWidget {
   const MyPagePage({super.key});
@@ -23,21 +25,22 @@ class _MyPagePageState extends ConsumerState<MyPagePage>
   bool _biometricEnabled = false;
   bool _pushEnabled = true;
   bool _marketingEnabled = false;
+  bool _seeded = false;                       // 서버값 1회 동기화 플래그
+  final _userDs = MypageRemoteDatasource();
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _loadSettings();
+    _loadBiometricSetting();
   }
 
-  Future<void> _loadSettings() async {
+  /// 생체인증은 로컬 저장값 사용 (서버 미연동)
+  Future<void> _loadBiometricSetting() async {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
       setState(() {
         _biometricEnabled = prefs.getBool(StorageKeys.biometricEnabled) ?? false;
-        _pushEnabled      = prefs.getBool('push_enabled') ?? true;
-        _marketingEnabled = prefs.getBool('marketing_enabled') ?? false;
       });
     }
   }
@@ -54,6 +57,11 @@ class _MyPagePageState extends ConsumerState<MyPagePage>
     final myCardsAsync = ref.watch(myCardsProvider);
 
     final info = myInfoAsync.valueOrNull ?? {};
+    if (!_seeded && myInfoAsync.hasValue) {
+      _pushEnabled      = (info['pushEnabled']    as String? ?? 'Y') == 'Y';
+      _marketingEnabled = (info['marketingAgree'] as String? ?? 'N') == 'Y';
+      _seeded = true;
+    }
     final name        = info['name']        as String? ?? '';
     final maskedEmail = info['maskedEmail'] as String? ?? info['email'] as String? ?? '';
     final maskedPhone = info['maskedPhone'] as String? ?? '';
@@ -198,6 +206,15 @@ class _MyPagePageState extends ConsumerState<MyPagePage>
 
           const SizedBox(height: 10),
 
+          // 인증 수단 관리
+          ListTile(
+            leading: const Icon(Icons.lock_outline, color: AppColors.primary),
+            title: const Text('간편로그인 설정'),
+            subtitle: const Text('지문 · 간편비밀번호 · 패턴'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/mypage/quick-login'),
+          ),
+
           // ── 금융 정보 ────────────────────────────────────────
           _sectionTitle('금융 정보'),
           Container(
@@ -240,7 +257,7 @@ class _MyPagePageState extends ConsumerState<MyPagePage>
                   onTap: () {},
                   trailing: Switch(
                     value: _biometricEnabled,
-                    activeColor: AppColors.teal600,
+                    activeThumbColor: AppColors.teal600,
                     onChanged: (v) async {
                       if (v) {
                         final success = await BiometricService.authenticate(
@@ -260,9 +277,8 @@ class _MyPagePageState extends ConsumerState<MyPagePage>
                   onTap: () {},
                   trailing: Switch(
                     value: _pushEnabled,
-                    activeColor: AppColors.teal600,
-                    onChanged: (v) =>
-                        setState(() => _pushEnabled = v),
+                    activeThumbColor: AppColors.teal600,
+                    onChanged: (v) => _savePush(v),
                   ),
                 ),
                 _menuTile(
@@ -271,9 +287,8 @@ class _MyPagePageState extends ConsumerState<MyPagePage>
                   onTap: () {},
                   trailing: Switch(
                     value: _marketingEnabled,
-                    activeColor: AppColors.teal600,
-                    onChanged: (v) =>
-                        setState(() => _marketingEnabled = v),
+                    activeThumbColor: AppColors.teal600,
+                    onChanged: (v) => _saveMarketing(v),
                   ),
                 ),
               ],
@@ -651,5 +666,37 @@ class _MyPagePageState extends ConsumerState<MyPagePage>
         ),
       ),
     );
+  }
+
+  Future<void> _savePush(bool v) async {
+    final prev = _pushEnabled;
+    setState(() => _pushEnabled = v);
+    try {
+      await _userDs.updateNotificationSettings(pushEnabled: v);
+      // 디바이스 토큰 동기화: ON이면 등록, OFF면 해제
+      if (v) {
+        await PushService.instance.registerToken();
+      } else {
+        await PushService.instance.unregister();
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _pushEnabled = prev);          // 실패 롤백
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('설정 저장에 실패했습니다.')));
+    }
+  }
+
+  Future<void> _saveMarketing(bool v) async {
+    final prev = _marketingEnabled;
+    setState(() => _marketingEnabled = v);
+    try {
+      await _userDs.updateNotificationSettings(marketingAgree: v);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _marketingEnabled = prev);
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('설정 저장에 실패했습니다.')));
+    }
   }
 }

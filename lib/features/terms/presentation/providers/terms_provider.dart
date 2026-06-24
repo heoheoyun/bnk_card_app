@@ -26,7 +26,12 @@ class TermsAgreeNotifier extends StateNotifier<Map<int, bool>> {
   bool isAllAgreed(List<int> requiredIds) {
     return requiredIds.every((id) => state[id] == true);
   }
+
+  void reset() {
+    state = {};
+  }
 }
+
 
 final termsAgreeProvider =
 StateNotifierProvider<TermsAgreeNotifier, Map<int, bool>>(

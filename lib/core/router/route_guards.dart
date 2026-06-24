@@ -18,6 +18,7 @@ class RouteGuards {
     '/reset-password',
     '/search',
     '/ai/chat',
+    '/unlock',
   };
 
   /// 로그인 상태에서 접근 시 홈으로 리다이렉트할 경로

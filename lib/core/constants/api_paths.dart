@@ -34,6 +34,8 @@ class ApiPaths {
   static const String myInfo             = '/api/users/me';
   static const String myPassword         = '/api/users/me/password';
   static const String myCards            = '/api/users/me/cards';
+  /// FCM 디바이스 푸시 토큰 등록(PUT) / 해제(DELETE)
+  static const String myPushToken        = '/api/users/me/push-token';
   /// [deprecated] 단순 조회용으로만 사용하던 구 경로 — 하위 호환 유지
   static const String mySpending         = '/api/users/me/spending';
   /// 소비 패턴 조회·저장 (GET / POST)
@@ -41,7 +43,35 @@ class ApiPaths {
   /// 월별 카드별 실제 결제 집계 (GET ?year=&month=)
   static const String myMonthlySpending = '/api/users/me/monthly-spending';
 
+  // ── 알림 ─────────────────────────────────────────────────────────
+  /// 내 알림 목록 + 미읽음수 (GET)
+  static const String notifications            = '/api/notifications';
+  /// 미읽음 수만 (GET, 헤더 뱃지 폴링용)
+  static const String notificationsUnreadCount = '/api/notifications/unread-count';
+  /// 전체 읽음 처리 (PATCH)
+  static const String notificationsReadAll     = '/api/notifications/read-all';
+  /// 단건 읽음 처리 (PATCH)
+  static String notificationRead(int id) => '/api/notifications/$id/read';
+
   // ── 약관 ─────────────────────────────────────────────────────────
   static String cardDetail(int id)     => '/api/cards/$id';
   static String termsPackage(String t) => '/api/terms/packages/$t';
+
+
+  // ── 카드 발급 ─────────────────────────────────────────────────────────
+  // ── 카드 발급 ─────────────────────────────────────────────────────────
+  static const String creditApplications          = '/api/applications/credit';
+  static const String createCreditApplication     = '/api/applications/credit/agree-terms';
+  static const String verifyCreditIdentity        = '/api/applications/credit/verify-identity';
+  static const String saveCreditApplicantInfo     = '/api/applications/credit/applicant-info';
+  static const String submitCreditApplication     = '/api/applications/credit/submit';
+  static const String checkCreditExistingCustomer = '/api/applications/credit/existing-customer';
+
+  static const String checkApplications           = '/api/applications/check';
+  static const String createCheckApplication      = '/api/applications/check/agree-terms';
+  static const String verifyCheckIdentity         = '/api/applications/check/verify-identity';
+  static const String saveCheckApplicantInfo      = '/api/applications/check/applicant-info';
+  static const String submitCheckApplication      = '/api/applications/check/submit';
+
+
 }

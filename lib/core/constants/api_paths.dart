@@ -56,4 +56,22 @@ class ApiPaths {
   // ── 약관 ─────────────────────────────────────────────────────────
   static String cardDetail(int id)     => '/api/cards/$id';
   static String termsPackage(String t) => '/api/terms/packages/$t';
+
+
+  // ── 카드 발급 ─────────────────────────────────────────────────────────
+  // ── 카드 발급 ─────────────────────────────────────────────────────────
+  static const String creditApplications          = '/api/applications/credit';
+  static const String createCreditApplication     = '/api/applications/credit/agree-terms';
+  static const String verifyCreditIdentity        = '/api/applications/credit/verify-identity';
+  static const String saveCreditApplicantInfo     = '/api/applications/credit/applicant-info';
+  static const String submitCreditApplication     = '/api/applications/credit/submit';
+  static const String checkCreditExistingCustomer = '/api/applications/credit/existing-customer';
+
+  static const String checkApplications           = '/api/applications/check';
+  static const String createCheckApplication      = '/api/applications/check/agree-terms';
+  static const String verifyCheckIdentity         = '/api/applications/check/verify-identity';
+  static const String saveCheckApplicantInfo      = '/api/applications/check/applicant-info';
+  static const String submitCheckApplication      = '/api/applications/check/submit';
+
+
 }

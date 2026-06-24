@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -42,7 +43,22 @@ import '../../features/terms/presentation/pages/terms_page.dart';
 import '../../features/mypage/presentation/pages/mypage_page.dart';
 import '../../features/mypage/presentation/pages/spending_input_page.dart';
 
-final appRouterProvider = Provider<GoRouter>((ref) {
+// ── Application (신용) ───────────────────────────────────────────
+import '../../features/application/presentation/pages/credit/credit_step1_terms_page.dart';
+import '../../features/application/presentation/pages/credit/credit_step2_identity_page.dart';
+import '../../features/application/presentation/pages/credit/credit_step3_applicant_page.dart';
+import '../../features/application/presentation/pages/credit/credit_step4_payment_page.dart';
+import '../../features/application/presentation/pages/credit/credit_step5_documents_page.dart';
+import '../../features/application/presentation/pages/credit/credit_result_page.dart';
+
+// ── Application (체크) ───────────────────────────────────────────
+import '../../features/application/presentation/pages/check/check_step1_terms_page.dart';
+import '../../features/application/presentation/pages/check/check_step2_identity_page.dart';
+import '../../features/application/presentation/pages/check/check_step3_applicant_page.dart';
+import '../../features/application/presentation/pages/check/check_step4_payment_page.dart';
+import '../../features/application/presentation/pages/check/check_result_page.dart';
+
+  final appRouterProvider = Provider<GoRouter>((ref) {
   final notifier   = ref.watch(routerNotifierProvider.notifier);
   final isLoggedIn = ref.watch(authStateProvider);
 
@@ -104,6 +120,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
 
       // ── 카드 ───────────────────────────────────────────────────
+      // /cards/compare 를 /cards/:id 보다 먼저 선언해야 충돌 없음
       GoRoute(
         path: '/cards/compare',
         builder: (_, __) => const CardComparePage(),
@@ -146,10 +163,89 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const MyPagePage(),
       ),
 
+      GoRoute(
+        path: '/accounts/create',
+        builder: (_, __) => Scaffold(
+          body: Center(
+            child: Text('계좌 개설 페이지 준비 중입니다.'),
+          ),
+        ),
+      ),
+
       // ── 소비 패턴 ──────────────────────────────────────────────
       GoRoute(
         path: '/spending/input',
         builder: (_, __) => const SpendingInputPage(),
+      ),
+
+      // ── 카드 발급 (신용) ───────────────────────────────────────────
+      GoRoute(
+        path: '/application/credit/step1',
+        builder: (context, state) => CreditStep1TermsPage(
+          cardId: state.extra as int,
+        ),
+      ),
+      GoRoute(
+        path: '/application/credit/step2',
+        builder: (context, state) => CreditStep2IdentityPage(
+          cardId: state.extra as int,
+        ),
+      ),
+      GoRoute(
+        path: '/application/credit/step3',
+        builder: (context, state) => CreditStep3ApplicantPage(
+          cardId: state.extra as int,
+        ),
+      ),
+      GoRoute(
+        path: '/application/credit/step4',
+        builder: (context, state) => CreditStep4PaymentPage(
+          cardId: state.extra as int,
+        ),
+      ),
+      GoRoute(
+        path: '/application/credit/step5',
+        builder: (context, state) => CreditStep5DocumentsPage(
+          cardId: state.extra as int,
+        ),
+      ),
+      GoRoute(
+        path: '/application/credit/result',
+        builder: (context, state) => CreditResultPage(
+          cardId: state.extra as int,
+        ),
+      ),
+
+// ── 카드 발급 (체크) ───────────────────────────────────────────
+      GoRoute(
+        path: '/application/check/step1',
+        builder: (context, state) => CheckStep1TermsPage(
+          cardId: state.extra as int,
+        ),
+      ),
+      GoRoute(
+        path: '/application/check/step2',
+        builder: (context, state) => CheckStep2IdentityPage(
+          cardId: state.extra as int,
+        ),
+      ),
+      GoRoute(
+        path: '/application/check/step3',
+        builder: (context, state) => CheckStep3ApplicantPage(
+          cardId: state.extra as int,
+        ),
+      ),
+      GoRoute(
+        path: '/application/check/step4',
+        builder: (context, state) => CheckStep4PaymentPage(
+          cardId: state.extra as int,
+        ),
+      ),
+      GoRoute(
+        path: '/application/check/result',
+        builder: (context, state) => CheckResultPage(
+          cardId: state.extra as int,
+        ),
       ),
     ],
   );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../data/models/terms_model.dart';
 import '../../../../core/constants/app_colors.dart';
+import 'terms_files_sheet.dart';
 
 /// 약관 목록의 개별 항목 타일.
 ///
@@ -61,9 +62,18 @@ class TermsItemTile extends StatelessWidget {
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            onPressed: () {
-              // TODO: TermsDetailBottomSheet.show(context, terms)
-            },
+            onPressed: () => showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.white,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              ),
+              builder: (context) => TermsFilesSheet(
+                termsId: terms.termsId,
+                title:   terms.title,
+              ),
+            ),
             child: const Text(
               '보기',
               style: TextStyle(

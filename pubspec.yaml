@@ -31,6 +31,11 @@ dependencies:
 
   # ── 로컬 저장소 ───────────────────────────
   shared_preferences: ^2.3.3           # 간단한 설정값 저장
+  
+  # -- 쿠키 이용
+  dio_cookie_manager: ^3.1.1
+  cookie_jar: ^4.0.8
+  path_provider: ^2.1.4
 
   # ── 이미지 ───────────────────────────────
   cached_network_image: ^3.4.1         # 카드 이미지 캐싱 (OCI Object Storage URL)

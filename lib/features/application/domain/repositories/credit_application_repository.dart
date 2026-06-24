@@ -42,4 +42,8 @@ abstract class CreditApplicationRepository {
 
   /// 내 신청 목록 조회 (마이페이지)
   Future<List<CreditApplication>> getMyApplications();
+
+  /// 임시저장
+  Future<CreditApplication?> getDraftApplication(int cardId);
+
 }

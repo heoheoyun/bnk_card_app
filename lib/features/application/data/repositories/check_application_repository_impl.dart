@@ -72,4 +72,9 @@ class CheckApplicationRepositoryImpl implements CheckApplicationRepository {
   Future<List<CheckApplication>> getMyApplications() {
     return _ds.getMyApplications();
   }
+
+  @override
+  Future<CheckApplication?> getDraftApplication(int cardId) {
+    return _ds.getDraftApplication(cardId);
+  }
 }

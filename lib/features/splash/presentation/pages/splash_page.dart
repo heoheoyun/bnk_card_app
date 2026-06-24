@@ -3,8 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/auth_state_provider.dart';
-import '../../../../core/constants/storage_keys.dart';
-import '../../../../core/storage/secure_storage.dart';
+import '../../../../core/network/cookie_store.dart';
 import '../../../quick_login/data/quick_login_service.dart';
 import '../../../../core/push/push_service.dart';
 
@@ -43,29 +42,27 @@ class _SplashPageState extends ConsumerState<SplashPage>
     await Future.delayed(const Duration(milliseconds: 2000));
     if (!mounted) return;
 
+    // 임시 비활성화 ---------------------------------------------------------
     // 푸시 서비스 초기화 (라우터가 준비된 이후 시점)
-    PushService.instance.init(
-      onTap: (linkUrl) {
-        if (!mounted) return;
-        if (linkUrl != null && linkUrl.startsWith('/cards/')) {
-          context.go(linkUrl);
-        } else {
-          context.go('/notifications');
-        }
-      },
-    );
+    // PushService.instance.init(
+    //   onTap: (linkUrl) {
+    //     if (!mounted) return;
+    //     if (linkUrl != null && linkUrl.startsWith('/cards/')) {
+    //       context.go(linkUrl);
+    //     } else {
+    //       context.go('/notifications');
+    //     }
+    //   },
+    // );
 
-    final hasRefresh =
-        (await SecureStorage.read(StorageKeys.refreshToken)) != null;
-    final quickEnabled =
-    await QuickLoginService.instance.isAnyEnabled;
+    final hasRefresh   = await CookieStore.hasRefreshToken();
+    final quickEnabled = await QuickLoginService.instance.isAnyEnabled;
+    if (!mounted) return;
 
-    if (ref.read(authStateProvider)) {
-      // access_token 이 살아있는 정상 로그인 상태
-      context.go('/');
-    } else if (hasRefresh && quickEnabled) {
-      // 토큰은 있고 간편로그인이 켜져 있으면 잠금 게이트로
+    if (quickEnabled && hasRefresh) {
       context.go('/unlock');
+    } else if (ref.read(authStateProvider)) {
+      context.go('/');
     } else {
       context.go('/login');
     }

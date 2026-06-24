@@ -56,6 +56,7 @@ class CheckApplication {
   /// Spring application_status 컬럼 → [ApplicationStatus] enum 변환
   /// 체크카드는 DRAFT / REQUESTED / APPROVED / REJECTED / ISSUED만 사용
   final ApplicationStatus applicationStatus;
+  final String?           idVerifiedYn;
 
   final CheckApplicantSnapshot? applicantSnapshot;
   final PaymentSnapshot?        paymentSnapshot;
@@ -78,6 +79,7 @@ class CheckApplication {
     this.cardName,
     this.cardImageUrl,
     required this.applicationStatus,
+    this.idVerifiedYn,
     this.applicantSnapshot,
     this.paymentSnapshot,
     this.linkedAccountId,
@@ -89,6 +91,7 @@ class CheckApplication {
   // ── 편의 getter ──────────────────────────────────────────────────
 
   bool get isDraft     => applicationStatus == ApplicationStatus.draft;
+  bool get isIdVerified => idVerifiedYn == 'Y';
   bool get isRequested => applicationStatus == ApplicationStatus.requested;
   bool get isApproved  => applicationStatus == ApplicationStatus.approved;
   bool get isRejected  => applicationStatus == ApplicationStatus.rejected;

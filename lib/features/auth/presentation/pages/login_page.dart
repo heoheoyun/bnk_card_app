@@ -13,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/storage_keys.dart';
 import '../providers/auth_provider.dart';
+import 'ip_verify_page.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -55,19 +56,32 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       );
       return;
     }
-    await ref.read(authProvider.notifier).login(
-      _emailCtrl.text.trim(),
-      _pwCtrl.text,
-    );
-    final state = ref.read(authProvider);
-    if (state.hasError && mounted) {
+    final email = _emailCtrl.text.trim();
+    final result =
+    await ref.read(authProvider.notifier).login(email, _pwCtrl.text);
+    if (!mounted) return;
+
+    if (result == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('로그인에 실패했습니다. 이메일/비밀번호를 확인해주세요.')),
       );
-    } else if (mounted) {
-      // 이메일만 저장(자동완성용). 비밀번호는 저장하지 않음.
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(StorageKeys.lastEmail, _emailCtrl.text.trim());
+      return;
+    }
+
+    // 이메일만 저장(자동완성용)
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(StorageKeys.lastEmail, email);
+    if (!mounted) return;
+
+    if (result.requireIpVerify) {
+      // 미신뢰 기기 → IP 2단계 인증 화면으로
+      context.go('/ip-verify',
+          extra: IpVerifyArgs(
+            userId: result.userId!,
+            challengeToken: result.challengeToken!,
+            methods: result.availableMethods,
+          ));
+    } else {
       context.go('/');
     }
   }

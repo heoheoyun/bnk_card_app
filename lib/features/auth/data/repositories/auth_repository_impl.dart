@@ -1,10 +1,8 @@
 import '../../domain/repositories/auth_repository.dart';
 import '../datasource/auth_remote_datasource.dart';
 import '../models/login_request_model.dart';
+import '../models/login_result.dart';
 import '../models/signup_request_model.dart';
-import '../../../../core/constants/storage_keys.dart';
-import '../../../../core/storage/secure_storage.dart';
-import '../../../../core/storage/local_storage.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDatasource _ds;
@@ -15,16 +13,11 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override Future<int> signup(SignupRequestModel req) => _ds.signup(req);
 
-  @override Future<void> login(String email, String password) async {
-    await _ds.login(LoginRequestModel(email: email, password: password));
-    await LocalStorage.setBool(StorageKeys.isLoggedIn, true);
-  }
+  // 로그인 상태 플래그는 실제 쿠키 발급 시점(onLogin)에서 설정한다.
+  @override Future<LoginResult> login(String email, String password) =>
+      _ds.login(LoginRequestModel(email: email, password: password));
 
-  @override Future<void> logout() async {
-    await _ds.logout();
-    await SecureStorage.deleteAll();
-    await LocalStorage.remove(StorageKeys.isLoggedIn);
-  }
+  @override Future<void> logout() => _ds.logout();
 
   @override Future<void> refreshToken() => _ds.refresh();
 
@@ -36,4 +29,19 @@ class AuthRepositoryImpl implements AuthRepository {
   @override Future<void> findPassword(String email, String name) => _ds.findPassword(email, name);
   @override Future<void> resetPassword(String email, String token, String newPassword) =>
       _ds.resetPassword(email, token, newPassword);
+
+  @override Future<void> sendIpEmailCode({
+    required int userId,
+    required String challengeToken,
+  }) =>
+      _ds.sendIpEmailCode(userId: userId, challengeToken: challengeToken);
+
+  @override Future<void> confirmIpEmailCode({
+    required int userId,
+    required String challengeToken,
+    required String code,
+    String? nickname,
+  }) =>
+      _ds.confirmIpEmailCode(
+          userId: userId, challengeToken: challengeToken, code: code, nickname: nickname);
 }

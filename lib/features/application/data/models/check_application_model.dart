@@ -11,6 +11,7 @@ class CheckApplicationModel {
       cardName:          json['cardName'] as String?,
       cardImageUrl:      json['cardImageUrl'] as String?,
       applicationStatus: ApplicationStatus.fromString(json['applicationStatus'] as String),
+      idVerifiedYn: json['idVerifiedYn'] as String?,
       applicantSnapshot: json['applicantSnapshot'] != null
           ? ApplicantSnapshotModel.checkFromJson(json['applicantSnapshot'])
           : null,

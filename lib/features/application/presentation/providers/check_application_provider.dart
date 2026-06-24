@@ -38,11 +38,14 @@ class CheckApplicationState {
   final bool    isLoading;
   final String? error;
 
+  final CheckApplicantSnapshot? draftApplicantSnapshot;
+
   const CheckApplicationState({
     this.currentStep = 1,
     this.checkAppId,
     this.isLoading   = false,
     this.error,
+    this.draftApplicantSnapshot,
   });
 
   CheckApplicationState copyWith({
@@ -50,12 +53,14 @@ class CheckApplicationState {
     int?    checkAppId,
     bool?   isLoading,
     String? error,
+    CheckApplicantSnapshot? draftApplicantSnapshot,
   }) {
     return CheckApplicationState(
       currentStep: currentStep ?? this.currentStep,
       checkAppId:  checkAppId  ?? this.checkAppId,
       isLoading:   isLoading   ?? this.isLoading,
       error:       error,
+      draftApplicantSnapshot: draftApplicantSnapshot ?? this.draftApplicantSnapshot,
     );
   }
 }
@@ -72,6 +77,28 @@ class CheckApplicationNotifier extends StateNotifier<CheckApplicationState> {
       this._submitUsecase,
       this._repo,
       ) : super(const CheckApplicationState());
+
+  // DRAFT 조회 → 단계 분기
+  Future<int> checkDraftAndGetStep(int cardId) async {
+    try {
+      final draft = await _repo.getDraftApplication(cardId);
+      if (draft == null) return 1; // DRAFT 없음 → step1부터
+
+      // creditAppId 저장
+      state = state.copyWith(checkAppId: draft.checkAppId);
+
+      // 본인확인 안 했으면 step2부터
+      if (draft.idVerifiedYn != 'Y') return 2;
+
+      // 본인확인 했으면 무조건 step3부터 (값 채워서)
+      if (draft.applicantSnapshot != null) {
+        state = state.copyWith(draftApplicantSnapshot: draft.applicantSnapshot);
+      }
+      return 3;
+    } catch (e) {
+      return 1;
+    }
+  }
 
   // STEP 1 - 약관 동의 → checkAppId 발급
   Future<void> createApplication({

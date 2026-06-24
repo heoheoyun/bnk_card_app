@@ -59,7 +59,6 @@ class ApiPaths {
 
 
   // ── 카드 발급 ─────────────────────────────────────────────────────────
-  // ── 카드 발급 ─────────────────────────────────────────────────────────
   static const String creditApplications          = '/api/applications/credit';
   static const String createCreditApplication     = '/api/applications/credit/agree-terms';
   static const String verifyCreditIdentity        = '/api/applications/credit/verify-identity';
@@ -72,6 +71,9 @@ class ApiPaths {
   static const String verifyCheckIdentity         = '/api/applications/check/verify-identity';
   static const String saveCheckApplicantInfo      = '/api/applications/check/applicant-info';
   static const String submitCheckApplication      = '/api/applications/check/submit';
+
+  static const String creditApplicationDraft = '/api/applications/credit/draft';
+  static const String checkApplicationDraft  = '/api/applications/check/draft';
 
 
 }

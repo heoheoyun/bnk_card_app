@@ -30,9 +30,22 @@ class _CreditStep1TermsPageState extends ConsumerState<CreditStep1TermsPage> {
   void initState() {
     super.initState();
     // 페이지 진입 시 약관 동의 상태 초기화
-    Future.microtask(() =>
-        ref.read(termsAgreeProvider.notifier).reset(),
-    );
+    Future.microtask(() async {
+      ref.read(termsAgreeProvider.notifier).reset();
+
+      // DRAFT 확인 → 단계 분기
+      final step = await ref.read(creditApplicationProvider.notifier)
+          .checkDraftAndGetStep(widget.cardId);
+
+      if (!mounted) return;
+
+      if (step == 2) {
+        context.pushReplacement('/application/credit/step2', extra: widget.cardId);
+      } else if (step == 3) {
+        context.pushReplacement('/application/credit/step3', extra: widget.cardId);
+      }
+      // step == 1이면 그냥 약관 동의 화면 유지
+    });
   }
 
   @override

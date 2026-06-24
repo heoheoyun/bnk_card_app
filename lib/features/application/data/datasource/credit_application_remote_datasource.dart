@@ -114,4 +114,14 @@ class CreditApplicationRemoteDatasource {
         .map((e) => CreditApplicationModel.fromJson(e))
         .toList();
   }
+
+  // DRAFT 조회
+  Future<CreditApplication?> getDraftApplication(int cardId) async {
+    final res = await _dio.get(
+      ApiPaths.creditApplicationDraft,
+      queryParameters: {'cardId': cardId},
+    );
+    if (res.data['data'] == null) return null;
+    return CreditApplicationModel.fromJson(res.data['data']);
+  }
 }

@@ -40,87 +40,110 @@ class _CreditStep2IdentityPageState
     final appState    = ref.watch(creditApplicationProvider);
     final appNotifier = ref.read(creditApplicationProvider.notifier);
 
-    return Scaffold(
-      appBar: const BnkAppBar(title: '카드 신청'),
-      body: Column(
-        children: [
-          ApplicationStepIndicator(currentStep: 2, totalSteps: 5),
-
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '본인확인',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '신분증 정보를 입력해 주세요.',
-                    style: TextStyle(fontSize: 13, color: AppColors.gray600),
-                  ),
-                  const SizedBox(height: 24),
-
-                  IdentityFormWidget(
-                    onChanged: ({
-                      required idType,
-                      required idName,
-                      required idResidentNo,
-                      required idAddress,
-                      required idIssueDate,
-                    }) {
-                      setState(() {
-                        _idType      = idType;
-                        _idName      = idName;
-                        _idResidentNo = idResidentNo;
-                        _idAddress   = idAddress;
-                        _idIssueDate = idIssueDate;
-                      });
-                    },
-                  ),
-
-                  if (appState.error != null) ...[
-                    const SizedBox(height: 16),
-                    Text(
-                      appState.error!,
-                      style: const TextStyle(fontSize: 13, color: Colors.red),
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        appBar: const BnkAppBar(title: '카드 신청'),
+        body: Column(
+          children: [
+            ApplicationStepIndicator(currentStep: 2, totalSteps: 5),
+      
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '본인확인',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                     ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '신분증 정보를 입력해 주세요.',
+                      style: TextStyle(fontSize: 13, color: AppColors.gray600),
+                    ),
+                    const SizedBox(height: 24),
+      
+                    IdentityFormWidget(
+                      onChanged: ({
+                        required idType,
+                        required idName,
+                        required idResidentNo,
+                        required idAddress,
+                        required idIssueDate,
+                      }) {
+                        setState(() {
+                          _idType      = idType;
+                          _idName      = idName;
+                          _idResidentNo = idResidentNo;
+                          _idAddress   = idAddress;
+                          _idIssueDate = idIssueDate;
+                        });
+                      },
+                    ),
+
+                    if (appState.error != null) ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.red.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Text(
+                                '본인확인에 실패했습니다. 입력 정보를 확인해 주세요.',
+                                style: TextStyle(fontSize: 13, color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
-          ),
-
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: BnkButton(
-                label:     '다음',
-                isLoading: appState.isLoading,
-                onPressed: _canNext
-                    ? () async {
-                  await appNotifier.verifyIdentity(
-                    idType:       _idType!,
-                    idName:       _idName!,
-                    idResidentNo: _idResidentNo!,
-                    idAddress:    _idAddress!,
-                    idIssueDate:  _idIssueDate!,
-                  );
-
-                  if (context.mounted && appState.error == null) {
-                    context.push(
-                      '/application/credit/step3',
-                      extra: widget.cardId,
+      
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: BnkButton(
+                  label:     '다음',
+                  isLoading: appState.isLoading,
+                  onPressed: _canNext
+                      ? () async {
+                    await appNotifier.verifyIdentity(
+                      idType:       _idType!,
+                      idName:       _idName!,
+                      idResidentNo: _idResidentNo!,
+                      idAddress:    _idAddress!,
+                      idIssueDate:  _idIssueDate!,
                     );
+
+                    final latest = ref.read(creditApplicationProvider);
+                    if (context.mounted && latest.error == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('본인확인이 완료되었습니다.'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                      context.push('/application/credit/step3', extra: widget.cardId);
+                    }
                   }
-                }
-                    : null,
+                      : null,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

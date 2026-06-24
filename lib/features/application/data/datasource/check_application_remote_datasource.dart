@@ -93,4 +93,13 @@ class CheckApplicationRemoteDatasource {
         .map((e) => CheckApplicationModel.fromJson(e))
         .toList();
   }
+
+  Future<CheckApplication?> getDraftApplication(int cardId) async {
+    final res = await _dio.get(
+      ApiPaths.checkApplicationDraft,
+      queryParameters: {'cardId': cardId},
+    );
+    if (res.data['data'] == null) return null;
+    return CheckApplicationModel.fromJson(res.data['data']);
+  }
 }

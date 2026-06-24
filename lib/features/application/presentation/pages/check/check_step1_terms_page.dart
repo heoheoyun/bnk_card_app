@@ -29,9 +29,20 @@ class _CheckStep1TermsPageState extends ConsumerState<CheckStep1TermsPage> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() =>
-        ref.read(termsAgreeProvider.notifier).reset(),
-    );
+    Future.microtask(() async {
+      ref.read(termsAgreeProvider.notifier).reset();
+
+      final step = await ref.read(checkApplicationProvider.notifier)
+          .checkDraftAndGetStep(widget.cardId);
+
+      if (!mounted) return;
+
+      if (step == 2) {
+        context.pushReplacement('/application/check/step2', extra: widget.cardId);
+      } else if (step == 3) {
+        context.pushReplacement('/application/check/step3', extra: widget.cardId);
+      }
+    });
   }
 
   @override

@@ -34,4 +34,7 @@ abstract class CheckApplicationRepository {
 
   /// 내 신청 목록 조회 (마이페이지)
   Future<List<CheckApplication>> getMyApplications();
+
+  /// 임시 저장
+  Future<CheckApplication?> getDraftApplication(int cardId);
 }

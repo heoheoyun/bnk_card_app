@@ -13,10 +13,12 @@ void main() async {
   // Firebase 초기화 (Android: google-services.json / iOS: GoogleService-Info.plist 자동 인식)
   // flutterfire configure 로 firebase_options.dart 를 생성했다면:
   //   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await Firebase.initializeApp();
+
+  // 임시 비활성화 ---------------------------------------------------------
+  // await Firebase.initializeApp();
 
   // 백그라운드/종료 상태 메시지 핸들러 등록 (top-level 함수여야 함)
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  // FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
   runApp(const ProviderScope(child: BnkCardApp()));
 }

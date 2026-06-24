@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/datasource/auth_remote_datasource.dart';
+import '../../data/models/login_result.dart';
 import '../../data/models/signup_request_model.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -38,19 +39,54 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
   AuthNotifier(this._loginUsecase, this._logoutUsecase, this._signupUsecase, this._ref)
       : super(const AsyncData(null));
 
-  Future<void> login(String email, String password) async {
+  /// 로그인. 성공/실패는 [state]에, 분기 정보는 반환값으로 전달.
+  ///  - null  → 실패(에러)
+  ///  - result.requireIpVerify=true  → IP 인증 화면으로
+  ///  - result.requireIpVerify=false → 쿠키 발급 완료, 홈으로
+  Future<LoginResult?> login(String email, String password) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() => _loginUsecase(email, password));
-    if (state is AsyncData) {
-      _ref.read(authStateProvider.notifier).onLogin();
-      // 로그인 직후 FCM 디바이스 토큰을 서버에 등록 (실패해도 로그인엔 영향 없음)
-      PushService.instance.registerToken();
+    final guarded = await AsyncValue.guard(() => _loginUsecase(email, password));
+    state = guarded.whenData((_) {});
+
+    if (guarded is AsyncData<LoginResult>) {
+      final result = guarded.value;
+      if (!result.requireIpVerify) {
+        // 실제 로그인 완료(쿠키 발급됨)
+        await _ref.read(authStateProvider.notifier).onLogin();
+        PushService.instance.registerToken();
+      }
+      return result;
     }
+    return null;
+  }
+
+  /// IP 인증 — 이메일 코드 발송
+  Future<void> sendIpEmailCode({
+    required int userId,
+    required String challengeToken,
+  }) =>
+      _ref.read(authRepositoryProvider)
+          .sendIpEmailCode(userId: userId, challengeToken: challengeToken);
+
+  /// IP 인증 — 이메일 코드 확인. 성공 시 쿠키 발급 완료 → 로그인 상태 전환.
+  Future<void> confirmIpEmailCode({
+    required int userId,
+    required String challengeToken,
+    required String code,
+    String? nickname,
+  }) async {
+    await _ref.read(authRepositoryProvider).confirmIpEmailCode(
+      userId: userId,
+      challengeToken: challengeToken,
+      code: code,
+      nickname: nickname,
+    );
+    await _ref.read(authStateProvider.notifier).onLogin();
+    PushService.instance.registerToken();
   }
 
   Future<void> logout() async {
     state = const AsyncLoading();
-    // 토큰(JWT)이 살아있는 동안 서버에서 푸시 토큰을 먼저 해제
     await PushService.instance.unregister();
     state = await AsyncValue.guard(() => _logoutUsecase());
     await _ref.read(authStateProvider.notifier).onLogout();
@@ -60,8 +96,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() => _signupUsecase(req).then((_) {}));
     if (state is AsyncError) {
-      final err = (state as AsyncError).error;
-      throw err;
+      throw (state as AsyncError).error;
     }
   }
 }

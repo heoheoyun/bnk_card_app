@@ -13,6 +13,7 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -23,7 +24,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.bnk_card_app"
-        minSdk = 21   // firebase_messaging 최소 요구사항 (flutter.minSdkVersion 이 21 미만이면 이걸로 고정)
+        minSdk = flutter.minSdkVersion   // firebase_messaging 최소 요구사항 (flutter.minSdkVersion 이 21 미만이면 이걸로 고정)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -38,4 +39,8 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

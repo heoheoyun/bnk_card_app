@@ -12,6 +12,7 @@ class RouteGuards {
   static const _publicRoutes = {
     '/',
     '/login',
+    '/ip-verify',
     '/signup',
     '/signup/verify',
     '/find-id',

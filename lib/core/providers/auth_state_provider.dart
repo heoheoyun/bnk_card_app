@@ -3,6 +3,7 @@ import '../constants/storage_keys.dart';
 import '../storage/local_storage.dart';
 import '../storage/secure_storage.dart';
 import '../push/push_service.dart';
+import 'dart:convert';
 
 /// 앱 전역 로그인 상태 Notifier.
 ///
@@ -19,7 +20,7 @@ class AuthStateNotifier extends StateNotifier<bool> {
 
   Future<void> _init() async {
     final token = await SecureStorage.read(StorageKeys.accessToken);
-    state = token != null;
+    state = token != null && !_isJwtExpired(token);
   }
 
   /// 로그인 성공 후 호출
@@ -43,3 +44,19 @@ final authStateProvider =
 StateNotifierProvider<AuthStateNotifier, bool>(
       (_) => AuthStateNotifier(),
 );
+
+bool _isJwtExpired(String jwt) {
+  try {
+    final parts = jwt.split('.');
+    if (parts.length != 3) return true;
+    final payload = json.decode(
+      utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))),
+    ) as Map<String, dynamic>;
+    final exp = payload['exp'];
+    if (exp is! int) return false;                 // exp 없으면 만료 판단 보류
+    final expiry = DateTime.fromMillisecondsSinceEpoch(exp * 1000);
+    return DateTime.now().isAfter(expiry);
+  } catch (_) {
+    return true;                                    // 파싱 실패 → 안전하게 만료 취급
+  }
+}

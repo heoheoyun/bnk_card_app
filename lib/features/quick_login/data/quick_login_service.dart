@@ -116,13 +116,14 @@ class QuickLoginService {
 
   // ── 생체인증 ────────────────────────────────────────────────────────
 
-  /// 단말이 생체인증을 지원하고 1개 이상 등록돼 있는지.
+  /// 단말이 생체인증을 지원하는지(하드웨어 + 사용 가능).
+  /// getAvailableBiometrics()는 기기/버전에 따라 빈 값이 와도 실제론
+  /// 사용 가능한 경우가 있어, 가용성 판정에서 제외한다.
   Future<bool> canUseBiometric() async {
     try {
       final supported = await _localAuth.isDeviceSupported();
       final canCheck = await _localAuth.canCheckBiometrics;
-      final available = await _localAuth.getAvailableBiometrics();
-      return supported && canCheck && available.isNotEmpty;
+      return supported && canCheck;
     } catch (_) {
       return false;
     }
@@ -137,9 +138,8 @@ class QuickLoginService {
     }
   }
 
-  /// 생체인증 사용 설정. 켤 때는 먼저 1회 인증을 통과해야 함.
+  /// 생체인증 사용 설정. 1회 인증 통과 시에만 등록.
   Future<bool> enableBiometric() async {
-    if (!await canUseBiometric()) return false;
     final ok = await _authenticateBiometric('생체인증을 등록하려면 인증해 주세요.');
     if (ok == QuickAuthResult.success) {
       await SecureStorage.write(StorageKeys.biometricEnabled, 'true');

@@ -28,6 +28,8 @@ class CheckApplicantSnapshot {
   /// 자금 출처 (근로소득 / 사업소득 / 연금 등) — AML 필수
   final String? fundSource;
 
+  final String? birthDate; // 추가 — 한도 산정용 (yyyy-MM-dd)
+
   const CheckApplicantSnapshot({
     required this.name,
     this.nameEn,
@@ -37,6 +39,7 @@ class CheckApplicantSnapshot {
     this.jobType,
     this.transactionPurpose,
     this.fundSource,
+    this.birthDate, // 추가
   });
 }
 

@@ -21,11 +21,12 @@ class CheckStep3ApplicantPage extends ConsumerStatefulWidget {
 class _CheckStep3ApplicantPageState
     extends ConsumerState<CheckStep3ApplicantPage> {
 
-  final _nameCtrl    = TextEditingController();
-  final _nameEnCtrl  = TextEditingController();
-  final _mobileCtrl  = TextEditingController();
-  final _addressCtrl = TextEditingController();
-  final _emailCtrl   = TextEditingController();
+  final _nameCtrl      = TextEditingController();
+  final _nameEnCtrl    = TextEditingController();
+  final _mobileCtrl    = TextEditingController();
+  final _addressCtrl   = TextEditingController();
+  final _emailCtrl     = TextEditingController();
+  final _birthDateCtrl = TextEditingController();
 
   String? _jobType;
   String? _transactionPurpose;
@@ -38,6 +39,7 @@ class _CheckStep3ApplicantPageState
     _mobileCtrl.dispose();
     _addressCtrl.dispose();
     _emailCtrl.dispose();
+    _birthDateCtrl.dispose();
     super.dispose();
   }
 
@@ -46,6 +48,7 @@ class _CheckStep3ApplicantPageState
           _mobileCtrl.text.isNotEmpty &&
           _addressCtrl.text.isNotEmpty &&
           _emailCtrl.text.isNotEmpty &&
+          _birthDateCtrl.text.isNotEmpty &&
           _jobType != null &&
           _transactionPurpose != null &&
           _fundSource != null;
@@ -74,35 +77,60 @@ class _CheckStep3ApplicantPageState
                   const SizedBox(height: 24),
 
                   // 이름
-                  _Field(label: '이름', controller: _nameCtrl,
-                      hint: '이름을 입력해 주세요',
-                      onChanged: (_) => setState(() {})),
+                  _Field(
+                    label: '이름',
+                    controller: _nameCtrl,
+                    hint: '이름을 입력해 주세요',
+                    onChanged: (_) => setState(() {}),
+                  ),
                   const SizedBox(height: 16),
 
                   // 영문 이름 (선택)
-                  _Field(label: '영문 이름 (선택)', controller: _nameEnCtrl,
-                      hint: 'HONG GILDONG',
-                      onChanged: (_) => setState(() {})),
+                  _Field(
+                    label: '영문 이름 (선택)',
+                    controller: _nameEnCtrl,
+                    hint: 'HONG GILDONG',
+                    onChanged: (_) => setState(() {}),
+                  ),
                   const SizedBox(height: 16),
 
                   // 휴대폰 번호
-                  _Field(label: '휴대폰 번호', controller: _mobileCtrl,
-                      hint: '010-0000-0000',
-                      keyboardType: TextInputType.phone,
-                      onChanged: (_) => setState(() {})),
+                  _Field(
+                    label: '휴대폰 번호',
+                    controller: _mobileCtrl,
+                    hint: '010-0000-0000',
+                    keyboardType: TextInputType.phone,
+                    onChanged: (_) => setState(() {}),
+                  ),
                   const SizedBox(height: 16),
 
                   // 주소
-                  _Field(label: '주소', controller: _addressCtrl,
-                      hint: '주소를 입력해 주세요',
-                      onChanged: (_) => setState(() {})),
+                  _Field(
+                    label: '주소',
+                    controller: _addressCtrl,
+                    hint: '주소를 입력해 주세요',
+                    onChanged: (_) => setState(() {}),
+                  ),
                   const SizedBox(height: 16),
 
                   // 이메일
-                  _Field(label: '이메일', controller: _emailCtrl,
-                      hint: 'example@email.com',
-                      keyboardType: TextInputType.emailAddress,
-                      onChanged: (_) => setState(() {})),
+                  _Field(
+                    label: '이메일',
+                    controller: _emailCtrl,
+                    hint: 'example@email.com',
+                    keyboardType: TextInputType.emailAddress,
+                    onChanged: (_) => setState(() {}),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // 생년월일
+                  _Field(
+                    label: '생년월일',
+                    controller: _birthDateCtrl,
+                    hint: '1990-01-01',
+                    keyboardType: TextInputType.datetime,
+                    onChanged: (_) => setState(() {}),
+                  ),
                   const SizedBox(height: 24),
 
                   const Text(
@@ -131,11 +159,11 @@ class _CheckStep3ApplicantPageState
                     label: '거래 목적',
                     value: _transactionPurpose,
                     items: const {
-                      'SALARY':       '급여이체',
-                      'LIVING':       '생활비',
-                      'SAVINGS':      '저축',
-                      'BUSINESS':     '사업',
-                      'OTHER':        '기타',
+                      'SALARY':   '급여이체',
+                      'LIVING':   '생활비',
+                      'SAVINGS':  '저축',
+                      'BUSINESS': '사업',
+                      'OTHER':    '기타',
                     },
                     onChanged: (v) => setState(() => _transactionPurpose = v),
                   ),
@@ -185,6 +213,7 @@ class _CheckStep3ApplicantPageState
                       mobileNo:           _mobileCtrl.text.trim(),
                       address:            _addressCtrl.text.trim(),
                       email:              _emailCtrl.text.trim(),
+                      birthDate:          _birthDateCtrl.text.trim(),
                       jobType:            _jobType,
                       transactionPurpose: _transactionPurpose,
                       fundSource:         _fundSource,
@@ -216,6 +245,7 @@ class _Field extends StatelessWidget {
   final TextEditingController controller;
   final TextInputType? keyboardType;
   final void Function(String) onChanged;
+
   const _Field({
     required this.label,
     required this.hint,
@@ -229,7 +259,9 @@ class _Field extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+        Text(label,
+            style: const TextStyle(
+                fontSize: 13, fontWeight: FontWeight.w500)),
         const SizedBox(height: 6),
         TextField(
           controller:   controller,
@@ -237,8 +269,10 @@ class _Field extends StatelessWidget {
           onChanged:    onChanged,
           decoration: InputDecoration(
             hintText:  hint,
-            hintStyle: const TextStyle(fontSize: 13, color: AppColors.gray400),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            hintStyle: const TextStyle(
+                fontSize: 13, color: AppColors.gray400),
+            contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14, vertical: 12),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(color: AppColors.gray200),
@@ -265,6 +299,7 @@ class _Dropdown extends StatelessWidget {
   final String?             value;
   final Map<String, String> items;
   final void Function(String?) onChanged;
+
   const _Dropdown({
     required this.label,
     required this.value,
@@ -277,14 +312,18 @@ class _Dropdown extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+        Text(label,
+            style: const TextStyle(
+                fontSize: 13, fontWeight: FontWeight.w500)),
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
           value: value,
           hint: const Text('선택해 주세요',
-              style: TextStyle(fontSize: 13, color: AppColors.gray400)),
+              style: TextStyle(
+                  fontSize: 13, color: AppColors.gray400)),
           decoration: InputDecoration(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14, vertical: 12),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(color: AppColors.gray200),
@@ -298,10 +337,13 @@ class _Dropdown extends StatelessWidget {
               borderSide: const BorderSide(color: AppColors.teal600),
             ),
           ),
-          items: items.entries.map((e) => DropdownMenuItem(
+          items: items.entries
+              .map((e) => DropdownMenuItem(
             value: e.key,
-            child: Text(e.value, style: const TextStyle(fontSize: 13)),
-          )).toList(),
+            child: Text(e.value,
+                style: const TextStyle(fontSize: 13)),
+          ))
+              .toList(),
           onChanged: onChanged,
         ),
       ],

@@ -4,6 +4,8 @@ import '../storage/local_storage.dart';
 import '../storage/secure_storage.dart';
 import '../push/push_service.dart';
 import 'dart:convert';
+import '../network/cookie_store.dart';
+import '../../features/quick_login/data/quick_login_service.dart';
 
 /// 앱 전역 로그인 상태 Notifier.
 ///
@@ -19,8 +21,8 @@ class AuthStateNotifier extends StateNotifier<bool> {
   }
 
   Future<void> _init() async {
-    final token = await SecureStorage.read(StorageKeys.accessToken);
-    state = token != null && !_isJwtExpired(token);
+    // 토큰은 쿠키(PersistCookieJar)에 저장되므로 쿠키 존재로 세션 복원
+    state = await CookieStore.hasRefreshToken();
   }
 
   /// 로그인 성공 후 호출
@@ -32,8 +34,9 @@ class AuthStateNotifier extends StateNotifier<bool> {
 
   /// 로그아웃 혹은 강제 만료 후 호출
   Future<void> onLogout() async {
-    // FCM 토큰을 서버에서 먼저 해제 (타인 기기 오발송 방지)
     await PushService.instance.unregister();
+    await CookieStore.clear();                    // 실제 토큰(쿠키) 삭제
+    await QuickLoginService.instance.clearAll();  // 간편로그인 해제
     await SecureStorage.deleteAll();
     await LocalStorage.remove(StorageKeys.isLoggedIn);
     state = false;

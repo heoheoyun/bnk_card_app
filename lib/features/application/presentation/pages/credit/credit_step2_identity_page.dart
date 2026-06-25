@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -42,12 +41,36 @@ class _CreditStep2IdentityPageState
 
     return PopScope(
       canPop: false,
+      // #17 안드로이드 시스템 백이 완전히 막혀 '먹통'이던 문제 해결.
+      // 확인 후 이전 단계(step1)로 이동. step1 의 재전진 가드 덕에 바운스 없음.
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final leave = await showDialog<bool>(
+          context: context,
+          builder: (c) => AlertDialog(
+            title: const Text('이전 단계로'),
+            content: const Text('본인확인 단계를 벗어날까요?'),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(c, false),
+                  child: const Text('취소')),
+              TextButton(
+                  onPressed: () => Navigator.pop(c, true),
+                  child: const Text('나가기')),
+            ],
+          ),
+        );
+        if (leave == true && context.mounted) {
+          context.pushReplacement('/application/credit/step1',
+              extra: widget.cardId);
+        }
+      },
       child: Scaffold(
         appBar: const BnkAppBar(title: '카드 신청'),
         body: Column(
           children: [
             ApplicationStepIndicator(currentStep: 2, totalSteps: 5),
-      
+
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
@@ -64,7 +87,7 @@ class _CreditStep2IdentityPageState
                       style: TextStyle(fontSize: 13, color: AppColors.gray600),
                     ),
                     const SizedBox(height: 24),
-      
+
                     IdentityFormWidget(
                       onChanged: ({
                         required idType,
@@ -110,7 +133,7 @@ class _CreditStep2IdentityPageState
                 ),
               ),
             ),
-      
+
             SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),

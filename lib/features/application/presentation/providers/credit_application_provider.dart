@@ -108,6 +108,16 @@ class CreditApplicationNotifier extends StateNotifier<CreditApplicationState> {
       this._repo,
       ) : super(const CreditApplicationState());
 
+  // #17 — step1 DRAFT 자동 전진을 1회만 수행하기 위한 가드.
+  //  - 카드 상세 "신청하기" 진입 시 beginNewSession()으로 false 리셋
+  //  - step1 이 자동 전진을 수행하면 markResumeHandled()로 true
+  //  - back 으로 step1 재진입 시 resumeHandled==true 면 재전진하지 않아
+  //    무한 전진(뒤로가기 먹통) 바운스를 막는다.
+  bool _resumeHandled = false;
+  bool get resumeHandled => _resumeHandled;
+  void beginNewSession() => _resumeHandled = false;
+  void markResumeHandled() => _resumeHandled = true;
+
   // DRAFT 조회 → 단계 분기
   Future<int> checkDraftAndGetStep(int cardId) async {
     try {
@@ -262,7 +272,10 @@ class CreditApplicationNotifier extends StateNotifier<CreditApplicationState> {
   void clearError() => state = state.copyWith(error: null);
 
   // 신청 처음부터 다시 시작
-  void reset() => state = const CreditApplicationState();
+  void reset() {
+    _resumeHandled = false;
+    state = const CreditApplicationState();
+  }
 }
 
 

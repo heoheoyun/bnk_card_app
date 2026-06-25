@@ -9,23 +9,26 @@ import '../../features/quick_login/data/quick_login_service.dart';
 
 /// 앱 전역 로그인 상태 Notifier.
 ///
-/// - 앱 시작: SecureStorage 에서 accessToken 존재 여부로 상태 복원
+/// - 앱 시작: 항상 false 로 시작한다. 실제 세션 유효성은 SplashPage 가
+///   서버(refresh) 검증 후 onLogin()/onLogout() 으로 확정한다.
+///   (로컬 쿠키만 보고 true 로 만들던 기존 로직이 #3 '정보 없는 회원' 버그의 원인)
 /// - 로그인 성공: [onLogin] 호출 → state = true + FCM 토큰 등록
-/// - 로그아웃 / 토큰 만료: [onLogout] 호출 → FCM 토큰 해제 + 토큰 삭제 + state = false
+/// - 로그아웃 / 토큰 만료: [onLogout] 호출 → FCM 해제 + 쿠키/간편로그인/시큐어스토리지 정리 + state = false
 ///
-/// GoRouter [RouterNotifier] 가 이 상태를 구독하여
-/// 상태 변경 시 redirect 를 자동 재평가한다.
+/// GoRouter [RouterNotifier] 가 이 상태를 구독하여 상태 변경 시 redirect 를 재평가한다.
 class AuthStateNotifier extends StateNotifier<bool> {
   AuthStateNotifier() : super(false) {
     _init();
   }
 
   Future<void> _init() async {
-    // 토큰은 쿠키(PersistCookieJar)에 저장되므로 쿠키 존재로 세션 복원
-    state = await CookieStore.hasRefreshToken();
+    // 콜드 스타트 시점엔 항상 false.
+    // 쿠키가 디스크에 있어도 서버 세션이 살아있다는 보장이 없으므로(서버 재시작/세션 revoke),
+    // SplashPage 가 /api/auth/refresh 로 서버 진실을 확인한 뒤 상태를 확정한다.
+    state = false;
   }
 
-  /// 로그인 성공 후 호출
+  /// 로그인 성공(또는 스플래시에서 세션 검증 성공) 후 호출
   Future<void> onLogin() async {
     state = true;
     // FCM 토큰을 서버에 등록 (실패해도 로그인 흐름에 영향 없음)
@@ -48,7 +51,8 @@ StateNotifierProvider<AuthStateNotifier, bool>(
       (_) => AuthStateNotifier(),
 );
 
-bool _isJwtExpired(String jwt) {
+/// JWT 만료 여부 판정 유틸 (필요 시 사용).
+bool isJwtExpired(String jwt) {
   try {
     final parts = jwt.split('.');
     if (parts.length != 3) return true;

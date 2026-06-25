@@ -4,6 +4,11 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../providers/mypage_provider.dart';
 
+/// #6 소비 패턴 수동 입력.
+/// 서버 계약에 맞춰 categoryId 기반으로 동작한다.
+///  - 카테고리: GET /api/cards/categories ({categoryId, categoryName})
+///  - 조회: GET /api/users/me/spending ({categoryId, monthlyAmount})
+///  - 저장: PUT /api/users/me/spending ({patterns:[{categoryId, monthlyAmount}]})
 class SpendingInputPage extends ConsumerStatefulWidget {
   const SpendingInputPage({super.key});
 
@@ -12,20 +17,10 @@ class SpendingInputPage extends ConsumerStatefulWidget {
 }
 
 class _SpendingInputPageState extends ConsumerState<SpendingInputPage> {
-  static const _categories = [
-    {'code': 'FOOD', 'label': '식음료/카페'},
-    {'code': 'SHOPPING', 'label': '쇼핑'},
-    {'code': 'TRANSPORT', 'label': '교통/대중교통'},
-    {'code': 'OIL', 'label': '주유/충전'},
-    {'code': 'LEISURE', 'label': '여가/문화'},
-    {'code': 'TELECOM', 'label': '통신/휴대폰'},
-    {'code': 'MEDICAL', 'label': '의료/건강'},
-    {'code': 'EDUCATION', 'label': '교육'},
-  ];
-
-  final Map<String, TextEditingController> _controllers = {
-    for (final c in _categories) c['code']!: TextEditingController(text: '0'),
-  };
+  // [{categoryId, categoryName}, ...]
+  List<Map<String, dynamic>> _cats = [];
+  // categoryId → 입력 컨트롤러
+  final Map<int, TextEditingController> _controllers = {};
 
   bool _isLoading = true;
   bool _isSaving = false;
@@ -33,22 +28,32 @@ class _SpendingInputPageState extends ConsumerState<SpendingInputPage> {
   @override
   void initState() {
     super.initState();
-    _loadExisting();
+    _load();
   }
 
-  Future<void> _loadExisting() async {
+  Future<void> _load() async {
     try {
       final ds = ref.read(mypageDatasourceProvider);
+
+      // 1) 카테고리 목록 (id 기반 렌더)
+      final cats = await ds.getCardCategories();
+      _cats = cats;
+      for (final c in cats) {
+        final id = (c['categoryId'] as num).toInt();
+        _controllers[id] = TextEditingController(text: '0');
+      }
+
+      // 2) 기존 입력값 채우기 (categoryId 매칭)
       final items = await ds.getSpendingPatterns();
-      for (final item in items) {
-        final code = item['categoryCode'] as String?;
-        final amount = item['monthlyAmount'];
-        if (code != null && _controllers.containsKey(code)) {
-          _controllers[code]!.text = (amount ?? 0).toString();
+      for (final it in items) {
+        final id = (it['categoryId'] as num?)?.toInt();
+        final amt = (it['monthlyAmount'] as num?)?.toInt() ?? 0;
+        if (id != null && _controllers.containsKey(id)) {
+          _controllers[id]!.text = amt.toString();
         }
       }
     } catch (_) {
-      // 기존 데이터 없으면 0으로 시작
+      // 카테고리/기존값 로드 실패 → 빈 값으로 시작
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -62,21 +67,20 @@ class _SpendingInputPageState extends ConsumerState<SpendingInputPage> {
     setState(() => _isSaving = true);
     try {
       final ds = ref.read(mypageDatasourceProvider);
-      final items = _categories
-          .map((c) => {
-        'categoryCode': c['code'],
-        'monthlyAmount': int.tryParse(_controllers[c['code']]!.text) ?? 0,
-        'source': 'MANUAL',
+      final patterns = _controllers.entries
+          .map((e) => {
+        'categoryId': e.key,
+        'monthlyAmount': int.tryParse(e.value.text) ?? 0,
       })
           .toList();
-      await ds.saveSpendingPatterns(items);
+      await ds.saveSpendingPatterns(patterns);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('소비 패턴이 저장되었습니다.')),
         );
         context.go('/mypage');
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('저장 중 오류가 발생했습니다.')),
@@ -89,9 +93,16 @@ class _SpendingInputPageState extends ConsumerState<SpendingInputPage> {
 
   @override
   void dispose() {
-    for (final c in _controllers.values) c.dispose();
+    for (final c in _controllers.values) {
+      c.dispose();
+    }
     super.dispose();
   }
+
+  String _comma(int v) => v.toString().replaceAllMapped(
+    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+        (m) => '${m[1]},',
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -117,7 +128,8 @@ class _SpendingInputPageState extends ConsumerState<SpendingInputPage> {
             ),
             child: const Text(
               '입력한 금액은 수동(MANUAL) 출처로 저장되며 AI 카드 추천에 즉시 반영됩니다.',
-              style: TextStyle(fontSize: 12, color: AppColors.teal800, height: 1.4),
+              style: TextStyle(
+                  fontSize: 12, color: AppColors.teal800, height: 1.4),
             ),
           ),
           const SizedBox(height: 16),
@@ -126,15 +138,19 @@ class _SpendingInputPageState extends ConsumerState<SpendingInputPage> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(14),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            padding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Column(
-              children: _categories.map((c) {
+              children: _cats.map((c) {
+                final id = (c['categoryId'] as num).toInt();
+                final name = c['categoryName'] as String? ?? '카테고리';
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   child: Row(
                     children: [
                       Container(
-                        width: 8, height: 8,
+                        width: 8,
+                        height: 8,
                         decoration: const BoxDecoration(
                           color: AppColors.teal600,
                           shape: BoxShape.circle,
@@ -143,13 +159,15 @@ class _SpendingInputPageState extends ConsumerState<SpendingInputPage> {
                       const SizedBox(width: 10),
                       Expanded(
                         flex: 2,
-                        child: Text(c['label']!,
-                            style: const TextStyle(fontSize: 13, color: AppColors.gray800)),
+                        child: Text(name,
+                            style: const TextStyle(
+                                fontSize: 13,
+                                color: AppColors.gray800)),
                       ),
                       Expanded(
                         flex: 3,
                         child: TextField(
-                          controller: _controllers[c['code']],
+                          controller: _controllers[id],
                           keyboardType: TextInputType.number,
                           textAlign: TextAlign.right,
                           onChanged: (_) => setState(() {}),
@@ -186,13 +204,13 @@ class _SpendingInputPageState extends ConsumerState<SpendingInputPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('월 합계',
-                    style: TextStyle(fontSize: 13, color: AppColors.gray600)),
-                Text('${_total.toString().replaceAllMapped(
-                  RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-                      (m) => '${m[1]},',
-                )}원',
+                    style: TextStyle(
+                        fontSize: 13, color: AppColors.gray600)),
+                Text('${_comma(_total)}원',
                     style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.teal800)),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.teal800)),
               ],
             ),
           ),
@@ -210,12 +228,14 @@ class _SpendingInputPageState extends ConsumerState<SpendingInputPage> {
               ),
               child: _isSaving
                   ? const SizedBox(
-                width: 18, height: 18,
+                width: 18,
+                height: 18,
                 child: CircularProgressIndicator(
                     strokeWidth: 2, color: Colors.white),
               )
                   : const Text('저장하기',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                  style: TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w500)),
             ),
           ),
           const SizedBox(height: 24),

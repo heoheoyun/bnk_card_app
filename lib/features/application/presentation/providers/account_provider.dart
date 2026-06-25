@@ -1,55 +1,20 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/network/dio_client.dart';
 
-// ── Model ─────────────────────────────────────────────────────────
+import '../../data/datasource/account_remote_datasource.dart';
+import '../../domain/entities/account_model.dart';
 
-class AccountModel {
-  final int     accountId;
-  final String  accountNumber;
-  final String  accountType;
-  final String? accountAlias;
-  final String  accountStatus;
-
-  const AccountModel({
-    required this.accountId,
-    required this.accountNumber,
-    required this.accountType,
-    this.accountAlias,
-    required this.accountStatus,
-  });
-
-  factory AccountModel.fromJson(Map<String, dynamic> j) => AccountModel(
-    accountId:     (j['accountId'] as num).toInt(),
-    accountNumber: j['accountNumber'] as String,
-    accountType:   j['accountType']   as String,
-    accountAlias:  j['accountAlias']  as String?,
-    accountStatus: j['accountStatus'] as String,
-  );
-
-  String get displayName => accountAlias ?? accountNumber;
-}
-
-// ── Datasource ────────────────────────────────────────────────────
-
-class AccountRemoteDatasource {
-  final _dio = DioClient.instance;
-
-  Future<List<Map<String, dynamic>>> getMyAccounts() async {
-    final res = await _dio.get('/api/accounts/me');
-    return (res.data['data'] as List)
-        .map((e) => Map<String, dynamic>.from(e as Map))
-        .toList();
-  }
-}
-
-// ── Providers ─────────────────────────────────────────────────────
+// 기존에 account_provider.dart 만 import 하던 파일(credit_step3_applicant_page,
+// account_create_page 등)이 AccountModel / AccountRemoteDatasource 를 그대로
+// 사용할 수 있도록 재공개(re-export)한다. 덕분에 사용처 import 수정이 불필요하다.
+export '../../domain/entities/account_model.dart';
+export '../../data/datasource/account_remote_datasource.dart';
 
 final accountDatasourceProvider = Provider<AccountRemoteDatasource>(
       (_) => AccountRemoteDatasource(),
 );
 
 final myAccountsProvider = FutureProvider<List<AccountModel>>((ref) async {
-  final ds   = ref.watch(accountDatasourceProvider);
+  final ds = ref.watch(accountDatasourceProvider);
   final data = await ds.getMyAccounts();
-  return data.map((e) => AccountModel.fromJson(e)).toList();
+  return data.map(AccountModel.fromJson).toList();
 });

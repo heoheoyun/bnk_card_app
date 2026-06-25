@@ -6,6 +6,7 @@
 //  - 보유 카드는 표시 전용(탭 불가)
 //  - SafeArea + 하단 인셋 패딩으로 시스템 버튼 가림 방지
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -16,6 +17,8 @@ import '../../../../core/push/push_service.dart';
 import '../../../../shared/widgets/bnk_app_bar.dart';
 import '../../../../shared/widgets/bnk_bottom_nav.dart';
 import '../providers/mypage_provider.dart';
+
+
 
 class MyPagePage extends ConsumerStatefulWidget {
   const MyPagePage({super.key});
@@ -141,6 +144,13 @@ class _MyPagePageState extends ConsumerState<MyPagePage>
               child: Column(
                 children: [
                   _MenuTile(
+                    icon: Icons.account_balance_outlined,
+                    title: '내 계좌',
+                    subtitle: '보유 계좌·잔액 조회',
+                    onTap: () => context.push('/mypage/accounts'),
+                  ),
+                  const _TileDivider(),
+                  _MenuTile(
                     icon: Icons.bar_chart_outlined,
                     title: '소비 패턴',
                     subtitle: '지출 현황 등록/수정',
@@ -162,6 +172,13 @@ class _MyPagePageState extends ConsumerState<MyPagePage>
               title: '알림',
               child: Column(
                 children: [
+                  _MenuTile(
+                    icon: Icons.notifications_active_outlined,
+                    title: '알림함',
+                    subtitle: '받은 알림 확인',
+                    onTap: () => context.push('/notifications'),
+                  ),
+                  const _TileDivider(),
                   _SwitchTile(
                     icon: Icons.notifications_outlined,
                     title: '푸시 알림',
@@ -233,6 +250,7 @@ class _MyPagePageState extends ConsumerState<MyPagePage>
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true, // #5 시스템 내비게이션 바 가림 방지
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -294,9 +312,11 @@ class _MyPagePageState extends ConsumerState<MyPagePage>
   void _showChangePasswordSheet(BuildContext context) {
     final currentCtrl = TextEditingController();
     final newCtrl = TextEditingController();
+    final confirmCtrl = TextEditingController(); // #7 새 비밀번호 확인
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true, // #5 시스템 내비게이션 바 가림 방지
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -322,6 +342,12 @@ class _MyPagePageState extends ConsumerState<MyPagePage>
               obscureText: true,
               decoration: const InputDecoration(hintText: '새 비밀번호'),
             ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: confirmCtrl, // #7 확인 필드 (웹과 동일한 흐름)
+              obscureText: true,
+              decoration: const InputDecoration(hintText: '새 비밀번호 확인'),
+            ),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
@@ -330,14 +356,42 @@ class _MyPagePageState extends ConsumerState<MyPagePage>
                     backgroundColor: AppColors.teal600,
                     foregroundColor: Colors.white),
                 onPressed: () async {
+                  // 클라이언트 1차 검증 (웹과 동일)
+                  if (newCtrl.text != confirmCtrl.text) {
+                    ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
+                        content: Text('새 비밀번호와 확인이 일치하지 않습니다.')));
+                    return;
+                  }
+                  if (newCtrl.text == currentCtrl.text) {
+                    ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
+                        content: Text('현재 비밀번호와 다른 비밀번호를 입력해 주세요.')));
+                    return;
+                  }
                   final ds = ref.read(mypageDatasourceProvider);
                   try {
-                    await ds.changePassword(currentCtrl.text, newCtrl.text);
+                    // #7 서버 계약: currentPassword/newPassword/newPasswordConfirm
+                    await ds.changePassword(
+                        currentCtrl.text, newCtrl.text, confirmCtrl.text);
                     if (ctx.mounted) Navigator.pop(ctx);
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('비밀번호가 변경되었습니다.')),
                       );
+                    }
+                  } on DioException catch (e) {
+                    final code = e.response?.data is Map
+                        ? (e.response?.data as Map)['code']
+                        : null;
+                    final msg = switch (code) {
+                      'U009' => '새 비밀번호와 확인이 일치하지 않습니다.',
+                      'U003' => '현재 비밀번호가 올바르지 않습니다.',
+                    // PASSWORD_RECENTLY_USED — 실제 코드값은 서버 ErrorCode 확인
+                      'U011' => '최근 사용한 비밀번호는 다시 사용할 수 없습니다.',
+                      _ => '변경에 실패했습니다.',
+                    };
+                    if (ctx.mounted) {
+                      ScaffoldMessenger.of(ctx)
+                          .showSnackBar(SnackBar(content: Text(msg)));
                     }
                   } catch (_) {
                     if (ctx.mounted) {

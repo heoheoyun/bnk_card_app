@@ -99,7 +99,7 @@ class _PatternPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final nodePaint = Paint()..color = color.withOpacity(0.18);
+    final nodePaint = Paint()..color = color.withValues(alpha: 0.18);
     final nodeOnPaint = Paint()..color = color;
     final linePaint = Paint()
       ..color = color

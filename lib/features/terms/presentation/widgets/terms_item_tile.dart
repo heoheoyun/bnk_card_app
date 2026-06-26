@@ -78,19 +78,15 @@ class _TermsItemTileState extends State<TermsItemTile> {
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             onPressed: () async {
-              await showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.white,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                ),
-                builder: (context) => TermsFilesSheet(
-                  termsId: widget.terms.termsId,
-                  title:   widget.terms.title,
-                ),
+              // 끝까지 스크롤 후 '확인'을 누르면 true 반환 → 그때만 동의 허용
+              final read = await TermsFilesSheet.show(
+                context,
+                widget.terms.termsId,
+                widget.terms.title,
               );
-              if (mounted) setState(() => _viewed = true);
+              if (mounted && read == true) {
+                setState(() => _viewed = true);
+              }
             },
             child: Text(
               '보기',

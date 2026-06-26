@@ -292,15 +292,12 @@ class _StaticTermsTile extends StatefulWidget {
   final bool       agreed;
   final VoidCallback onToggle;
   final String     content;
-  final double     contentHeight;
-
   const _StaticTermsTile({
     required this.title,
     required this.isRequired,
     required this.agreed,
     required this.onToggle,
     required this.content,
-    this.contentHeight = 120,
   });
 
   @override
@@ -384,7 +381,7 @@ class _StaticTermsTileState extends State<_StaticTermsTile> {
 
           // 본문 스크롤 (#16 끝까지 읽어야 동의 가능)
           Container(
-            height: widget.contentHeight,
+            height: 200,
             padding: const EdgeInsets.all(12),
             child: SingleChildScrollView(
               controller: _scroll,

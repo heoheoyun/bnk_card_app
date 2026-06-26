@@ -123,8 +123,6 @@ class CreditApplicationNotifier extends StateNotifier<CreditApplicationState> {
     try {
       final draft = await _repo.getDraftApplication(cardId);
 
-      print('draft: $draft');
-      print('draft creditAppId: ${draft?.creditAppId}');
       if (draft == null) return 1; // DRAFT 없음 → step1부터
 
       // creditAppId 저장
@@ -204,6 +202,24 @@ class CreditApplicationNotifier extends StateNotifier<CreditApplicationState> {
       state = state.copyWith(isLoading: false, error: e.toString());
       return false;
     }
+  }
+
+  // STEP 2 → STEP 3 자동 반영용.
+  // 본인확인에서 받은 이름/주소/생년월일을 draftApplicantSnapshot 에 채워
+  // step3 폼이 비어 보이지 않도록 한다. (직업/소득 등 나머지는 step3에서 입력)
+  void prefillApplicantFromIdentity({
+    required String name,
+    required String address,
+    String? birthDate,
+  }) {
+    final base = state.draftApplicantSnapshot ??
+        const CreditApplicantSnapshot(
+          name: '', mobileNo: '', address: '', email: '',
+        );
+    state = state.copyWith(
+      draftApplicantSnapshot:
+      base.copyWith(name: name, address: address, birthDate: birthDate),
+    );
   }
 
   // STEP 3 - 기본정보 + 직업/소득

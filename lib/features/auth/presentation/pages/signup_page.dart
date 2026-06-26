@@ -627,7 +627,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
               _secTitle('추가 정보', optional: true),
               _lbl('직업'),
               DropdownButtonFormField<String>(
-                value: _selectedJob,
+                initialValue: _selectedJob,
                 hint: const Text('선택하지 않음',
                     style: TextStyle(fontSize: 13, color: AppColors.gray400)),
                 decoration: InputDecoration(
@@ -642,7 +642,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
               const SizedBox(height: 12),
               _lbl('소득 등급'),
               DropdownButtonFormField<String>(
-                value: _selectedIncome,
+                initialValue: _selectedIncome,
                 hint: const Text('선택하지 않음',
                     style: TextStyle(fontSize: 13, color: AppColors.gray400)),
                 decoration: InputDecoration(

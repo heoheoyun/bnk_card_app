@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../providers/card_list_provider.dart';
-import '../../../terms/presentation/providers/terms_provider.dart';
 import '../../../terms/presentation/widgets/terms_files_sheet.dart';
 
 class CardTermsSection extends ConsumerWidget {

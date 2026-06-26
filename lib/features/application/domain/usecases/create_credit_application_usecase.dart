@@ -1,4 +1,3 @@
-import '../entities/credit_application.dart';
 import '../repositories/credit_application_repository.dart';
 
 class CreateCreditApplicationUsecase {

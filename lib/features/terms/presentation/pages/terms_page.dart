@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/widgets/bnk_app_bar.dart';
 import '../../../../shared/widgets/bnk_button.dart';
 import '../../data/models/terms_model.dart';

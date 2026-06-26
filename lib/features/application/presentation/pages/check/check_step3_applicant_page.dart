@@ -323,7 +323,7 @@ class _Dropdown extends StatelessWidget {
         Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
-          value: value,
+          initialValue: value,
           hint: const Text('선택해 주세요',
               style: TextStyle(fontSize: 13, color: AppColors.gray400)),
           decoration: InputDecoration(

@@ -45,7 +45,6 @@ class _CreditStep4PaymentPageState
   @override
   Widget build(BuildContext context) {
     final appState    = ref.watch(creditApplicationProvider);
-    final appNotifier = ref.read(creditApplicationProvider.notifier);
 
     return Scaffold(
       appBar: const BnkAppBar(title: '카드 신청'),
@@ -84,7 +83,7 @@ class _CreditStep4PaymentPageState
                   _SectionTitle('결제일'),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<int>(
-                    value: _paymentDay,
+                    initialValue: _paymentDay,
                     decoration: _inputDecoration(),
                     items: [1, 5, 10, 15, 20, 25].map((d) =>
                         DropdownMenuItem(value: d, child: Text('매월 $d일')),
@@ -143,7 +142,7 @@ class _CreditStep4PaymentPageState
                   _SectionTitle('신청 한도'),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<int>(
-                    value: _requestedLimit,
+                    initialValue: _requestedLimit,
                     decoration: _inputDecoration(),
                     items: [
                       300000, 500000, 1000000, 3000000, 5000000

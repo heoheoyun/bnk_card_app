@@ -2,6 +2,7 @@
 ///
 /// Spring CreditCardApplicationResponse + CreditApplicantSnapshotDto + PaymentSnapshotDto 기반
 /// PaymentSnapshot은 체크카드 Entity에서도 import해서 공용으로 사용한다.
+library;
 
 // ── 신청 상태 ──────────────────────────────────────────────────────
 
@@ -87,6 +88,9 @@ class CreditApplicantSnapshot {
   /// 자차 보유 여부 Y/N
   final String? hasOwnVehicle;
 
+  /// 생년월일 (yyyy-MM-dd) — step2 주민번호에서 파생, 한도 산정용
+  final String? birthDate;
+
   const CreditApplicantSnapshot({
     required this.name,
     this.nameEn,
@@ -97,7 +101,35 @@ class CreditApplicantSnapshot {
     this.healthInsuranceType,
     this.hasRealEstate,
     this.hasOwnVehicle,
+    this.birthDate,
   });
+
+  /// step2(본인확인) 정보를 step3(신청정보)로 옮길 때 사용
+  CreditApplicantSnapshot copyWith({
+    String? name,
+    String? nameEn,
+    String? mobileNo,
+    String? address,
+    String? email,
+    String? incomeType,
+    String? healthInsuranceType,
+    String? hasRealEstate,
+    String? hasOwnVehicle,
+    String? birthDate,
+  }) {
+    return CreditApplicantSnapshot(
+      name:                name ?? this.name,
+      nameEn:              nameEn ?? this.nameEn,
+      mobileNo:            mobileNo ?? this.mobileNo,
+      address:             address ?? this.address,
+      email:               email ?? this.email,
+      incomeType:          incomeType ?? this.incomeType,
+      healthInsuranceType: healthInsuranceType ?? this.healthInsuranceType,
+      hasRealEstate:       hasRealEstate ?? this.hasRealEstate,
+      hasOwnVehicle:       hasOwnVehicle ?? this.hasOwnVehicle,
+      birthDate:           birthDate ?? this.birthDate,
+    );
+  }
 }
 
 // ── 신용카드 신청 Entity ───────────────────────────────────────────

@@ -60,6 +60,21 @@ class _CreditStep2IdentityPageState
     return age >= 19;
   }
 
+  /// 주민번호(앞6+성별코드1)에서 생년월일(yyyy-MM-dd) 파생 — 한도 산정용
+  String? _birthDateFromResidentNo(String? r) {
+    if (r == null || r.length < 7) return null;
+    final f = r.substring(0, 6);
+    final g = r.substring(6, 7);
+    final century = switch (g) {
+      '1' || '2' || '7' || '8' => 1900,
+      '3' || '4' || '9' || '0' => 2000,
+      _ => null,
+    };
+    if (century == null) return null;
+    final y = century + int.parse(f.substring(0, 2));
+    return '$y-${f.substring(2, 4)}-${f.substring(4, 6)}';
+  }
+
   bool get _canNext =>
       _idType != null &&
           _idName != null && _idName!.isNotEmpty &&
@@ -195,6 +210,14 @@ class _CreditStep2IdentityPageState
                     );
 
                     if (!verified || !context.mounted) return; // 실패면 여기서 차단
+
+                    // step3 신청정보 폼 자동 반영을 위해 snapshot 채움.
+                    // (creditApplicationProvider 에 아래 메서드 + CreditApplicantSnapshot.copyWith 필요)
+                    appNotifier.prefillApplicantFromIdentity(
+                      name:      _idName!,
+                      address:   _idAddress!,
+                      birthDate: _birthDateFromResidentNo(_idResidentNo),
+                    );
 
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(

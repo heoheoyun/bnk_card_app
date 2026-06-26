@@ -1,7 +1,6 @@
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/constants/api_paths.dart';
 import '../../domain/entities/credit_application.dart';
-import '../../domain/entities/check_application.dart';
 import '../models/credit_application_model.dart';
 import '../models/credit_application_request_model.dart';
 

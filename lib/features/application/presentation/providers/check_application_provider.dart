@@ -184,6 +184,21 @@ class CheckApplicationNotifier extends StateNotifier<CheckApplicationState> {
   void clearError() => state = state.copyWith(error: null);
 
   void reset() => state = const CheckApplicationState();
+
+  void prefillApplicantFromIdentity({
+    required String name,
+    required String address,
+    String? birthDate,
+  }) {
+    final base = state.draftApplicantSnapshot ??
+        const CheckApplicantSnapshot(
+          name: '', mobileNo: '', address: '', email: '',
+        );
+    state = state.copyWith(
+      draftApplicantSnapshot:
+      base.copyWith(name: name, address: address, birthDate: birthDate),
+    );
+  }
 }
 
 // ── Provider ──────────────────────────────────────────────────────
@@ -196,3 +211,4 @@ StateNotifierProvider.autoDispose<CheckApplicationNotifier, CheckApplicationStat
     ref.read(checkApplicationRepositoryProvider),
   ),
 );
+

@@ -372,9 +372,9 @@ class _MyPagePageState extends ConsumerState<MyPagePage>
                     // #7 서버 계약: currentPassword/newPassword/newPasswordConfirm
                     await ds.changePassword(
                         currentCtrl.text, newCtrl.text, confirmCtrl.text);
-                    if (ctx.mounted) Navigator.pop(ctx);
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                    if (ctx.mounted) {
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(ctx).showSnackBar(
                         const SnackBar(content: Text('비밀번호가 변경되었습니다.')),
                       );
                     }

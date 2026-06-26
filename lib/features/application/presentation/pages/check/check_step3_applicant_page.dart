@@ -8,6 +8,7 @@ import '../../../../../shared/widgets/bnk_button.dart';
 import '../../../domain/entities/check_application.dart';
 import '../../../presentation/providers/check_application_provider.dart';
 import '../../../presentation/widgets/application_step_indicator.dart';
+import 'package:bnk_card_app/shared/widgets/address_search_field.dart';
 
 class CheckStep3ApplicantPage extends ConsumerStatefulWidget {
   final int cardId;
@@ -25,6 +26,8 @@ class _CheckStep3ApplicantPageState
   final _nameEnCtrl    = TextEditingController();
   final _mobileCtrl    = TextEditingController();
   final _addressCtrl   = TextEditingController();
+  final _postcodeCtrl   = TextEditingController();
+  final _addrDetailCtrl = TextEditingController();
   final _emailCtrl     = TextEditingController();
   final _birthDateCtrl = TextEditingController();
 
@@ -38,6 +41,8 @@ class _CheckStep3ApplicantPageState
     _nameEnCtrl.dispose();
     _mobileCtrl.dispose();
     _addressCtrl.dispose();
+    _postcodeCtrl.dispose();
+    _addrDetailCtrl.dispose();
     _emailCtrl.dispose();
     _birthDateCtrl.dispose();
     super.dispose();
@@ -105,11 +110,11 @@ class _CheckStep3ApplicantPageState
                   const SizedBox(height: 16),
 
                   // 주소
-                  _Field(
-                    label: '주소',
-                    controller: _addressCtrl,
-                    hint: '주소를 입력해 주세요',
-                    onChanged: (_) => setState(() {}),
+                  AddressSearchField(
+                    postcodeController: _postcodeCtrl,
+                    addressController:  _addressCtrl,
+                    detailController:   _addrDetailCtrl,
+                    onChanged: () => setState(() {}),
                   ),
                   const SizedBox(height: 16),
 
@@ -211,7 +216,8 @@ class _CheckStep3ApplicantPageState
                           ? null
                           : _nameEnCtrl.text.trim(),
                       mobileNo:           _mobileCtrl.text.trim(),
-                      address:            _addressCtrl.text.trim(),
+                      address: [_addressCtrl.text.trim(), _addrDetailCtrl.text.trim()]
+                          .where((s) => s.isNotEmpty).join(' '),
                       email:              _emailCtrl.text.trim(),
                       birthDate:          _birthDateCtrl.text.trim(),
                       jobType:            _jobType,

@@ -57,6 +57,8 @@ dependencies:
 
   local_auth: ^2.3.0
   crypto: ^3.0.6
+  # 카카오톡 주소 API 사용
+  webview_flutter: ^4.10.0
 
   # ── FCM 푸시 알림 ─────────────────────────────────────────────
   firebase_core: ^3.6.0

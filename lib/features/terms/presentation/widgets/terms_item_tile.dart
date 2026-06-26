@@ -3,12 +3,7 @@ import '../../data/models/terms_model.dart';
 import '../../../../core/constants/app_colors.dart';
 import 'terms_files_sheet.dart';
 
-/// 약관 목록의 개별 항목 타일.
-///
-/// - 필수/선택 배지 표시
-/// - 체크 토글
-/// - '보기' 버튼 → TermsDetailBottomSheet 호출 (선택)
-class TermsItemTile extends StatelessWidget {
+class TermsItemTile extends StatefulWidget {
   final TermsModel  terms;
   final bool        agreed;
   final VoidCallback onToggle;
@@ -21,6 +16,13 @@ class TermsItemTile extends StatelessWidget {
   });
 
   @override
+  State<TermsItemTile> createState() => _TermsItemTileState();
+}
+
+class _TermsItemTileState extends State<TermsItemTile> {
+  bool _viewed = false;
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -28,10 +30,23 @@ class TermsItemTile extends StatelessWidget {
         children: [
           // 체크박스
           GestureDetector(
-            onTap: onToggle,
+            onTap: () {
+              if (!_viewed) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('약관을 먼저 확인해 주세요.'),
+                    duration: Duration(seconds: 1),
+                  ),
+                );
+                return;
+              }
+              widget.onToggle();
+            },
             child: Icon(
-              agreed ? Icons.check_circle : Icons.check_circle_outline,
-              color: agreed ? AppColors.primary : Colors.grey.shade400,
+              widget.agreed ? Icons.check_circle : Icons.check_circle_outline,
+              color: !_viewed
+                  ? Colors.grey.shade200
+                  : (widget.agreed ? AppColors.primary : Colors.grey.shade400),
               size: 24,
             ),
           ),
@@ -41,11 +56,11 @@ class TermsItemTile extends StatelessWidget {
           Expanded(
             child: Row(
               children: [
-                _RequiredBadge(required: terms.required),
+                _RequiredBadge(required: widget.terms.required),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    terms.title,
+                    widget.terms.title,
                     style: const TextStyle(fontSize: 14),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -62,23 +77,26 @@ class TermsItemTile extends StatelessWidget {
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            onPressed: () => showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              backgroundColor: Colors.white,
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-              ),
-              builder: (context) => TermsFilesSheet(
-                termsId: terms.termsId,
-                title:   terms.title,
-              ),
-            ),
-            child: const Text(
+            onPressed: () async {
+              await showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.white,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                ),
+                builder: (context) => TermsFilesSheet(
+                  termsId: widget.terms.termsId,
+                  title:   widget.terms.title,
+                ),
+              );
+              if (mounted) setState(() => _viewed = true);
+            },
+            child: Text(
               '보기',
               style: TextStyle(
                 fontSize: 12,
-                color: AppColors.textMuted,
+                color: _viewed ? AppColors.primary : AppColors.textMuted,
                 decoration: TextDecoration.underline,
               ),
             ),

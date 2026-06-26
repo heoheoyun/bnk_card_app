@@ -32,18 +32,11 @@ class _CreditStep1TermsPageState extends ConsumerState<CreditStep1TermsPage> {
     // 페이지 진입 시 약관 동의 상태 초기화
     Future.microtask(() async {
       ref.read(termsAgreeProvider.notifier).reset();
-
-      final notifier = ref.read(creditApplicationProvider.notifier);
-
-      // #17 back 으로 step1 재진입 시에는 자동 전진하지 않는다(먹통 바운스 차단)
-      if (notifier.resumeHandled) return;
-
       // DRAFT 확인 → 단계 분기
-      final step = await notifier.checkDraftAndGetStep(widget.cardId);
+      final step = await ref.read(creditApplicationProvider.notifier)
+          .checkDraftAndGetStep(widget.cardId);
 
       if (!mounted) return;
-
-      notifier.markResumeHandled(); // 자동 전진 1회만 허용
 
       if (step == 2) {
         context.pushReplacement('/application/credit/step2', extra: widget.cardId);
@@ -299,6 +292,7 @@ class _StaticTermsTile extends StatefulWidget {
   final bool       agreed;
   final VoidCallback onToggle;
   final String     content;
+  final double     contentHeight;
 
   const _StaticTermsTile({
     required this.title,
@@ -306,6 +300,7 @@ class _StaticTermsTile extends StatefulWidget {
     required this.agreed,
     required this.onToggle,
     required this.content,
+    this.contentHeight = 120,
   });
 
   @override
@@ -389,14 +384,13 @@ class _StaticTermsTileState extends State<_StaticTermsTile> {
 
           // 본문 스크롤 (#16 끝까지 읽어야 동의 가능)
           Container(
-            height: 120,
+            height: widget.contentHeight,
             padding: const EdgeInsets.all(12),
             child: SingleChildScrollView(
               controller: _scroll,
               child: Text(
-                widget.content,
-                style: const TextStyle(
-                    fontSize: 12, color: AppColors.gray600, height: 1.7),
+                widget.content.replaceAll(RegExp(r'\s+'), ' ').trim(),
+                style: const TextStyle(fontSize: 12, color: AppColors.gray600, height: 1.7),
               ),
             ),
           ),

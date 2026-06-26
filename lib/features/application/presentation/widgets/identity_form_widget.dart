@@ -128,7 +128,7 @@ class _IdentityFormWidgetState extends State<IdentityFormWidget> {
                 onChanged:    (_) => _notify(),
                 decoration: InputDecoration(
                   counterText: '',
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: const BorderSide(color: AppColors.gray200),

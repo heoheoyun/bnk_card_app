@@ -42,7 +42,7 @@ class _CheckStep2IdentityPageState
     return PopScope(
       canPop: false,
       child: Scaffold(
-        appBar: const BnkAppBar(title: '카드 신청'),
+        appBar: const BnkAppBar(title: '카드 신청', showBack: false),
         body: Column(
           children: [
             ApplicationStepIndicator(currentStep: 2, totalSteps: 4),
@@ -63,6 +63,30 @@ class _CheckStep2IdentityPageState
                       style: TextStyle(fontSize: 13, color: AppColors.gray600),
                     ),
                     const SizedBox(height: 24),
+
+                    // 안내 문구 추가
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.teal50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.teal200),
+                      ),
+                      child: const Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.info_outline, color: AppColors.teal600, size: 18),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '만 19세 미만 미성년자는 온라인 신청이 불가합니다.\n가까운 BNK 부산은행 영업점을 방문해 주세요.',
+                              style: TextStyle(fontSize: 12, color: AppColors.teal800, height: 1.5),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
       
                     IdentityFormWidget(
                       onChanged: ({

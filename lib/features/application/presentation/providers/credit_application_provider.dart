@@ -112,6 +112,9 @@ class CreditApplicationNotifier extends StateNotifier<CreditApplicationState> {
   Future<int> checkDraftAndGetStep(int cardId) async {
     try {
       final draft = await _repo.getDraftApplication(cardId);
+
+      print('draft: $draft');
+      print('draft creditAppId: ${draft?.creditAppId}');
       if (draft == null) return 1; // DRAFT 없음 → step1부터
 
       // creditAppId 저장
@@ -158,7 +161,7 @@ class CreditApplicationNotifier extends StateNotifier<CreditApplicationState> {
   }
 
   // STEP 2 - 본인확인
-  Future<void> verifyIdentity({
+  Future<bool> verifyIdentity({
     required String idType,
     required String idName,
     required String idResidentNo,
@@ -167,7 +170,7 @@ class CreditApplicationNotifier extends StateNotifier<CreditApplicationState> {
   }) async {
     state = state.copyWith(isLoading: true);
     try {
-      await _repo.verifyIdentity(
+      final result = await _repo.verifyIdentity(
         creditAppId:  state.creditAppId!,
         idType:       idType,
         idName:       idName,
@@ -175,9 +178,21 @@ class CreditApplicationNotifier extends StateNotifier<CreditApplicationState> {
         idAddress:    idAddress,
         idIssueDate:  idIssueDate,
       );
+
+      // 서버가 'N' 반환하면 실패 처리
+      if (result != 'Y') {
+        state = state.copyWith(
+          isLoading: false,
+          error: '본인확인에 실패했습니다.',
+        );
+        return false;
+      }
+
       state = state.copyWith(currentStep: 3, isLoading: false);
+      return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
     }
   }
 

@@ -37,6 +37,32 @@ class _CreditStep3ApplicantPageState
   int?    _linkedAccountId;
 
   @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      final appState = ref.read(creditApplicationProvider);
+      final draft    = appState.draftApplicantSnapshot;
+      if (draft == null) return;
+
+      setState(() {
+        _nameCtrl.text    = draft.name;
+        _nameEnCtrl.text  = draft.nameEn ?? '';
+        _mobileCtrl.text  = draft.mobileNo;
+        _addressCtrl.text = draft.address;
+        _emailCtrl.text   = draft.email;
+        _incomeType          = draft.incomeType;
+        _healthInsuranceType = draft.healthInsuranceType;
+        _hasRealEstate       = draft.hasRealEstate ?? 'N';
+        _hasOwnVehicle       = draft.hasOwnVehicle ?? 'N';
+        _annualIncomeBand    = appState.draftAnnualIncomeBand;
+        _creditScoreBand     = appState.draftCreditScoreBand;
+        _linkedAccountId     = appState.draftLinkedAccountId;
+      });
+    });
+  }
+
+
+  @override
   void dispose() {
     _nameCtrl.dispose();
     _nameEnCtrl.dispose();
@@ -64,7 +90,7 @@ class _CreditStep3ApplicantPageState
     final accountAsync = ref.watch(myAccountsProvider);
 
     return Scaffold(
-      appBar: const BnkAppBar(title: '카드 신청'),
+      appBar: const BnkAppBar(title: '카드 신청', showBack: false),
       body: Column(
         children: [
           ApplicationStepIndicator(currentStep: 3, totalSteps: 5),
@@ -123,14 +149,14 @@ class _CreditStep3ApplicantPageState
                           hint: '이름을 입력해 주세요', onChanged: (_) => setState(() {})),
                       const SizedBox(height: 16),
 
-                      // 영문 이름 (선택)
-                      _Field(label: '영문 이름 (선택)', controller: _nameEnCtrl,
+                      // 영문 이름
+                      _Field(label: '영문 이름', controller: _nameEnCtrl,
                           hint: 'HONG GILDONG', onChanged: (_) => setState(() {})),
                       const SizedBox(height: 16),
 
                       // 휴대폰 번호
                       _Field(label: '휴대폰 번호', controller: _mobileCtrl,
-                          hint: '010-0000-0000',
+                          hint: '-없이 숫자만 입력',
                           keyboardType: TextInputType.phone,
                           onChanged: (_) => setState(() {})),
                       const SizedBox(height: 16),
@@ -158,10 +184,11 @@ class _CreditStep3ApplicantPageState
                         label: '직업 구분',
                         value: _incomeType,
                         items: const {
-                          'EMPLOYED':    '직장인',
+                          'EMPLOYED':      '직장인',
                           'SELF_EMPLOYED': '자영업자',
-                          'PROFESSIONAL': '전문직',
-                          'OTHER':       '기타',
+                          'STUDENT':       '학생',
+                          'UNEMPLOYED':    '무직/전업주부',
+                          'OTHER':         '기타',
                         },
                         onChanged: (v) => setState(() => _incomeType = v),
                       ),
@@ -172,8 +199,9 @@ class _CreditStep3ApplicantPageState
                         label: '건강보험 유형',
                         value: _healthInsuranceType,
                         items: const {
-                          'EMPLOYEE':  '직장가입자',
-                          'REGIONAL':  '지역가입자',
+                          'EMPLOYEE':  '직장가입자',  // 직장인, 공무원
+                          'REGIONAL':  '지역가입자',  // 자영업자, 프리랜서, 무직
+                          'DEPENDENT': '피부양자',    // 배우자/부모 등 가족 직장보험에 올라간 경우
                         },
                         onChanged: (v) => setState(() => _healthInsuranceType = v),
                       ),
@@ -199,8 +227,8 @@ class _CreditStep3ApplicantPageState
                         value: _creditScoreBand,
                         items: const {
                           'HIGH': '800점 이상',
-                          'MID':  '650점 ~ 799점',
-                          'LOW':  '649점 이하',
+                          'MID':  '600점 ~ 800점',
+                          'LOW':  '600점 이하',
                         },
                         onChanged: (v) => setState(() => _creditScoreBand = v),
                       ),
@@ -244,9 +272,25 @@ class _CreditStep3ApplicantPageState
 
                       if (appState.error != null) ...[
                         const SizedBox(height: 16),
-                        Text(
-                          appState.error!,
-                          style: const TextStyle(fontSize: 13, color: Colors.red),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.red.shade200),
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.error_outline, color: Colors.red, size: 20),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+                                  style: TextStyle(fontSize: 13, color: Colors.red),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                       const SizedBox(height: 24),

@@ -32,6 +32,27 @@ class _CheckStep3ApplicantPageState
   String? _fundSource;
 
   @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      final appState = ref.read(checkApplicationProvider);
+      final draft    = appState.draftApplicantSnapshot;
+      if (draft == null) return;
+
+      setState(() {
+        _nameCtrl.text    = draft.name;
+        _nameEnCtrl.text  = draft.nameEn ?? '';
+        _mobileCtrl.text  = draft.mobileNo;
+        _addressCtrl.text = draft.address;
+        _emailCtrl.text   = draft.email;
+        _jobType            = draft.jobType;
+        _transactionPurpose = draft.transactionPurpose;
+        _fundSource         = draft.fundSource;
+      });
+    });
+  }
+
+  @override
   void dispose() {
     _nameCtrl.dispose();
     _nameEnCtrl.dispose();
@@ -55,154 +76,174 @@ class _CheckStep3ApplicantPageState
     final appState    = ref.watch(checkApplicationProvider);
     final appNotifier = ref.read(checkApplicationProvider.notifier);
 
-    return Scaffold(
-      appBar: const BnkAppBar(title: '카드 신청'),
-      body: Column(
-        children: [
-          ApplicationStepIndicator(currentStep: 3, totalSteps: 4),
-
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '기본정보',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // 이름
-                  _Field(label: '이름', controller: _nameCtrl,
-                      hint: '이름을 입력해 주세요',
-                      onChanged: (_) => setState(() {})),
-                  const SizedBox(height: 16),
-
-                  // 영문 이름 (선택)
-                  _Field(label: '영문 이름 (선택)', controller: _nameEnCtrl,
-                      hint: 'HONG GILDONG',
-                      onChanged: (_) => setState(() {})),
-                  const SizedBox(height: 16),
-
-                  // 휴대폰 번호
-                  _Field(label: '휴대폰 번호', controller: _mobileCtrl,
-                      hint: '010-0000-0000',
-                      keyboardType: TextInputType.phone,
-                      onChanged: (_) => setState(() {})),
-                  const SizedBox(height: 16),
-
-                  // 주소
-                  _Field(label: '주소', controller: _addressCtrl,
-                      hint: '주소를 입력해 주세요',
-                      onChanged: (_) => setState(() {})),
-                  const SizedBox(height: 16),
-
-                  // 이메일
-                  _Field(label: '이메일', controller: _emailCtrl,
-                      hint: 'example@email.com',
-                      keyboardType: TextInputType.emailAddress,
-                      onChanged: (_) => setState(() {})),
-                  const SizedBox(height: 24),
-
-                  const Text(
-                    '거래 정보',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // 직업 구분
-                  _Dropdown(
-                    label: '직업 구분',
-                    value: _jobType,
-                    items: const {
-                      'EMPLOYED':      '직장인',
-                      'SELF_EMPLOYED': '자영업자',
-                      'STUDENT':       '학생',
-                      'HOUSEWIFE':     '주부',
-                      'OTHER':         '기타',
-                    },
-                    onChanged: (v) => setState(() => _jobType = v),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // 거래 목적
-                  _Dropdown(
-                    label: '거래 목적',
-                    value: _transactionPurpose,
-                    items: const {
-                      'SALARY':       '급여이체',
-                      'LIVING':       '생활비',
-                      'SAVINGS':      '저축',
-                      'BUSINESS':     '사업',
-                      'OTHER':        '기타',
-                    },
-                    onChanged: (v) => setState(() => _transactionPurpose = v),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // 자금 출처
-                  _Dropdown(
-                    label: '자금 출처',
-                    value: _fundSource,
-                    items: const {
-                      'LABOR_INCOME':    '근로소득',
-                      'BUSINESS_INCOME': '사업소득',
-                      'PENSION':         '연금',
-                      'INHERITANCE':     '상속/증여',
-                      'OTHER':           '기타',
-                    },
-                    onChanged: (v) => setState(() => _fundSource = v),
-                  ),
-
-                  if (appState.error != null) ...[
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        appBar: const BnkAppBar(title: '카드 신청', showBack: false),
+        body: Column(
+          children: [
+            ApplicationStepIndicator(currentStep: 3, totalSteps: 4),
+      
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '기본정보',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 24),
+      
+                    // 이름
+                    _Field(label: '이름', controller: _nameCtrl,
+                        hint: '이름을 입력해 주세요',
+                        onChanged: (_) => setState(() {})),
                     const SizedBox(height: 16),
-                    Text(
-                      appState.error!,
-                      style: const TextStyle(fontSize: 13, color: Colors.red),
+      
+                    // 영문 이름 (선택)
+                    _Field(label: '영문 이름', controller: _nameEnCtrl,
+                        hint: 'HONG GILDONG',
+                        onChanged: (_) => setState(() {})),
+                    const SizedBox(height: 16),
+      
+                    // 휴대폰 번호
+                    _Field(label: '휴대폰 번호', controller: _mobileCtrl,
+                        hint: '-없이 숫자만 입력',
+                        keyboardType: TextInputType.phone,
+                        onChanged: (_) => setState(() {})),
+                    const SizedBox(height: 16),
+      
+                    // 주소
+                    _Field(label: '주소', controller: _addressCtrl,
+                        hint: '주소를 입력해 주세요',
+                        onChanged: (_) => setState(() {})),
+                    const SizedBox(height: 16),
+      
+                    // 이메일
+                    _Field(label: '이메일', controller: _emailCtrl,
+                        hint: 'example@email.com',
+                        keyboardType: TextInputType.emailAddress,
+                        onChanged: (_) => setState(() {})),
+                    const SizedBox(height: 24),
+      
+                    const Text(
+                      '거래 정보',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                     ),
+                    const SizedBox(height: 16),
+      
+                    // 직업 구분
+                    _Dropdown(
+                      label: '직업 구분',
+                      value: _jobType,
+                      items: const {
+                        'EMPLOYED':      '직장인',
+                        'SELF_EMPLOYED': '자영업자',
+                        'STUDENT':       '학생',
+                        'HOUSEWIFE':     '주부',
+                        'OTHER':         '기타',
+                      },
+                      onChanged: (v) => setState(() => _jobType = v),
+                    ),
+                    const SizedBox(height: 16),
+      
+                    // 거래 목적
+                    _Dropdown(
+                      label: '거래 목적',
+                      value: _transactionPurpose,
+                      items: const {
+                        'SALARY':       '급여이체',
+                        'LIVING':       '생활비',
+                        'SAVINGS':      '저축',
+                        'INVESTMENT':   '투자',
+                        'OTHER':        '기타',
+                      },
+                      onChanged: (v) => setState(() => _transactionPurpose = v),
+                    ),
+                    const SizedBox(height: 16),
+      
+                    // 자금 출처
+                    _Dropdown(
+                      label: '자금 출처',
+                      value: _fundSource,
+                      items: const {
+                        'LABOR_INCOME':    '근로소득',
+                        'BUSINESS_INCOME': '사업소득',
+                        'ALLOWANCE':       '용돈',
+                        'PENSION':         '연금',
+                        'INHERITANCE':     '상속/증여',
+                        'OTHER':           '기타',
+                      },
+                      onChanged: (v) => setState(() => _fundSource = v),
+                    ),
+      
+                    if (appState.error != null) ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.red.shade200),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.error_outline, color: Colors.red, size: 20),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                '오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+                                style: TextStyle(fontSize: 13, color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
                   ],
-                  const SizedBox(height: 24),
-                ],
+                ),
               ),
             ),
-          ),
-
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: BnkButton(
-                label:     '다음',
-                isLoading: appState.isLoading,
-                onPressed: _canNext
-                    ? () async {
-                  await appNotifier.saveApplicantInfo(
-                    applicantSnapshot: CheckApplicantSnapshot(
-                      name:               _nameCtrl.text.trim(),
-                      nameEn:             _nameEnCtrl.text.trim().isEmpty
-                          ? null
-                          : _nameEnCtrl.text.trim(),
-                      mobileNo:           _mobileCtrl.text.trim(),
-                      address:            _addressCtrl.text.trim(),
-                      email:              _emailCtrl.text.trim(),
-                      jobType:            _jobType,
-                      transactionPurpose: _transactionPurpose,
-                      fundSource:         _fundSource,
-                    ),
-                  );
-
-                  if (context.mounted && appState.error == null) {
-                    context.push(
-                      '/application/check/step4',
-                      extra: widget.cardId,
+      
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: BnkButton(
+                  label:     '다음',
+                  isLoading: appState.isLoading,
+                  onPressed: _canNext
+                      ? () async {
+                    await appNotifier.saveApplicantInfo(
+                      applicantSnapshot: CheckApplicantSnapshot(
+                        name:               _nameCtrl.text.trim(),
+                        nameEn:             _nameEnCtrl.text.trim().isEmpty
+                            ? null
+                            : _nameEnCtrl.text.trim(),
+                        mobileNo:           _mobileCtrl.text.trim(),
+                        address:            _addressCtrl.text.trim(),
+                        email:              _emailCtrl.text.trim(),
+                        jobType:            _jobType,
+                        transactionPurpose: _transactionPurpose,
+                        fundSource:         _fundSource,
+                      ),
                     );
+      
+                    if (context.mounted && appState.error == null) {
+                      context.push(
+                        '/application/check/step4',
+                        extra: widget.cardId,
+                      );
+                    }
                   }
-                }
-                    : null,
+                      : null,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

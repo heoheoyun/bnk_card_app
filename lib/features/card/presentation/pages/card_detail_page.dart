@@ -434,6 +434,7 @@ class _ApplyBar extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10)),
               ),
               onPressed: () {
+                print('=== 신청 버튼 클릭 cardId=$cardId cardType=${card?.cardType} ===');
                 if (card == null) return;
                 if (card!.cardType == 'CREDIT') {
                   context.push('/application/credit/step1', extra: cardId);

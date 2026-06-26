@@ -216,6 +216,7 @@ class _CheckStep1TermsPageState extends ConsumerState<CheckStep1TermsPage> {
                       agreed: _marketingAgreed,
                       onToggle: () => setState(() => _marketingAgreed = !_marketingAgreed),
                       content: '마케팅 정보 수신에 동의하시면 BNK 부산은행의 다양한 혜택과 이벤트 정보를 받아보실 수 있습니다.',
+                      contentHeight: 65
                     ),
                   ],
                 );
@@ -290,6 +291,7 @@ class _StaticTermsTile extends StatelessWidget {
   final bool       agreed;
   final VoidCallback onToggle;
   final String     content;
+  final double     contentHeight;
 
   const _StaticTermsTile({
     required this.title,
@@ -297,6 +299,7 @@ class _StaticTermsTile extends StatelessWidget {
     required this.agreed,
     required this.onToggle,
     required this.content,
+    this.contentHeight = 120,
   });
 
   @override
@@ -348,7 +351,7 @@ class _StaticTermsTile extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             child: SingleChildScrollView(
               child: Text(
-                content,
+                content.replaceAll(RegExp(r'\s+'), ' ').trim(),
                 style: const TextStyle(fontSize: 12, color: AppColors.gray600, height: 1.7),
               ),
             ),

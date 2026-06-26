@@ -86,7 +86,7 @@ class _CreditStep4PaymentPageState
                   DropdownButtonFormField<int>(
                     value: _paymentDay,
                     decoration: _inputDecoration(),
-                    items: [1, 5, 10, 14, 15, 20, 25].map((d) =>
+                    items: [1, 5, 10, 15, 20, 25].map((d) =>
                         DropdownMenuItem(value: d, child: Text('매월 $d일')),
                     ).toList(),
                     onChanged: (v) => setState(() => _paymentDay = v ?? 15),
@@ -186,9 +186,25 @@ class _CreditStep4PaymentPageState
 
                   if (appState.error != null) ...[
                     const SizedBox(height: 16),
-                    Text(
-                      appState.error!,
-                      style: const TextStyle(fontSize: 13, color: Colors.red),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red.shade200),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.error_outline, color: Colors.red, size: 20),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+                              style: TextStyle(fontSize: 13, color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                   const SizedBox(height: 24),

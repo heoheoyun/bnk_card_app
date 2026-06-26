@@ -5,6 +5,8 @@ import '../../../../core/constants/app_colors.dart';
 import '../../data/models/signup_request_model.dart';
 import '../providers/auth_provider.dart';
 import '../../../terms/presentation/providers/terms_provider.dart';
+import 'package:bnk_card_app/shared/widgets/kakao_address_search_page.dart';
+
 class SignupPage extends ConsumerStatefulWidget {
   const SignupPage({super.key});
 
@@ -26,10 +28,11 @@ class _SignupPageState extends ConsumerState<SignupPage> {
   final _pwConfirmCtrl     = TextEditingController();
   final _nameCtrl          = TextEditingController();
   final _phoneCtrl         = TextEditingController();
-  final _creditCtrl        = TextEditingController();
   final _residentFrontCtrl = TextEditingController();
   final _genderCodeCtrl    = TextEditingController();
   final _addressCtrl       = TextEditingController();
+  final _postcodeCtrl   = TextEditingController(); // 우편번호
+  final _addrDetailCtrl = TextEditingController(); // 상세주소
 
   bool _obscurePw        = true;
   bool _obscurePwConfirm = true;
@@ -55,10 +58,11 @@ class _SignupPageState extends ConsumerState<SignupPage> {
     _emailCtrl.dispose(); _codeCtrl.dispose();
     _pwCtrl.dispose(); _pwConfirmCtrl.dispose();
     _nameCtrl.dispose(); _phoneCtrl.dispose();
-    _creditCtrl.dispose();
     _residentFrontCtrl.dispose();
     _genderCodeCtrl.dispose();
     _addressCtrl.dispose();
+    _postcodeCtrl.dispose();
+    _addrDetailCtrl.dispose();
     super.dispose();
   }
 
@@ -100,6 +104,19 @@ class _SignupPageState extends ConsumerState<SignupPage> {
       if (mounted) _snack('인증코드가 올바르지 않습니다.');
     } finally {
       if (mounted) setState(() => _isVerifyingCode = false);
+    }
+  }
+
+  Future<void> _searchAddress() async {
+    FocusScope.of(context).unfocus();
+    final result = await Navigator.of(context).push<KakaoAddress>(
+      MaterialPageRoute(builder: (_) => const KakaoAddressSearchPage()),
+    );
+    if (result != null && mounted) {
+      setState(() {
+        _postcodeCtrl.text = result.zonecode;
+        _addressCtrl.text  = result.address; // 도로명 우선
+      });
     }
   }
 
@@ -149,11 +166,13 @@ class _SignupPageState extends ConsumerState<SignupPage> {
         agreedTermsIds:  agreedTermsIds,
         residentFront:   _residentFrontCtrl.text.trim(),
         genderCode:      _genderCodeCtrl.text.trim(),
-        address:         _addressCtrl.text.trim(),
+        address: [_addressCtrl.text.trim(), _addrDetailCtrl.text.trim()]
+            .where((s) => s.isNotEmpty)
+            .join(' '),
         marketingAgree:  _agreeMarketing,
         job:             _selectedJob,
         incomeLevelCode: _selectedIncome,
-        creditScore:     int.tryParse(_creditCtrl.text),
+        creditScore:     null,
       );
 
       await ref.read(authProvider.notifier).signup(req);
@@ -487,6 +506,34 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                   ),
                 ),
               ),
+              if (_pwConfirmCtrl.text.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Icon(
+                      _pwCtrl.text == _pwConfirmCtrl.text
+                          ? Icons.check_circle
+                          : Icons.cancel,
+                      size: 14,
+                      color: _pwCtrl.text == _pwConfirmCtrl.text
+                          ? AppColors.teal600
+                          : Colors.red,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      _pwCtrl.text == _pwConfirmCtrl.text
+                          ? '비밀번호가 일치합니다'
+                          : '비밀번호가 일치하지 않습니다',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: _pwCtrl.text == _pwConfirmCtrl.text
+                            ? AppColors.teal600
+                            : Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 20),
 
               // 기본 정보
@@ -514,7 +561,6 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                       controller: _residentFrontCtrl,
                       keyboardType: TextInputType.number,
                       maxLength: 6,
-                      obscureText: true,
                       decoration: _dec('앞 6자리').copyWith(counterText: ''),
                     ),
                   ),
@@ -535,11 +581,45 @@ class _SignupPageState extends ConsumerState<SignupPage> {
               ),
               const SizedBox(height: 12),
               _lbl('주소 *'),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _postcodeCtrl,
+                      readOnly: true,
+                      decoration: _dec('우편번호'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    height: 48,
+                    width: 90,
+                    child: OutlinedButton(
+                      onPressed: _searchAddress,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.teal600,
+                        side: const BorderSide(color: AppColors.teal600),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: const Text('주소 검색'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
               TextField(
                 controller: _addressCtrl,
-                decoration: _dec('도로명 주소 또는 지번 주소'),
+                readOnly: true,            // 직접 입력 막고 검색으로만 채움
+                onTap: _searchAddress,
+                decoration: _dec('도로명 주소 (주소 검색 버튼)'),
                 maxLines: 2,
                 minLines: 1,
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _addrDetailCtrl,
+                decoration: _dec('상세주소 (동·호수 등)'),
               ),
               const SizedBox(height: 20),
 
@@ -575,12 +655,6 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                 onChanged: (v) => setState(() => _selectedIncome = v),
               ),
               const SizedBox(height: 12),
-              _lbl('신용점수 (300~900)'),
-              TextField(
-                controller: _creditCtrl,
-                keyboardType: TextInputType.number,
-                decoration: _dec('신용점수 입력 (선택)'),
-              ),
             ],
           ),
         ),

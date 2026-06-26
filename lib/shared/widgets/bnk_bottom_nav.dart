@@ -18,7 +18,9 @@ class BnkBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BottomNavigationBar(
+    return SafeArea(
+      top: false,
+      child:BottomNavigationBar(
       currentIndex: currentIndex,
       onTap: (i) {
         if (i != currentIndex) context.go(_routes[i]);
@@ -48,6 +50,7 @@ class BnkBottomNav extends StatelessWidget {
           label: '마이페이지',
         ),
       ],
+    ),
     );
   }
 }

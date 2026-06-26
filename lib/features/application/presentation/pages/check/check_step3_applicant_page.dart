@@ -257,6 +257,7 @@ class _Field extends StatelessWidget {
   final TextEditingController controller;
   final TextInputType? keyboardType;
   final void Function(String) onChanged;
+
   const _Field({
     required this.label,
     required this.hint,
@@ -306,6 +307,7 @@ class _Dropdown extends StatelessWidget {
   final String?             value;
   final Map<String, String> items;
   final void Function(String?) onChanged;
+
   const _Dropdown({
     required this.label,
     required this.value,

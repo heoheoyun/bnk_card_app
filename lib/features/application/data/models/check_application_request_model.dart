@@ -46,6 +46,7 @@ class CheckApplicationRequestModel {
         'mobileNo':           applicantSnapshot.mobileNo,
         'address':            applicantSnapshot.address,
         'email':              applicantSnapshot.email,
+        'birthDate':          applicantSnapshot.birthDate,
         'jobType':            applicantSnapshot.jobType,
         'transactionPurpose': applicantSnapshot.transactionPurpose,
         'fundSource':         applicantSnapshot.fundSource,

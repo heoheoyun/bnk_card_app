@@ -5,7 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/auth_state_provider.dart';
 import '../../../../core/network/cookie_store.dart';
 import '../../../quick_login/data/quick_login_service.dart';
-import '../../../../core/push/push_service.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
@@ -39,35 +39,36 @@ class _SplashPageState extends ConsumerState<SplashPage>
   }
 
   Future<void> _checkAuthAndNavigate() async {
+    // 애니메이션 시간 확보 (기존 유지)
     await Future.delayed(const Duration(milliseconds: 2000));
     if (!mounted) return;
 
-    // 임시 비활성화 ---------------------------------------------------------
-    // 푸시 서비스 초기화 (라우터가 준비된 이후 시점)
-    // PushService.instance.init(
-    //   onTap: (linkUrl) {
-    //     if (!mounted) return;
-    //     if (linkUrl != null && linkUrl.startsWith('/cards/')) {
-    //       context.go(linkUrl);
-    //     } else {
-    //       context.go('/notifications');
-    //     }
-    //   },
-    // );
-
-    final hasRefresh   = await CookieStore.hasRefreshToken();
-    final quickEnabled = await QuickLoginService.instance.isAnyEnabled;
-    if (!mounted) return;
-
-    if (quickEnabled && hasRefresh) {
-      context.go('/unlock');
-    } else if (ref.read(authStateProvider)) {
-      context.go('/');
-    } else {
-      context.go('/login');
+    // 1) 로컬 refresh 쿠키 없음 → 게스트 홈 (로그인 강제하려면 '/login')
+    final hasRefresh = await CookieStore.hasRefreshToken();
+    if (!hasRefresh) {
+      if (mounted) context.go('/');
+      return;
     }
-  }
 
+    // 2) 쿠키 있어도 서버 세션 검증 (#3 빈 회원 차단 / 서버 꺼지면 자동 로그아웃)
+    final ok = await ref.read(authDatasourceProvider).refresh();
+    if (!ok) {
+      await ref.read(authStateProvider.notifier).onLogout();
+      if (mounted) context.go('/login');
+      return;
+    }
+
+    // 3) 세션 유효 + 간편인증 설정됨 → 재인증 게이트 (#13)
+    final quickEnabled = await QuickLoginService.instance.isAnyEnabled;
+    if (quickEnabled) {
+      if (mounted) context.go('/unlock');
+      return;
+    }
+
+    // 4) 간편인증 미설정 → 로그인 상태 확정 후 홈
+    await ref.read(authStateProvider.notifier).onLogin();
+    if (mounted) context.go('/');
+  }
   @override
   void dispose() {
     _animCtrl.dispose();

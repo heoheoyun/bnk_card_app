@@ -45,6 +45,7 @@ import '../../features/mypage/presentation/pages/spending_input_page.dart';
 
 // ── Account ───────────────────────────────────────────────────────
 import '../../features/application/presentation/pages/account_create_page.dart';
+import '../../features/application/presentation/pages/my_accounts_page.dart';
 
 // ── Application (신용) ───────────────────────────────────────────
 import '../../features/application/presentation/pages/credit/credit_step1_terms_page.dart';
@@ -60,10 +61,6 @@ import '../../features/application/presentation/pages/check/check_step2_identity
 import '../../features/application/presentation/pages/check/check_step3_applicant_page.dart';
 import '../../features/application/presentation/pages/check/check_step4_payment_page.dart';
 import '../../features/application/presentation/pages/check/check_result_page.dart';
-
-// ── Account ───────────────────────────────────────────────────────
-import '../../features/application/presentation/pages/account_create_page.dart';
-import '../../features/application/presentation/pages/my_accounts_page.dart';
 
   final appRouterProvider = Provider<GoRouter>((ref) {
   final notifier   = ref.watch(routerNotifierProvider.notifier);
@@ -176,11 +173,6 @@ import '../../features/application/presentation/pages/my_accounts_page.dart';
       GoRoute(
         path: '/mypage',
         builder: (_, __) => const MyPagePage(),
-      ),
-
-      GoRoute(
-        path: '/accounts/create',
-        builder: (_, __) => const AccountCreatePage(),
       ),
 
       // ── 소비 패턴 ──────────────────────────────────────────────

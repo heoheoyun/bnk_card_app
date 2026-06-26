@@ -9,6 +9,7 @@ import '../../../domain/entities/credit_application.dart';
 import '../../../presentation/providers/credit_application_provider.dart';
 import '../../../presentation/providers/account_provider.dart';
 import '../../../presentation/widgets/application_step_indicator.dart';
+import 'package:bnk_card_app/shared/widgets/address_search_field.dart';
 
 class CreditStep3ApplicantPage extends ConsumerStatefulWidget {
   final int cardId;
@@ -26,6 +27,8 @@ class _CreditStep3ApplicantPageState
   final _nameEnCtrl  = TextEditingController();
   final _mobileCtrl  = TextEditingController();
   final _addressCtrl = TextEditingController();
+  final _postcodeCtrl   = TextEditingController();
+  final _addrDetailCtrl = TextEditingController();
   final _emailCtrl   = TextEditingController();
 
   String? _incomeType;
@@ -42,6 +45,8 @@ class _CreditStep3ApplicantPageState
     _nameEnCtrl.dispose();
     _mobileCtrl.dispose();
     _addressCtrl.dispose();
+    _postcodeCtrl.dispose();
+    _addrDetailCtrl.dispose();
     _emailCtrl.dispose();
     super.dispose();
   }
@@ -136,9 +141,12 @@ class _CreditStep3ApplicantPageState
                       const SizedBox(height: 16),
 
                       // 주소
-                      _Field(label: '주소', controller: _addressCtrl,
-                          hint: '주소를 입력해 주세요', onChanged: (_) => setState(() {})),
-                      const SizedBox(height: 16),
+                      AddressSearchField(
+                        postcodeController: _postcodeCtrl,
+                        addressController:  _addressCtrl,
+                        detailController:   _addrDetailCtrl,
+                        onChanged: () => setState(() {}),
+                      ),
 
                       // 이메일
                       _Field(label: '이메일', controller: _emailCtrl,
@@ -272,7 +280,8 @@ class _CreditStep3ApplicantPageState
                           ? null
                           : _nameEnCtrl.text.trim(),
                       mobileNo:            _mobileCtrl.text.trim(),
-                      address:             _addressCtrl.text.trim(),
+                      address: [_addressCtrl.text.trim(), _addrDetailCtrl.text.trim()]
+                          .where((s) => s.isNotEmpty).join(' '),
                       email:               _emailCtrl.text.trim(),
                       incomeType:          _incomeType,
                       healthInsuranceType: _healthInsuranceType,

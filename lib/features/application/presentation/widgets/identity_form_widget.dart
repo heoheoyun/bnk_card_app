@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/constants/app_colors.dart';
+import 'package:bnk_card_app/core/constants/app_colors.dart';
+import 'package:bnk_card_app/shared/widgets/address_search_field.dart';
 
 class IdentityFormWidget extends StatefulWidget {
   final void Function({
@@ -18,18 +19,22 @@ class IdentityFormWidget extends StatefulWidget {
 
 class _IdentityFormWidgetState extends State<IdentityFormWidget> {
   String _idType      = 'RESIDENT'; // RESIDENT / DRIVER
-  final _nameCtrl     = TextEditingController();
+  final _nameCtrl          = TextEditingController();
   final _residentFrontCtrl = TextEditingController();
   final _residentBackCtrl  = TextEditingController();
-  final _addressCtrl  = TextEditingController();
-  final _issueDateCtrl = TextEditingController();
+  final _postcodeCtrl      = TextEditingController();
+  final _addressCtrl       = TextEditingController();
+  final _addrDetailCtrl    = TextEditingController();
+  final _issueDateCtrl     = TextEditingController();
 
   @override
   void dispose() {
     _nameCtrl.dispose();
     _residentFrontCtrl.dispose();
     _residentBackCtrl.dispose();
+    _postcodeCtrl.dispose();
     _addressCtrl.dispose();
+    _addrDetailCtrl.dispose();
     _issueDateCtrl.dispose();
     super.dispose();
   }
@@ -39,7 +44,9 @@ class _IdentityFormWidgetState extends State<IdentityFormWidget> {
       idType:       _idType,
       idName:       _nameCtrl.text.trim(),
       idResidentNo: _residentFrontCtrl.text.trim() + _residentBackCtrl.text.trim(),
-      idAddress:    _addressCtrl.text.trim(),
+      // 도로명 주소 + 상세주소 합쳐서 전달
+      idAddress:    [_addressCtrl.text.trim(), _addrDetailCtrl.text.trim()]
+          .where((s) => s.isNotEmpty).join(' '),
       idIssueDate:  _issueDateCtrl.text.trim(),
     );
   }
@@ -128,7 +135,7 @@ class _IdentityFormWidgetState extends State<IdentityFormWidget> {
                 onChanged:    (_) => _notify(),
                 decoration: InputDecoration(
                   counterText: '',
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: const BorderSide(color: AppColors.gray200),
@@ -155,11 +162,11 @@ class _IdentityFormWidgetState extends State<IdentityFormWidget> {
         const SizedBox(height: 16),
 
         // 주소
-        _Field(
-          label:       '주소',
-          hint:        '주소를 입력해 주세요',
-          controller:  _addressCtrl,
-          onChanged:   (_) => _notify(),
+        AddressSearchField(
+          postcodeController: _postcodeCtrl,
+          addressController:  _addressCtrl,
+          detailController:   _addrDetailCtrl,
+          onChanged:          _notify,
         ),
         const SizedBox(height: 16),
 
@@ -217,7 +224,6 @@ class _Field extends StatelessWidget {
   final String             hint;
   final TextEditingController controller;
   final TextInputType?     keyboardType;
-  final int?               maxLength;
   final void Function(String) onChanged;
 
   const _Field({
@@ -226,7 +232,6 @@ class _Field extends StatelessWidget {
     required this.controller,
     required this.onChanged,
     this.keyboardType,
-    this.maxLength,
   });
 
   @override
@@ -239,7 +244,6 @@ class _Field extends StatelessWidget {
         TextField(
           controller:   controller,
           keyboardType: keyboardType,
-          maxLength:    maxLength,
           onChanged:    onChanged,
           decoration: InputDecoration(
             hintText:      hint,

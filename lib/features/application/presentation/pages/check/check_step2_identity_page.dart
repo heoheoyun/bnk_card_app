@@ -34,6 +34,21 @@ class _CheckStep2IdentityPageState
           _idAddress != null && _idAddress!.isNotEmpty &&
           _idIssueDate != null && _idIssueDate!.isNotEmpty;
 
+  /// 주민번호(앞6+성별코드1)에서 생년월일(yyyy-MM-dd) 파생 — 한도 산정용
+  String? _birthDateFromResidentNo(String? r) {
+    if (r == null || r.length < 7) return null;
+    final f = r.substring(0, 6);
+    final g = r.substring(6, 7);
+    final century = switch (g) {
+      '1' || '2' || '7' || '8' => 1900,
+      '3' || '4' || '9' || '0' => 2000,
+      _ => null,
+    };
+    if (century == null) return null;
+    final y = century + int.parse(f.substring(0, 2));
+    return '$y-${f.substring(2, 4)}-${f.substring(4, 6)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final appState    = ref.watch(checkApplicationProvider);
@@ -42,11 +57,11 @@ class _CheckStep2IdentityPageState
     return PopScope(
       canPop: false,
       child: Scaffold(
-        appBar: const BnkAppBar(title: '카드 신청'),
+        appBar: const BnkAppBar(title: '카드 신청', showBack: false),
         body: Column(
           children: [
             ApplicationStepIndicator(currentStep: 2, totalSteps: 4),
-      
+
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
@@ -63,7 +78,31 @@ class _CheckStep2IdentityPageState
                       style: TextStyle(fontSize: 13, color: AppColors.gray600),
                     ),
                     const SizedBox(height: 24),
-      
+
+                    // 안내 문구 추가
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.teal50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.teal200),
+                      ),
+                      child: const Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.info_outline, color: AppColors.teal600, size: 18),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '만 19세 미만 미성년자는 온라인 신청이 불가합니다.\n가까운 BNK 부산은행 영업점을 방문해 주세요.',
+                              style: TextStyle(fontSize: 12, color: AppColors.teal800, height: 1.5),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
                     IdentityFormWidget(
                       onChanged: ({
                         required idType,
@@ -109,7 +148,7 @@ class _CheckStep2IdentityPageState
                 ),
               ),
             ),
-      
+
             SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -128,6 +167,12 @@ class _CheckStep2IdentityPageState
 
                     final latest = ref.read(checkApplicationProvider);
                     if (context.mounted && latest.error == null) {
+                      // step3 신청정보 폼에 자동 반영될 수 있도록 snapshot 채움
+                      appNotifier.prefillApplicantFromIdentity(
+                        name:      _idName!,
+                        address:   _idAddress!,
+                        birthDate: _birthDateFromResidentNo(_idResidentNo),
+                      );
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('본인확인이 완료되었습니다.'),

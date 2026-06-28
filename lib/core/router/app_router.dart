@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -46,6 +45,7 @@ import '../../features/mypage/presentation/pages/spending_input_page.dart';
 
 // ── Account ───────────────────────────────────────────────────────
 import '../../features/application/presentation/pages/account_create_page.dart';
+import '../../features/application/presentation/pages/my_accounts_page.dart';
 
 // ── Application (신용) ───────────────────────────────────────────
 import '../../features/application/presentation/pages/credit/credit_step1_terms_page.dart';
@@ -122,7 +122,15 @@ import '../../features/application/presentation/pages/check/check_result_page.da
         path: '/notifications',
         builder: (_, __) => const NotificationPage(),
       ),
-
+      // -- 계좌
+      GoRoute(
+        path: '/mypage/accounts',
+        builder: (_, __) => const MyAccountsPage(),
+      ),
+      GoRoute(
+        path: '/accounts/create',
+        builder: (_, __) => const AccountCreatePage(),
+      ),
       // ── 카드 ───────────────────────────────────────────────────
       // /cards/compare 를 /cards/:id 보다 먼저 선언해야 충돌 없음
       GoRoute(
@@ -165,11 +173,6 @@ import '../../features/application/presentation/pages/check/check_result_page.da
       GoRoute(
         path: '/mypage',
         builder: (_, __) => const MyPagePage(),
-      ),
-
-      GoRoute(
-        path: '/accounts/create',
-        builder: (_, __) => const AccountCreatePage(),
       ),
 
       // ── 소비 패턴 ──────────────────────────────────────────────

@@ -24,7 +24,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.bnk_card_app"
-        minSdk = flutter.minSdkVersion   // firebase_messaging 최소 요구사항 (flutter.minSdkVersion 이 21 미만이면 이걸로 고정)
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

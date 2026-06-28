@@ -1,8 +1,3 @@
-/// 체크카드 신청 도메인 Entity
-///
-/// Spring CheckCardApplicationResponse + CheckApplicantSnapshotDto 기반
-/// [ApplicationStatus], [PaymentSnapshot]은 credit_application.dart에서 import
-
 import 'credit_application.dart' show ApplicationStatus, PaymentSnapshot;
 
 // ── 체크카드 신청인 스냅샷 ─────────────────────────────────────────
@@ -28,6 +23,8 @@ class CheckApplicantSnapshot {
   /// 자금 출처 (근로소득 / 사업소득 / 연금 등) — AML 필수
   final String? fundSource;
 
+  final String? birthDate; // 추가 — 한도 산정용 (yyyy-MM-dd)
+
   const CheckApplicantSnapshot({
     required this.name,
     this.nameEn,
@@ -37,7 +34,33 @@ class CheckApplicantSnapshot {
     this.jobType,
     this.transactionPurpose,
     this.fundSource,
+    this.birthDate, // 추가
   });
+
+  /// step2(본인확인) 정보를 step3(신청정보)로 옮길 때 사용
+  CheckApplicantSnapshot copyWith({
+    String? name,
+    String? nameEn,
+    String? mobileNo,
+    String? address,
+    String? email,
+    String? jobType,
+    String? transactionPurpose,
+    String? fundSource,
+    String? birthDate,
+  }) {
+    return CheckApplicantSnapshot(
+      name:               name ?? this.name,
+      nameEn:             nameEn ?? this.nameEn,
+      mobileNo:           mobileNo ?? this.mobileNo,
+      address:            address ?? this.address,
+      email:              email ?? this.email,
+      jobType:            jobType ?? this.jobType,
+      transactionPurpose: transactionPurpose ?? this.transactionPurpose,
+      fundSource:         fundSource ?? this.fundSource,
+      birthDate:          birthDate ?? this.birthDate,
+    );
+  }
 }
 
 // ── 체크카드 신청 Entity ───────────────────────────────────────────

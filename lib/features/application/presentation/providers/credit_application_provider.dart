@@ -108,10 +108,21 @@ class CreditApplicationNotifier extends StateNotifier<CreditApplicationState> {
       this._repo,
       ) : super(const CreditApplicationState());
 
+  // #17 — step1 DRAFT 자동 전진을 1회만 수행하기 위한 가드.
+  //  - 카드 상세 "신청하기" 진입 시 beginNewSession()으로 false 리셋
+  //  - step1 이 자동 전진을 수행하면 markResumeHandled()로 true
+  //  - back 으로 step1 재진입 시 resumeHandled==true 면 재전진하지 않아
+  //    무한 전진(뒤로가기 먹통) 바운스를 막는다.
+  bool _resumeHandled = false;
+  bool get resumeHandled => _resumeHandled;
+  void beginNewSession() => _resumeHandled = false;
+  void markResumeHandled() => _resumeHandled = true;
+
   // DRAFT 조회 → 단계 분기
   Future<int> checkDraftAndGetStep(int cardId) async {
     try {
       final draft = await _repo.getDraftApplication(cardId);
+
       if (draft == null) return 1; // DRAFT 없음 → step1부터
 
       // creditAppId 저장
@@ -158,7 +169,7 @@ class CreditApplicationNotifier extends StateNotifier<CreditApplicationState> {
   }
 
   // STEP 2 - 본인확인
-  Future<void> verifyIdentity({
+  Future<bool> verifyIdentity({
     required String idType,
     required String idName,
     required String idResidentNo,
@@ -167,7 +178,7 @@ class CreditApplicationNotifier extends StateNotifier<CreditApplicationState> {
   }) async {
     state = state.copyWith(isLoading: true);
     try {
-      await _repo.verifyIdentity(
+      final result = await _repo.verifyIdentity(
         creditAppId:  state.creditAppId!,
         idType:       idType,
         idName:       idName,
@@ -175,10 +186,40 @@ class CreditApplicationNotifier extends StateNotifier<CreditApplicationState> {
         idAddress:    idAddress,
         idIssueDate:  idIssueDate,
       );
+
+      // 서버가 'N' 반환하면 실패 처리
+      if (result != 'Y') {
+        state = state.copyWith(
+          isLoading: false,
+          error: '본인확인에 실패했습니다.',
+        );
+        return false;
+      }
+
       state = state.copyWith(currentStep: 3, isLoading: false);
+      return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
     }
+  }
+
+  // STEP 2 → STEP 3 자동 반영용.
+  // 본인확인에서 받은 이름/주소/생년월일을 draftApplicantSnapshot 에 채워
+  // step3 폼이 비어 보이지 않도록 한다. (직업/소득 등 나머지는 step3에서 입력)
+  void prefillApplicantFromIdentity({
+    required String name,
+    required String address,
+    String? birthDate,
+  }) {
+    final base = state.draftApplicantSnapshot ??
+        const CreditApplicantSnapshot(
+          name: '', mobileNo: '', address: '', email: '',
+        );
+    state = state.copyWith(
+      draftApplicantSnapshot:
+      base.copyWith(name: name, address: address, birthDate: birthDate),
+    );
   }
 
   // STEP 3 - 기본정보 + 직업/소득
@@ -262,7 +303,10 @@ class CreditApplicationNotifier extends StateNotifier<CreditApplicationState> {
   void clearError() => state = state.copyWith(error: null);
 
   // 신청 처음부터 다시 시작
-  void reset() => state = const CreditApplicationState();
+  void reset() {
+    _resumeHandled = false;
+    state = const CreditApplicationState();
+  }
 }
 
 

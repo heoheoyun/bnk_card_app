@@ -32,7 +32,6 @@ class _CreditStep1TermsPageState extends ConsumerState<CreditStep1TermsPage> {
     // 페이지 진입 시 약관 동의 상태 초기화
     Future.microtask(() async {
       ref.read(termsAgreeProvider.notifier).reset();
-
       // DRAFT 확인 → 단계 분기
       final step = await ref.read(creditApplicationProvider.notifier)
           .checkDraftAndGetStep(widget.cardId);
@@ -122,11 +121,11 @@ class _CreditStep1TermsPageState extends ConsumerState<CreditStep1TermsPage> {
 
                     // 홈페이지 회원약관 (필수)
                     _StaticTermsTile(
-                      title: '[필수] 홈페이지 회원약관',
-                      isRequired: true,
-                      agreed: _memberTermsAgreed,
-                      onToggle: () => setState(() => _memberTermsAgreed = !_memberTermsAgreed),
-                      content:
+                        title: '[필수] 홈페이지 회원약관',
+                        isRequired: true,
+                        agreed: _memberTermsAgreed,
+                        onToggle: () => setState(() => _memberTermsAgreed = !_memberTermsAgreed),
+                        content:
                         '''제1장 총칙 제1조(목적) 이 약관은 주식회사 부산은행(이하 '은행'이라 한다)과 이용 고객(이하 '회원'이라 한다)간에
                         홈페이지 및 회원 개인홈페이지의 이용조건 및 절차에 관한 사항을 정함을 목적으로 합니다. 제2조(이용약관의 효력 및
                         변경) ① 이 약관은 부산은행 웹사이트에서 온라인으로 공시함으로써 효력을 발생합니다. ② 은행은 합리적인 사유가
@@ -169,11 +168,11 @@ class _CreditStep1TermsPageState extends ConsumerState<CreditStep1TermsPage> {
 
                     // 개인정보처리취급방침 (필수)
                     _StaticTermsTile(
-                      title: '[필수] 개인정보처리취급방침',
-                      isRequired: true,
-                      agreed: _privacyTermsAgreed,
-                      onToggle: () => setState(() => _privacyTermsAgreed = !_privacyTermsAgreed),
-                      content:
+                        title: '[필수] 개인정보처리취급방침',
+                        isRequired: true,
+                        agreed: _privacyTermsAgreed,
+                        onToggle: () => setState(() => _privacyTermsAgreed = !_privacyTermsAgreed),
+                        content:
                         '''㈜부산은행(이하 '당행')은 개인정보보호법 제30조에 따라 고객의 개인정보 보호 및 권익을 보호하고 개인정보와 관련한 고객의 고충을
                         원활하게 처리할 수 있도록 다음과 같은 처리방침을 두고 있습니다. 제1조(개인정보의 처리 목적) 당행은 개인정보를
                         다음 각 호의 목적을 위해 처리합니다. 처리한 개인정보는 다음의 목적 외의 용도로는 사용되지 않으며 이용 목적이
@@ -287,13 +286,12 @@ class _CreditStep1TermsPageState extends ConsumerState<CreditStep1TermsPage> {
   }
 }
 
-class _StaticTermsTile extends StatelessWidget {
+class _StaticTermsTile extends StatefulWidget {
   final String     title;
   final bool       isRequired;
   final bool       agreed;
   final VoidCallback onToggle;
   final String     content;
-
   const _StaticTermsTile({
     required this.title,
     required this.isRequired,
@@ -301,6 +299,42 @@ class _StaticTermsTile extends StatelessWidget {
     required this.onToggle,
     required this.content,
   });
+
+  @override
+  State<_StaticTermsTile> createState() => _StaticTermsTileState();
+}
+
+class _StaticTermsTileState extends State<_StaticTermsTile> {
+  // #16 — 본문 박스를 끝까지 스크롤해야만 동의 가능
+  final _scroll = ScrollController();
+  bool _reachedBottom = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scroll.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // 내용이 짧아 스크롤이 없으면 즉시 활성화
+      if (_scroll.hasClients && _scroll.position.maxScrollExtent <= 0) {
+        setState(() => _reachedBottom = true);
+      }
+    });
+  }
+
+  void _onScroll() {
+    if (_reachedBottom) return;
+    final p = _scroll.position;
+    if (p.pixels >= p.maxScrollExtent - 8) {
+      setState(() => _reachedBottom = true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _scroll.removeListener(_onScroll);
+    _scroll.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -324,63 +358,87 @@ class _StaticTermsTile extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: isRequired ? AppColors.teal50 : AppColors.gray200,
+                    color: widget.isRequired ? AppColors.teal50 : AppColors.gray200,
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    isRequired ? '필수' : '선택',
+                    widget.isRequired ? '필수' : '선택',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      color: isRequired ? AppColors.teal800 : AppColors.gray600,
+                      color: widget.isRequired ? AppColors.teal800 : AppColors.gray600,
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  title,
+                  widget.title,
                   style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
                 ),
               ],
             ),
           ),
 
-          // 본문 스크롤
+          // 본문 스크롤 (#16 끝까지 읽어야 동의 가능)
           Container(
-            height: 120,
+            height: 200,
             padding: const EdgeInsets.all(12),
             child: SingleChildScrollView(
+              controller: _scroll,
               child: Text(
-                content,
+                widget.content.replaceAll(RegExp(r'\s+'), ' ').trim(),
                 style: const TextStyle(fontSize: 12, color: AppColors.gray600, height: 1.7),
               ),
             ),
           ),
 
-          // 동의 체크
+          // 동의 체크 — 끝까지 읽기 전엔 비활성
           const Divider(height: 1, color: AppColors.gray200),
           GestureDetector(
-            onTap: onToggle,
+            onTap: () {
+              if (!_reachedBottom) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('약관을 끝까지 읽어주세요.'),
+                    duration: Duration(seconds: 1),
+                  ),
+                );
+                return;
+              }
+              widget.onToggle();
+            },
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               child: Row(
                 children: [
                   Icon(
-                    agreed ? Icons.check_circle : Icons.check_circle_outline,
-                    color: agreed ? AppColors.teal600 : AppColors.gray400,
+                    widget.agreed
+                        ? Icons.check_circle
+                        : Icons.check_circle_outline,
+                    color: !_reachedBottom
+                        ? AppColors.gray200
+                        : (widget.agreed
+                        ? AppColors.teal600
+                        : AppColors.gray400),
                     size: 20,
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    '${title.replaceAll(RegExp(r'\[.*?\]\s*'), '')}에 동의합니다',
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-                  ),
-                  if (isRequired) ...[
-                    const SizedBox(width: 4),
-                    const Text(
-                      '(필수)',
-                      style: TextStyle(fontSize: 11, color: Colors.red),
+                    _reachedBottom
+                        ? '${widget.title.replaceAll(RegExp(r'\[.*?\]\s*'), '')}에 동의합니다'
+                        : '끝까지 읽어주세요',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: _reachedBottom
+                          ? AppColors.gray800
+                          : AppColors.gray400,
                     ),
+                  ),
+                  if (widget.isRequired) ...[
+                    const SizedBox(width: 4),
+                    const Text('(필수)',
+                        style: TextStyle(fontSize: 11, color: Colors.red)),
                   ],
                 ],
               ),

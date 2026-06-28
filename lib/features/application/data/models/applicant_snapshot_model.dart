@@ -24,6 +24,7 @@ class ApplicantSnapshotModel {
       mobileNo:           json['mobileNo']           as String,
       address:            json['address']            as String,
       email:              json['email']              as String,
+      birthDate:          json['birthDate']          as String?, // 추가
       jobType:            json['jobType']            as String?,
       transactionPurpose: json['transactionPurpose'] as String?,
       fundSource:         json['fundSource']         as String?,

@@ -1,4 +1,3 @@
-import '../entities/check_application.dart';
 import '../entities/credit_application.dart' show PaymentSnapshot;
 import '../repositories/check_application_repository.dart';
 

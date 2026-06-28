@@ -56,11 +56,15 @@ class _QuickLoginGatePageState extends ConsumerState<QuickLoginGatePage> {
       _active = methods.contains(QuickLoginMethod.pin)
           ? QuickLoginMethod.pin
           : methods.contains(QuickLoginMethod.pattern)
-              ? QuickLoginMethod.pattern
-              : QuickLoginMethod.biometric;
+          ? QuickLoginMethod.pattern
+          : QuickLoginMethod.biometric;
     });
-    // 생체인증이 켜져 있으면 즉시 시도
+    // 생체인증이 켜져 있으면 시도.
+    // 콜드 스타트 직후엔 Activity resume 전이라 첫 호출이 즉시 실패하는
+    // 안드로이드 이슈가 있어, 약간 지연 후 호출한다.
     if (methods.contains(QuickLoginMethod.biometric)) {
+      await Future.delayed(const Duration(milliseconds: 600));
+      if (!mounted) return;
       _tryBiometric();
     }
   }
@@ -108,11 +112,13 @@ class _QuickLoginGatePageState extends ConsumerState<QuickLoginGatePage> {
         _toLogin(null);
         break;
       case QuickAuthResult.canceled:
-        // 생체인증 취소 → PIN/패턴이 있으면 그쪽으로, 없으면 대기
+      // 취소/실패 → PIN·패턴 있으면 전환, 생체만 있으면 재시도 안내
         if (_enabled.contains(QuickLoginMethod.pin)) {
           setState(() => _active = QuickLoginMethod.pin);
         } else if (_enabled.contains(QuickLoginMethod.pattern)) {
           setState(() => _active = QuickLoginMethod.pattern);
+        } else {
+          setState(() => _error = '지문 아이콘을 눌러 다시 시도해 주세요.');
         }
         break;
     }

@@ -5,7 +5,7 @@ class AppConfig {
   /// 실기기·운영: --dart-define=BASE_URL=https://api.bnkcard.store
   static const String baseUrl = String.fromEnvironment(
     'BASE_URL',
-    defaultValue: 'http://192.168.0.183:8088',
+    defaultValue: 'http://192.168.0.74:8088',
   );
 
   static const Duration connectTimeout = Duration(seconds: 10);

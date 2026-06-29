@@ -122,6 +122,13 @@ class _MyPagePageState extends ConsumerState<MyPagePage>
                   ),
                   const _TileDivider(),
                   _MenuTile(
+                    icon: Icons.home_outlined,
+                    title: '주소 변경',
+                    subtitle: '본인인증 후 주소 변경',
+                    onTap: () => context.push('/mypage/address-verify'),
+                  ),
+                  const _TileDivider(),
+                  _MenuTile(
                     icon: Icons.lock_outline,
                     title: '비밀번호 변경',
                     subtitle: '현재 비밀번호 확인 후 변경',

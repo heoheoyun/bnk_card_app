@@ -14,6 +14,12 @@ class MypageRemoteDatasource {
   Future<void> updateMyInfo(Map<String, dynamic> data) =>
       _dio.put(ApiPaths.myInfo, data: data);
 
+  // ── 주소 변경 → CI(연계정보) 갱신 (본인인증 결과 전송) ──────────────
+  /// PATCH /api/users/me/ci
+  /// body { name, residentFront, genderCode, address, addressDetail? }
+  Future<void> updateCi(Map<String, dynamic> data) =>
+      _dio.patch('${ApiPaths.myInfo}/ci', data: data);
+
   // ── #7 비밀번호 변경 ───────────────────────────────────────────
   // 서버 계약: PATCH /api/users/me/password
   //   body { currentPassword, newPassword, newPasswordConfirm }

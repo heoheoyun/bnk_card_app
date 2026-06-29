@@ -8,27 +8,29 @@ library;
 
 /// Spring application_status 컬럼 값과 1:1 대응
 enum ApplicationStatus {
-  draft,      // DRAFT    : 약관 동의 직후, 신청 진행 중
-  requested,  // REQUESTED: 신청 완료 → 심사 대기
-  reviewing,  // REVIEWING: 한도 초과 → 수동 심사 중 (신용카드 전용)
-  approved,   // APPROVED : 심사 통과
-  rejected,   // REJECTED : 심사 거절
-  issued;     // ISSUED   : 카드 발급 완료
+  draft,           // DRAFT            : 약관 동의 직후, 신청 진행 중
+  requested,       // REQUESTED        : 신청 완료 → 심사 대기
+  reviewing,       // REVIEWING        : 한도 초과 → 수동 심사 중 (신용카드 전용)
+  approved,        // APPROVED         : 심사 통과
+  rejected,        // REJECTED         : 심사 거절
+  issued,          // ISSUED           : 카드 발급 완료
+  screeningFailed; // SCREENING_FAILED : 심사 서버 통신 실패 → 재시도 가능
 
   static ApplicationStatus fromString(String value) {
     return ApplicationStatus.values.firstWhere(
-          (e) => e.name.toUpperCase() == value.toUpperCase(),
+          (e) => e.name.toUpperCase() == value.toUpperCase().replaceAll('_', ''),
       orElse: () => ApplicationStatus.draft,
     );
   }
 
   String get label => switch (this) {
-    ApplicationStatus.draft      => '신청 중',
-    ApplicationStatus.requested  => '심사 대기',
-    ApplicationStatus.reviewing  => '심사 중',
-    ApplicationStatus.approved   => '승인',
-    ApplicationStatus.rejected   => '거절',
-    ApplicationStatus.issued     => '발급 완료',
+    ApplicationStatus.draft           => '신청 중',
+    ApplicationStatus.requested       => '심사 대기',
+    ApplicationStatus.reviewing       => '심사 중',
+    ApplicationStatus.approved        => '승인',
+    ApplicationStatus.rejected        => '거절',
+    ApplicationStatus.issued          => '발급 완료',
+    ApplicationStatus.screeningFailed => '심사 오류',
   };
 }
 
@@ -165,6 +167,10 @@ class CreditApplication {
   /// 거절 사유 (REJECTED 시 세팅)
   final String? rejectionReason;
 
+  /// 한도 심사 결과 — PASS / MANUAL_REQUIRED
+  /// REVIEWING 상태일 때 서류 제출 필요 여부를 구분하는 데 사용
+  final String? limitCheckResult;
+
   /// STEP 4 submit 완료 시점 (REQUESTED 전환 시각)
   final DateTime? appliedAt;
 
@@ -186,6 +192,7 @@ class CreditApplication {
     this.approvedLimit,
     this.requestedLimit,
     this.rejectionReason,
+    this.limitCheckResult,
     this.appliedAt,
     this.createdAt,
   });

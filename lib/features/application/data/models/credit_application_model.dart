@@ -25,6 +25,7 @@ class CreditApplicationModel {
       approvedLimit:     json['approvedLimit'] as int?,
       requestedLimit:    json['requestedLimit'] as int?,
       rejectionReason:   json['rejectionReason'] as String?,
+      limitCheckResult:  json['limitCheckResult'] as String?,
       appliedAt:         json['appliedAt'] != null
           ? DateTime.parse(json['appliedAt'] as String)
           : null,

@@ -50,6 +50,7 @@ import '../../features/application/presentation/pages/account_create_page.dart';
 import '../../features/application/presentation/pages/my_accounts_page.dart';
 
 // ── Application (신용) ───────────────────────────────────────────
+import '../../features/application/presentation/pages/credit/credit_reviewing_page.dart';
 import '../../features/application/presentation/pages/credit/credit_step1_terms_page.dart';
 import '../../features/application/presentation/pages/credit/credit_step2_identity_page.dart';
 import '../../features/application/presentation/pages/credit/credit_step3_applicant_page.dart';
@@ -239,6 +240,12 @@ import '../../features/application/presentation/pages/check/check_result_page.da
         path: '/application/credit/result',
         builder: (context, state) => CreditResultPage(
           cardId: state.extra as int,
+        ),
+      ),
+      GoRoute(
+        path: '/application/credit/:id/documents',
+        builder: (context, state) => CreditReviewingPage(
+          creditAppId: int.tryParse(state.pathParameters['id'] ?? '') ?? 0,
         ),
       ),
 

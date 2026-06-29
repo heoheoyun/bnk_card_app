@@ -46,4 +46,6 @@ abstract class CreditApplicationRepository {
   /// 임시저장
   Future<CreditApplication?> getDraftApplication(int cardId);
 
+  /// SCREENING_FAILED 상태 심사 재시도
+  Future<void> retryScreening(int creditAppId);
 }

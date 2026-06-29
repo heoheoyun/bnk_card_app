@@ -236,7 +236,7 @@ class _CreditStep4PaymentPageState
                   // 기존고객이면 바로 submit, 신규고객이면 step5로
                   if (appState.isExistingCustomer) {
                     await ref.read(creditApplicationProvider.notifier).submitApplication();
-                    if (context.mounted && appState.error == null) {
+                    if (context.mounted && ref.read(creditApplicationProvider).error == null) {
                       context.push('/application/credit/result', extra: widget.cardId);
                     }
                   } else {

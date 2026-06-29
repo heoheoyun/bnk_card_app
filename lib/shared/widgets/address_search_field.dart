@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:bnk_card_app/core/constants/app_colors.dart';
 import 'package:bnk_card_app/shared/widgets/kakao_address_search_page.dart';
@@ -32,14 +33,74 @@ class AddressSearchField extends StatelessWidget {
 
   Future<void> _search(BuildContext context) async {
     FocusScope.of(context).unfocus();
+
+    // 웹에서는 WebView 미지원 → 직접 입력 다이얼로그
+    if (kIsWeb) {
+      await _searchWeb(context);
+      return;
+    }
+
     final result = await Navigator.of(context).push<KakaoAddress>(
       MaterialPageRoute(builder: (_) => const KakaoAddressSearchPage()),
     );
     if (result != null) {
       postcodeController.text = result.zonecode;
-      addressController.text = result.address; // 도로명 우선
+      addressController.text = result.address;
       onChanged?.call();
     }
+  }
+
+  Future<void> _searchWeb(BuildContext context) async {
+    final postcodeCtrl = TextEditingController();
+    final addressCtrl  = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('주소 입력', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: postcodeCtrl,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: '우편번호',
+                hintText: '예) 48058',
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: addressCtrl,
+              decoration: const InputDecoration(
+                labelText: '도로명 주소',
+                hintText: '예) 부산광역시 해운대구 센텀2로 24',
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('취소')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('확인', style: TextStyle(color: AppColors.teal600)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      postcodeController.text = postcodeCtrl.text.trim();
+      addressController.text  = addressCtrl.text.trim();
+      onChanged?.call();
+    }
+
+    postcodeCtrl.dispose();
+    addressCtrl.dispose();
   }
 
   InputDecoration _dec(String hint) => InputDecoration(

@@ -5,7 +5,7 @@ class AppConfig {
   /// 실기기·운영: --dart-define=BASE_URL=https://api.bnkcard.store
   static const String baseUrl = String.fromEnvironment(
     'BASE_URL',
-    defaultValue: 'https://curable-cranium-handwoven.ngrok-free.dev',
+    defaultValue: 'http://192.168.200.146:8088',
   );
 
   static const Duration connectTimeout = Duration(seconds: 10);

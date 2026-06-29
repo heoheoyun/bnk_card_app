@@ -37,4 +37,7 @@ abstract class CheckApplicationRepository {
 
   /// 임시 저장
   Future<CheckApplication?> getDraftApplication(int cardId);
+
+  /// SCREENING_FAILED 상태 심사 재시도
+  Future<void> retryScreening(int checkAppId);
 }

@@ -93,4 +93,9 @@ class CreditApplicationRepositoryImpl implements CreditApplicationRepository {
   Future<CreditApplication?> getDraftApplication(int cardId) {
     return _ds.getDraftApplication(cardId);
   }
+
+  @override
+  Future<void> retryScreening(int creditAppId) {
+    return _ds.retryScreening(creditAppId);
+  }
 }

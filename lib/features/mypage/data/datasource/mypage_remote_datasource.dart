@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import '../../../../core/constants/api_paths.dart';
 import '../../../../core/network/dio_client.dart';
+import '../../../application/domain/entities/user_card.dart';
 
 class MypageRemoteDatasource {
   final Dio _dio = DioClient.instance;
@@ -32,6 +33,19 @@ class MypageRemoteDatasource {
     final res = await _dio.get(ApiPaths.myCards);
     return res.data['data'] as Map<String, dynamic>;
   }
+
+  // ── 보유 카드 단건 상세 ─────────────────────────────────────────
+  /// GET /api/users/me/cards/{userCardId}
+  Future<UserCard> getUserCard(int userCardId) async {
+    final res = await _dio.get('${ApiPaths.myCards}/$userCardId');
+    return UserCard.fromJson(res.data['data'] as Map<String, dynamic>);
+  }
+
+  // ── 보유 카드 부분 수정 ─────────────────────────────────────────
+  /// PATCH /api/users/me/cards/{userCardId}
+  /// 변경 허용 필드만 [patch] 에 담아 전송 (한도/해외·비접촉/별칭/상태 등).
+  Future<void> patchUserCard(int userCardId, Map<String, dynamic> patch) =>
+      _dio.patch('${ApiPaths.myCards}/$userCardId', data: patch);
 
   // ── 알림 설정 저장 ─────────────────────────────────────────────
   /// PUT /api/users/me  Body: { pushEnabled?: bool, marketingAgree?: bool }

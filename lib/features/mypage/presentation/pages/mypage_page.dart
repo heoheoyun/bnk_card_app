@@ -117,15 +117,15 @@ class _MyPagePageState extends ConsumerState<MyPagePage>
                   _MenuTile(
                     icon: Icons.person_outline,
                     title: '내 정보 수정',
-                    subtitle: '이름·전화번호 변경',
-                    onTap: () => _showEditInfoSheet(context, info),
+                    subtitle: '이름·전화번호·직업·소득 변경',
+                    onTap: () => _showEditInfoDialog(context, info),
                   ),
                   const _TileDivider(),
                   _MenuTile(
                     icon: Icons.lock_outline,
                     title: '비밀번호 변경',
                     subtitle: '현재 비밀번호 확인 후 변경',
-                    onTap: () => _showChangePasswordSheet(context),
+                    onTap: () => _showChangePasswordDialog(context),
                   ),
                   const _TileDivider(),
                   _MenuTile(
@@ -242,65 +242,205 @@ class _MyPagePageState extends ConsumerState<MyPagePage>
     }
   }
 
-  // ── 바텀시트: 내 정보 수정 ────────────────────────────────────────
-  void _showEditInfoSheet(BuildContext context, Map<String, dynamic> info) {
+  // ── 다이얼로그 공용 셸: 화면 중앙 + 키보드 위로 자동 이동 + 내부 스크롤 ──
+  //   (바텀시트는 키보드가 올라오면 하단이 잘리는 문제가 있어 중앙 다이얼로그로 전환)
+  Widget _dialogShell(BuildContext ctx,
+      {required String title, required List<Widget> children}) {
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: ConstrainedBox(
+        constraints:
+            BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * 0.8),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title,
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 18),
+              ...children,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _fieldLabel(String t) => Padding(
+        padding: const EdgeInsets.only(bottom: 6, top: 2),
+        child: Text(t,
+            style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.gray600,
+                fontWeight: FontWeight.w500)),
+      );
+
+  InputDecoration _dialogInput(String hint) => InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(fontSize: 13, color: AppColors.gray400),
+        isDense: true,
+        filled: true,
+        fillColor: AppColors.gray100,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.teal600, width: 1.2),
+        ),
+      );
+
+  Widget _dialogActions(BuildContext ctx,
+          {required String submitLabel, required VoidCallback onSubmit}) =>
+      Row(
+        children: [
+          Expanded(
+            child: OutlinedButton(
+              onPressed: () => Navigator.pop(ctx),
+              style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.gray600,
+                  side: const BorderSide(color: AppColors.gray200),
+                  padding: const EdgeInsets.symmetric(vertical: 13)),
+              child: const Text('취소'),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: ElevatedButton(
+              onPressed: onSubmit,
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.teal600,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 13)),
+              child: Text(submitLabel),
+            ),
+          ),
+        ],
+      );
+
+  // ── 다이얼로그: 내 정보 수정 (이름·휴대폰·직업·소득 + 본인확인) ────────
+  void _showEditInfoDialog(BuildContext context, Map<String, dynamic> info) {
     final nameCtrl = TextEditingController(text: info['name'] as String? ?? '');
     final phoneCtrl =
-    TextEditingController(text: info['phone'] as String? ?? '');
-    showModalBottomSheet(
+        TextEditingController(text: info['phone'] as String? ?? '');
+    final pwCtrl = TextEditingController();
+    const jobs = {'EMPLOYED', 'SELF_EMPLOYED', 'STUDENT', 'UNEMPLOYED', 'OTHER'};
+    const incomes = {'LV1', 'LV2', 'LV3', 'LV4'};
+    // 드롭다운 목록에 없는 값이 들어오면 DropdownButtonFormField 가 assert 로 죽으므로 클램프.
+    String? job = jobs.contains(info['job']) ? info['job'] as String : null;
+    String? income =
+        incomes.contains(info['incomeLevelCode']) ? info['incomeLevelCode'] as String : null;
+
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      useSafeArea: true, // #5 시스템 내비게이션 바 가림 방지
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.fromLTRB(
-            20, 20, 20, MediaQuery.of(ctx).viewInsets.bottom + 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => _dialogShell(
+          ctx,
+          title: '내 정보 수정',
           children: [
-            const Text('내 정보 수정',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 16),
-            TextField(
-              controller: nameCtrl,
-              decoration: const InputDecoration(hintText: '이름'),
-            ),
-            const SizedBox(height: 10),
+            _fieldLabel('이름'),
+            TextField(controller: nameCtrl, decoration: _dialogInput('이름 입력')),
+            const SizedBox(height: 14),
+            _fieldLabel('휴대폰 번호'),
             TextField(
               controller: phoneCtrl,
               keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(hintText: '휴대폰 번호'),
+              decoration: _dialogInput('01012345678'),
             ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.teal600,
-                    foregroundColor: Colors.white),
-                onPressed: () async {
-                  final ds = ref.read(mypageDatasourceProvider);
-                  try {
-                    await ds.updateMyInfo({
-                      'name': nameCtrl.text,
-                      'phone': phoneCtrl.text,
-                    });
-                    ref.invalidate(myInfoProvider);
-                    if (ctx.mounted) Navigator.pop(ctx);
-                  } catch (_) {
-                    if (ctx.mounted) {
-                      ScaffoldMessenger.of(ctx).showSnackBar(
-                        const SnackBar(content: Text('수정에 실패했습니다.')),
-                      );
-                    }
+            const SizedBox(height: 14),
+            _fieldLabel('직업'),
+            DropdownButtonFormField<String>(
+              initialValue: job,
+              isExpanded: true,
+              decoration: _dialogInput('선택 안함'),
+              items: const [
+                DropdownMenuItem(value: 'EMPLOYED', child: Text('직장인')),
+                DropdownMenuItem(value: 'SELF_EMPLOYED', child: Text('자영업')),
+                DropdownMenuItem(value: 'STUDENT', child: Text('학생')),
+                DropdownMenuItem(value: 'UNEMPLOYED', child: Text('무직')),
+                DropdownMenuItem(value: 'OTHER', child: Text('기타')),
+              ],
+              onChanged: (v) => setLocal(() => job = v),
+            ),
+            const SizedBox(height: 14),
+            _fieldLabel('소득 등급'),
+            DropdownButtonFormField<String>(
+              initialValue: income,
+              isExpanded: true,
+              decoration: _dialogInput('선택 안함'),
+              items: const [
+                DropdownMenuItem(value: 'LV1', child: Text('LV1 · 연 3천만 원 미만')),
+                DropdownMenuItem(value: 'LV2', child: Text('LV2 · 연 3천~5천만 원')),
+                DropdownMenuItem(value: 'LV3', child: Text('LV3 · 연 5천만~1억 원')),
+                DropdownMenuItem(value: 'LV4', child: Text('LV4 · 연 1억 원 이상')),
+              ],
+              onChanged: (v) => setLocal(() => income = v),
+            ),
+            const SizedBox(height: 14),
+            _fieldLabel('현재 비밀번호'),
+            TextField(
+              controller: pwCtrl,
+              obscureText: true,
+              decoration: _dialogInput('본인확인을 위해 입력'),
+            ),
+            const SizedBox(height: 6),
+            const Text('정보 변경 시 본인확인을 위해 현재 비밀번호가 필요합니다.',
+                style: TextStyle(fontSize: 11, color: AppColors.gray400)),
+            const SizedBox(height: 20),
+            _dialogActions(
+              ctx,
+              submitLabel: '저장하기',
+              onSubmit: () async {
+                if (pwCtrl.text.isEmpty) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
+                      content: Text('현재 비밀번호를 입력해 주세요.')));
+                  return;
+                }
+                final ds = ref.read(mypageDatasourceProvider);
+                try {
+                  await ds.updateMyInfo({
+                    if (nameCtrl.text.trim().isNotEmpty)
+                      'name': nameCtrl.text.trim(),
+                    if (phoneCtrl.text.trim().isNotEmpty)
+                      'phone': phoneCtrl.text.trim(),
+                    if (job != null) 'job': job,
+                    if (income != null) 'incomeLevelCode': income,
+                    'currentPassword': pwCtrl.text,
+                  });
+                  ref.invalidate(myInfoProvider);
+                  if (ctx.mounted) {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                        const SnackBar(content: Text('정보가 수정되었습니다.')));
                   }
-                },
-                child: const Text('저장하기'),
-              ),
+                } on DioException catch (e) {
+                  final code = e.response?.data is Map
+                      ? (e.response?.data as Map)['code']
+                      : null;
+                  final msg = switch (code) {
+                    'U003' => '현재 비밀번호가 올바르지 않습니다.',
+                    'C001' => '입력값을 확인해 주세요.',
+                    'U010' => '이미 사용 중인 휴대폰 번호입니다.',
+                    _ => '수정에 실패했습니다.',
+                  };
+                  if (ctx.mounted) {
+                    ScaffoldMessenger.of(ctx)
+                        .showSnackBar(SnackBar(content: Text(msg)));
+                  }
+                } catch (_) {
+                  if (ctx.mounted) {
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                        const SnackBar(content: Text('수정에 실패했습니다.')));
+                  }
+                }
+              },
             ),
           ],
         ),
@@ -308,101 +448,95 @@ class _MyPagePageState extends ConsumerState<MyPagePage>
     );
   }
 
-  // ── 바텀시트: 비밀번호 변경 ──────────────────────────────────────
-  void _showChangePasswordSheet(BuildContext context) {
+  // ── 다이얼로그: 비밀번호 변경 ────────────────────────────────────
+  void _showChangePasswordDialog(BuildContext context) {
     final currentCtrl = TextEditingController();
     final newCtrl = TextEditingController();
-    final confirmCtrl = TextEditingController(); // #7 새 비밀번호 확인
-    showModalBottomSheet(
+    final confirmCtrl = TextEditingController();
+    bool obscure = true;
+
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      useSafeArea: true, // #5 시스템 내비게이션 바 가림 방지
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.fromLTRB(
-            20, 20, 20, MediaQuery.of(ctx).viewInsets.bottom + 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => _dialogShell(
+          ctx,
+          title: '비밀번호 변경',
           children: [
-            const Text('비밀번호 변경',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 16),
+            _fieldLabel('현재 비밀번호'),
             TextField(
               controller: currentCtrl,
-              obscureText: true,
-              decoration: const InputDecoration(hintText: '현재 비밀번호'),
+              obscureText: obscure,
+              decoration: _dialogInput('현재 비밀번호').copyWith(
+                suffixIcon: IconButton(
+                  icon: Icon(
+                      obscure
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      size: 18,
+                      color: AppColors.gray400),
+                  onPressed: () => setLocal(() => obscure = !obscure),
+                ),
+              ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 14),
+            _fieldLabel('새 비밀번호'),
             TextField(
               controller: newCtrl,
-              obscureText: true,
-              decoration: const InputDecoration(hintText: '새 비밀번호'),
+              obscureText: obscure,
+              decoration: _dialogInput('영문·숫자·특수문자 조합 8자 이상'),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 14),
+            _fieldLabel('새 비밀번호 확인'),
             TextField(
-              controller: confirmCtrl, // #7 확인 필드 (웹과 동일한 흐름)
-              obscureText: true,
-              decoration: const InputDecoration(hintText: '새 비밀번호 확인'),
+              controller: confirmCtrl,
+              obscureText: obscure,
+              decoration: _dialogInput('새 비밀번호 다시 입력'),
             ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.teal600,
-                    foregroundColor: Colors.white),
-                onPressed: () async {
-                  // 클라이언트 1차 검증 (웹과 동일)
-                  if (newCtrl.text != confirmCtrl.text) {
+            const SizedBox(height: 20),
+            _dialogActions(
+              ctx,
+              submitLabel: '변경하기',
+              onSubmit: () async {
+                if (newCtrl.text != confirmCtrl.text) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
+                      content: Text('새 비밀번호와 확인이 일치하지 않습니다.')));
+                  return;
+                }
+                if (newCtrl.text == currentCtrl.text) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
+                      content: Text('현재 비밀번호와 다른 비밀번호를 입력해 주세요.')));
+                  return;
+                }
+                final ds = ref.read(mypageDatasourceProvider);
+                try {
+                  await ds.changePassword(
+                      currentCtrl.text, newCtrl.text, confirmCtrl.text);
+                  if (ctx.mounted) {
+                    Navigator.pop(ctx);
                     ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
-                        content: Text('새 비밀번호와 확인이 일치하지 않습니다.')));
-                    return;
+                        content: Text('비밀번호가 변경되었습니다.')));
                   }
-                  if (newCtrl.text == currentCtrl.text) {
+                } on DioException catch (e) {
+                  final code = e.response?.data is Map
+                      ? (e.response?.data as Map)['code']
+                      : null;
+                  final msg = switch (code) {
+                    'U009' => '새 비밀번호와 확인이 일치하지 않습니다.',
+                    'U003' => '현재 비밀번호가 올바르지 않습니다.',
+                    'U011' => '최근 사용한 비밀번호는 다시 사용할 수 없습니다.',
+                    _ => '변경에 실패했습니다.',
+                  };
+                  if (ctx.mounted) {
+                    ScaffoldMessenger.of(ctx)
+                        .showSnackBar(SnackBar(content: Text(msg)));
+                  }
+                } catch (_) {
+                  if (ctx.mounted) {
                     ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
-                        content: Text('현재 비밀번호와 다른 비밀번호를 입력해 주세요.')));
-                    return;
+                        content: Text('변경에 실패했습니다.')));
                   }
-                  final ds = ref.read(mypageDatasourceProvider);
-                  try {
-                    // #7 서버 계약: currentPassword/newPassword/newPasswordConfirm
-                    await ds.changePassword(
-                        currentCtrl.text, newCtrl.text, confirmCtrl.text);
-                    if (ctx.mounted) {
-                      Navigator.pop(ctx);
-                      ScaffoldMessenger.of(ctx).showSnackBar(
-                        const SnackBar(content: Text('비밀번호가 변경되었습니다.')),
-                      );
-                    }
-                  } on DioException catch (e) {
-                    final code = e.response?.data is Map
-                        ? (e.response?.data as Map)['code']
-                        : null;
-                    final msg = switch (code) {
-                      'U009' => '새 비밀번호와 확인이 일치하지 않습니다.',
-                      'U003' => '현재 비밀번호가 올바르지 않습니다.',
-                    // PASSWORD_RECENTLY_USED — 실제 코드값은 서버 ErrorCode 확인
-                      'U011' => '최근 사용한 비밀번호는 다시 사용할 수 없습니다.',
-                      _ => '변경에 실패했습니다.',
-                    };
-                    if (ctx.mounted) {
-                      ScaffoldMessenger.of(ctx)
-                          .showSnackBar(SnackBar(content: Text(msg)));
-                    }
-                  } catch (_) {
-                    if (ctx.mounted) {
-                      ScaffoldMessenger.of(ctx).showSnackBar(
-                        const SnackBar(content: Text('변경에 실패했습니다.')),
-                      );
-                    }
-                  }
-                },
-                child: const Text('변경하기'),
-              ),
+                }
+              },
             ),
           ],
         ),
@@ -664,8 +798,9 @@ class _OwnedList extends StatelessWidget {
       itemCount: items.length,
       separatorBuilder: (_, __) =>
       const Divider(height: 1, color: AppColors.gray100),
-      itemBuilder: (_, i) {
+      itemBuilder: (context, i) {
         final c = items[i];
+        final userCardId = (c['userCardId'] as num?)?.toInt();
         return ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const _CardChip(),
@@ -673,8 +808,13 @@ class _OwnedList extends StatelessWidget {
             c['cardName'] as String? ?? '카드',
             style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
           ),
+          trailing: const Icon(Icons.chevron_right,
+              size: 18, color: AppColors.gray400),
           dense: true,
-          // 표시 전용 — onTap 없음
+          // 탭 시 USER_CARDS 컬럼 기반 카드 관리 화면으로
+          onTap: userCardId == null
+              ? null
+              : () => context.push('/mypage/cards/$userCardId'),
         );
       },
     );

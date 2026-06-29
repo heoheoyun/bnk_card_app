@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../providers/auth_provider.dart';
+import '../../../../core/providers/auth_state_provider.dart'; // authStateProvider 위치에 맞게 경로 확인
 
 class IpVerifyArgs {
   final int userId;
@@ -77,6 +78,10 @@ class _IpVerifyPageState extends ConsumerState<IpVerifyPage> {
         nickname: '내 기기',
       );
       if (!mounted) return;
+
+      // [추가] 껐다 켜지 않아도 전역 로그인 프로바이더 상태를 true로 변경하고 FCM 토큰을 등록시킵니다.
+      await ref.read(authStateProvider.notifier).onLogin();
+
       context.go('/');
     } catch (_) {
       if (!mounted) return;

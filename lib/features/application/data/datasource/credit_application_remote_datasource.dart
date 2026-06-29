@@ -123,4 +123,9 @@ class CreditApplicationRemoteDatasource {
     if (res.data['data'] == null) return null;
     return CreditApplicationModel.fromJson(res.data['data']);
   }
+
+  // SCREENING_FAILED 심사 재시도
+  Future<void> retryScreening(int creditAppId) async {
+    await _dio.post('${ApiPaths.creditApplications}/$creditAppId/retry-screening');
+  }
 }

@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/storage/local_storage.dart';
@@ -15,8 +16,10 @@ void main() async {
   await LocalStorage.init();
   await DioClient.init();
 
-  await Firebase.initializeApp();  // ← 주석 해제
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);  // ← 주석 해제
+  if (!kIsWeb) {
+    await Firebase.initializeApp();
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  }
 
   runApp(const ProviderScope(child: BnkCardApp()));
 }

@@ -77,4 +77,9 @@ class CheckApplicationRepositoryImpl implements CheckApplicationRepository {
   Future<CheckApplication?> getDraftApplication(int cardId) {
     return _ds.getDraftApplication(cardId);
   }
+
+  @override
+  Future<void> retryScreening(int checkAppId) {
+    return _ds.retryScreening(checkAppId);
+  }
 }

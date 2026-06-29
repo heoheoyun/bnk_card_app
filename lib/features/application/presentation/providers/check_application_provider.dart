@@ -122,7 +122,7 @@ class CheckApplicationNotifier extends StateNotifier<CheckApplicationState> {
   }
 
   // STEP 2 - 본인확인
-  Future<void> verifyIdentity({
+  Future<bool> verifyIdentity({
     required String idType,
     required String idName,
     required String idResidentNo,
@@ -131,7 +131,7 @@ class CheckApplicationNotifier extends StateNotifier<CheckApplicationState> {
   }) async {
     state = state.copyWith(isLoading: true);
     try {
-      await _repo.verifyIdentity(
+      final result = await _repo.verifyIdentity(
         checkAppId:   state.checkAppId!,
         idType:       idType,
         idName:       idName,
@@ -139,9 +139,15 @@ class CheckApplicationNotifier extends StateNotifier<CheckApplicationState> {
         idAddress:    idAddress,
         idIssueDate:  idIssueDate,
       );
+      if (result != 'Y') {
+        state = state.copyWith(isLoading: false, error: '본인확인에 실패했습니다.');
+        return false;
+      }
       state = state.copyWith(currentStep: 3, isLoading: false);
+      return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
     }
   }
 

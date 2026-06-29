@@ -102,4 +102,9 @@ class CheckApplicationRemoteDatasource {
     if (res.data['data'] == null) return null;
     return CheckApplicationModel.fromJson(res.data['data']);
   }
+
+  // SCREENING_FAILED 심사 재시도
+  Future<void> retryScreening(int checkAppId) async {
+    await _dio.post('${ApiPaths.checkApplications}/$checkAppId/retry-screening');
+  }
 }

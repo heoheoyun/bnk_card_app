@@ -268,7 +268,7 @@ class _CheckStep4PaymentPageState
                     cardPassword:    _passwordCtrl.text,
                   );
 
-                  if (context.mounted && appState.error == null) {
+                  if (context.mounted && ref.read(checkApplicationProvider).error == null) {
                     context.push(
                       '/application/check/result',
                       extra: widget.cardId,

@@ -845,11 +845,82 @@ class _AppliedList extends StatelessWidget {
       itemCount: items.length,
       separatorBuilder: (_, __) =>
       const Divider(height: 1, color: AppColors.gray100),
-      itemBuilder: (_, i) {
+      itemBuilder: (context, i) {
         final c = items[i];
         final status = c['applicationStatus'] as String? ??
             c['statusCode'] as String? ??
             '';
+        final creditAppId = (c['creditAppId'] as num?)?.toInt() ??
+            (c['appId'] as num?)?.toInt();
+
+        if (status == 'REVIEWING' && creditAppId != null) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF8E1),
+                border: Border.all(color: const Color(0xFFFFE082)),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const _CardChip(),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          c['cardName'] as String? ?? '카드',
+                          style: const TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF59E0B),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text('서류검토중',
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    '추가 서류 제출이 필요합니다. 서류를 재제출하여 심사를 계속 진행하세요.',
+                    style: TextStyle(fontSize: 11, color: Color(0xFF92400E)),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => context
+                          .push('/application/credit/$creditAppId/documents'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFF59E0B),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        textStyle: const TextStyle(
+                            fontSize: 13, fontWeight: FontWeight.w600),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Text('서류 재제출'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
         return ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const _CardChip(),

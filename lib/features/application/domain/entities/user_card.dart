@@ -142,6 +142,43 @@ class UserCard {
     this.updatedAt,
   });
 
+  // ── 역직렬화 ──────────────────────────────────────────────────────
+
+  /// 서버 USER_CARDS 상세 응답(JSON) → UserCard.
+  /// 키는 백엔드 OwnedCardDetailResponse 의 camelCase 필드명과 1:1 대응.
+  factory UserCard.fromJson(Map<String, dynamic> j) {
+    int? toInt(Object? v) => v == null ? null : (v as num).toInt();
+    DateTime? toDate(Object? v) =>
+        (v == null || (v is String && v.isEmpty)) ? null : DateTime.parse(v as String);
+
+    return UserCard(
+      userCardId: toInt(j['userCardId'])!,
+      userId: toInt(j['userId'])!,
+      versionId: toInt(j['versionId'])!,
+      creditAppId: toInt(j['creditAppId']),
+      checkAppId: toInt(j['checkAppId']),
+      maskedCardNumber: j['maskedCardNumber'] as String? ?? '',
+      issueDate: toDate(j['issueDate']) ?? DateTime.now(),
+      expireDate: toDate(j['expireDate']) ?? DateTime.now(),
+      cardStatus: CardStatus.fromString(j['cardStatus'] as String? ?? 'ACTIVE'),
+      usableYn: j['usableYn'] as String? ?? 'N',
+      linkedAccountId: toInt(j['linkedAccountId']),
+      dailyLimitAmount: toInt(j['dailyLimitAmount']) ?? 0,
+      monthlyLimitAmount: toInt(j['monthlyLimitAmount']),
+      cardBrand: j['cardBrand'] as String?,
+      cardDesignId: toInt(j['cardDesignId']),
+      paymentDay: toInt(j['paymentDay']),
+      combinedTransitYn: j['combinedTransitYn'] as String?,
+      txAlertType: j['txAlertType'] as String?,
+      statementMethod: j['statementMethod'] as String?,
+      overseasEnabledYn: j['overseasEnabledYn'] as String?,
+      contactlessEnabledYn: j['contactlessEnabledYn'] as String?,
+      cardNickname: j['cardNickname'] as String?,
+      issuedAt: toDate(j['issuedAt']),
+      updatedAt: toDate(j['updatedAt']),
+    );
+  }
+
   // ── 편의 getter ──────────────────────────────────────────────────
 
   /// 신용카드 여부

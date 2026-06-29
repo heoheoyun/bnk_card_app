@@ -35,13 +35,28 @@ class AuthStateNotifier extends StateNotifier<bool> {
     await PushService.instance.registerToken();
   }
 
-  /// 로그아웃 혹은 강제 만료 후 호출
-  Future<void> onLogout() async {
+  /// 로그아웃 혹은 강제 만료 후 호출.
+  ///
+  /// [keepQuickLogin] true(기본값): 쿠키 + 세션 시큐어스토리지만 정리하고
+  /// 간편로그인(PIN/패턴/생체) 설정은 보존한다.
+  /// false: 간편로그인 설정까지 모두 해제한다(완전 로그아웃, 다른 계정 전환 등).
+  Future<void> onLogout({bool keepQuickLogin = true}) async {
     await PushService.instance.unregister();
-    await CookieStore.clear();                    // 실제 토큰(쿠키) 삭제
-    await QuickLoginService.instance.clearAll();  // 간편로그인 해제
-    await SecureStorage.deleteAll();
+    if (keepQuickLogin) {
+      await CookieStore.clear();                  // 실제 토큰(쿠키) 삭제
+      await SecureStorage.deleteSessionOnly();     // 간편로그인 키는 보존
+    } else {
+      await QuickLoginService.instance.clearAll(); // 간편로그인 해제
+      await SecureStorage.deleteAll();
+    }
     await LocalStorage.remove(StorageKeys.isLoggedIn);
+    state = false;
+  }
+
+  /// 앱 종료 시 호출. 쿠키 / 간편로그인 / 서버세션은 모두 보존하고
+  /// 메모리 상의 로그인 상태만 false 로 내려서 다음 콜드스타트에
+  /// SplashPage 가 서버 검증부터 다시 시작하도록 한다.
+  void resetSessionForExit() {
     state = false;
   }
 }

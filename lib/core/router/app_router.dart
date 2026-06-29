@@ -41,6 +41,8 @@ import '../../features/terms/presentation/pages/terms_page.dart';
 
 // ── MyPage ───────────────────────────────────────────────────────
 import '../../features/mypage/presentation/pages/mypage_page.dart';
+import '../../features/mypage/presentation/pages/my_card_detail_page.dart';
+import '../../features/mypage/presentation/pages/address_ci_verify_page.dart';
 import '../../features/mypage/presentation/pages/spending_input_page.dart';
 
 // ── Account ───────────────────────────────────────────────────────
@@ -63,8 +65,12 @@ import '../../features/application/presentation/pages/check/check_step4_payment_
 import '../../features/application/presentation/pages/check/check_result_page.dart';
 
   final appRouterProvider = Provider<GoRouter>((ref) {
+  // 라우터는 앱 생애 동안 단 한 번만 생성한다.
+  // authStateProvider 를 watch 하면 로그인 상태가 바뀔 때마다 GoRouter 자체가
+  // 재생성되어 initialLocation('/splash')로 튕긴다(→ 간편로그인 후 /splash → /unlock
+  // 재진입 = 로그인 2회 버그). 상태 변화는 refreshListenable 로만 반영하고,
+  // 현재 로그인값은 redirect 시점에 ref.read 로 즉시 읽는다.
   final notifier   = ref.watch(routerNotifierProvider.notifier);
-  final isLoggedIn = ref.watch(authStateProvider);
 
   return GoRouter(
     initialLocation: '/splash',
@@ -72,6 +78,7 @@ import '../../features/application/presentation/pages/check/check_result_page.da
     redirect: (ctx, state) {
       // 스플래시는 리다이렉트 제외
       if (state.matchedLocation == '/splash') return null;
+      final isLoggedIn = ref.read(authStateProvider);
       return RouteGuards.redirect(isLoggedIn, state);
     },
     routes: [
@@ -114,7 +121,9 @@ import '../../features/application/presentation/pages/check/check_result_page.da
       ),
       GoRoute(
         path: '/mypage/quick-login',
-        builder: (_, __) => const QuickLoginSettingsPage(),
+        builder: (_, state) => QuickLoginSettingsPage(
+          onboarding: state.uri.queryParameters['onboarding'] == '1',
+        ),
       ),
 
       // ── 알림 ───────────────────────────────────────────────────
@@ -173,6 +182,20 @@ import '../../features/application/presentation/pages/check/check_result_page.da
       GoRoute(
         path: '/mypage',
         builder: (_, __) => const MyPagePage(),
+      ),
+
+      // ── 보유 카드 관리 (USER_CARDS 컬럼 기반) ──────────────────
+      GoRoute(
+        path: '/mypage/cards/:id',
+        builder: (_, state) => MyCardDetailPage(
+          userCardId: int.tryParse(state.pathParameters['id'] ?? '') ?? 0,
+        ),
+      ),
+
+      // ── 주소 변경 · CI 갱신 (본인인증) ─────────────────────────
+      GoRoute(
+        path: '/mypage/address-verify',
+        builder: (_, __) => const AddressCiVerifyPage(),
       ),
 
       // ── 소비 패턴 ──────────────────────────────────────────────

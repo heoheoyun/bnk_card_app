@@ -6,6 +6,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/widgets/bnk_app_bar.dart';
@@ -14,7 +15,11 @@ import '../../../quick_login/presentation/pages/pattern_input_page.dart';
 import '../../../quick_login/presentation/providers/quick_login_provider.dart';
 
 class QuickLoginSettingsPage extends ConsumerWidget {
-  const QuickLoginSettingsPage({super.key});
+  /// 첫 로그인 직후 온보딩으로 진입했는지 여부.
+  /// true 면 '나중에 설정' 버튼을 노출하고, 설정완료/건너뛰기 시 홈('/')으로 이동한다.
+  final bool onboarding;
+
+  const QuickLoginSettingsPage({super.key, this.onboarding = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -23,7 +28,11 @@ class QuickLoginSettingsPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const BnkAppBar(title: '간편로그인 설정', backPath: '/mypage'),
+      appBar: BnkAppBar(
+        title: '간편로그인 설정',
+        // 온보딩 중엔 뒤로가기 대상을 홈으로 (마이페이지 스택이 없음)
+        backPath: onboarding ? '/' : '/mypage',
+      ),
       body: ListView(
         children: [
           const SizedBox(height: 8),
@@ -112,6 +121,41 @@ class QuickLoginSettingsPage extends ConsumerWidget {
               '비밀번호로 다시 로그인해야 합니다.',
               style: TextStyle(fontSize: 12, color: AppColors.gray400),
             ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: onboarding ? _onboardingFooter(context, state) : null,
+    );
+  }
+
+  /// 온보딩 진입 시 하단 버튼: 설정완료 / 나중에 설정 (둘 다 홈으로).
+  Widget _onboardingFooter(BuildContext context, QuickLoginState state) {
+    final anySet = state.biometricEnabled || state.pinSet || state.patternSet;
+    return SafeArea(
+      minimum: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => context.go('/'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+              child: Text(anySet ? '설정 완료' : '시작하기',
+                  style: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w600)),
+            ),
+          ),
+          TextButton(
+            onPressed: () => context.go('/'),
+            child: const Text('나중에 설정',
+                style: TextStyle(fontSize: 13, color: AppColors.gray600)),
           ),
         ],
       ),

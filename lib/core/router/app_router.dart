@@ -42,6 +42,7 @@ import '../../features/terms/presentation/pages/terms_page.dart';
 // ── MyPage ───────────────────────────────────────────────────────
 import '../../features/mypage/presentation/pages/mypage_page.dart';
 import '../../features/mypage/presentation/pages/my_card_detail_page.dart';
+import '../../features/mypage/presentation/pages/address_ci_verify_page.dart';
 import '../../features/mypage/presentation/pages/spending_input_page.dart';
 
 // ── Account ───────────────────────────────────────────────────────
@@ -189,6 +190,12 @@ import '../../features/application/presentation/pages/check/check_result_page.da
         builder: (_, state) => MyCardDetailPage(
           userCardId: int.tryParse(state.pathParameters['id'] ?? '') ?? 0,
         ),
+      ),
+
+      // ── 주소 변경 · CI 갱신 (본인인증) ─────────────────────────
+      GoRoute(
+        path: '/mypage/address-verify',
+        builder: (_, __) => const AddressCiVerifyPage(),
       ),
 
       // ── 소비 패턴 ──────────────────────────────────────────────

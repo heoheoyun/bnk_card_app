@@ -25,6 +25,12 @@ class _CheckStep1TermsPageState extends ConsumerState<CheckStep1TermsPage> {
   bool _memberTermsAgreed  = false;
   bool _privacyTermsAgreed = false;
   bool _marketingAgreed    = false;
+  bool _mydataAgreed = false;
+  bool _mydataScrolledToBottom = false;
+  final Set<int> _viewedTermsIds = {};
+
+  bool get _allStaticAgreed =>
+      _memberTermsAgreed && _privacyTermsAgreed && _marketingAgreed;
 
   @override
   void initState() {
@@ -67,11 +73,6 @@ class _CheckStep1TermsPageState extends ConsumerState<CheckStep1TermsPage> {
                     .map((e) => TermsModel.fromJson(e as Map<String, dynamic>))
                     .toList();
 
-                final allIds = terms.map((t) => t.termsId).toList();
-
-                final isAllChecked = allIds.isNotEmpty &&
-                    allIds.every((id) => agreeState[id] == true);
-
                 return ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
@@ -92,37 +93,44 @@ class _CheckStep1TermsPageState extends ConsumerState<CheckStep1TermsPage> {
                     ),
                     const SizedBox(height: 24),
 
-                    // 전체 동의
-                    CheckboxListTile(
-                      value:   isAllChecked,
-                      onChanged: (_) => ref
-                          .read(termsAgreeProvider.notifier)
-                          .agreeAll(allIds),
-                      title: const Text(
-                        '전체 동의',
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      controlAffinity: ListTileControlAffinity.leading,
-                      activeColor: AppColors.teal600,
-                    ),
-                    const Divider(height: 1),
-                    const SizedBox(height: 8),
-
                     // 약관 목록
                     ...terms.map((term) => TermsItemTile(
+                      key: ValueKey(term.termsId),
                       terms:    term,
                       agreed:   agreeState[term.termsId] ?? false,
-                      onToggle: () => ref
-                          .read(termsAgreeProvider.notifier)
-                          .toggle(term.termsId),
+                      viewed:   _viewedTermsIds.contains(term.termsId),              // 연결
+                      onToggle: () => ref.read(termsAgreeProvider.notifier).toggle(term.termsId),
+                      onViewed: () => setState(() => _viewedTermsIds.add(term.termsId)), // 연결
                     )),
 
                     const Divider(height: 24),
 
                     _StaticTermsTile(
+                      title: '[필수] 마이데이터 서비스 이용 동의',
+                      isRequired: true,
+                      agreed: _mydataAgreed,
+                      requireScroll: true,
+                      onToggle: () => setState(() => _mydataAgreed = !_mydataAgreed),
+                      onScrollCompleted: () => setState(() => _mydataScrolledToBottom = true),
+                      contentHeight: 150,
+                      content: '''제1조(목적) 본 약관은 주식회사 부산은행(이하 '은행')이 제공하는 마이데이터(본인신용정보관리업) 서비스 이용과 관련하여 은행과 이용자 간의 권리·의무 및 책임사항을 규정함을 목적으로 합니다.
+                                  제2조(정의) ① '마이데이터 서비스'란 신용정보의 이용 및 보호에 관한 법률 제22조의9에 따라 이용자의 개인신용정보를 통합 조회하고 관리할 수 있도록 지원하는 서비스를 말합니다. ② '전송요구'란 이용자가 금융기관 등 보유기관에 자신의 개인신용정보를 은행에 전송하도록 요구하는 것을 말합니다.                                
+                                  제3조(서비스 내용) 은행은 이용자의 동의 및 전송요구에 따라 타 금융기관에 보유된 이용자의 계좌, 카드, 대출, 보험 등 금융정보를 수집하여 통합 조회 서비스를 제공합니다.                                  
+                                  제4조(개인신용정보 수집·이용) ① 은행은 마이데이터 서비스 제공을 위해 이용자로부터 전송요구를 받은 개인신용정보를 수집·이용합니다. ② 수집 항목: 금융거래 정보(계좌잔액, 입출금 내역, 카드이용 내역, 대출 정보, 보험 정보 등) ③ 보유 및 이용기간: 서비스 해지 시까지. 단 관계 법령에 따라 일정 기간 보관이 필요한 경우 해당 기간까지 보유합니다.                                  
+                                  제5조(정보 전송요구) ① 이용자는 본 약관 동의와 함께 아래 보유기관에 대하여 개인신용정보의 전송을 요구하는 것으로 간주합니다. ② 이용자는 언제든지 전송요구를 철회할 수 있으며, 철회 시 해당 정보의 수집이 중단됩니다.                                  
+                                  제6조(이용자의 권리) ① 이용자는 수집된 개인신용정보의 열람, 정정, 삭제를 요구할 수 있습니다. ② 이용자는 마이데이터 서비스를 언제든지 해지할 수 있습니다. ③ 서비스 해지 시 은행은 보유 중인 개인신용정보를 지체 없이 파기합니다.                                  
+                                  제7조(은행의 의무) ① 은행은 이용자의 개인신용정보를 안전하게 관리하기 위한 보안 시스템을 구축·운영합니다. ② 은행은 수집된 정보를 서비스 제공 목적 외에 이용하거나 제3자에게 제공하지 않습니다. ③ 은행은 관련 법령 및 감독당국의 지침을 준수합니다.                                  
+                                  제8조(면책조항) ① 은행은 천재지변, 시스템 장애 등 불가항력적 사유로 서비스를 제공하지 못한 경우 책임을 지지 않습니다. ② 이용자의 귀책사유로 인한 손해에 대해서는 은행이 책임을 지지 않습니다.                                  
+                                  제9조(약관의 변경) 은행은 약관을 변경할 경우 시행 7일 전 앱 또는 홈페이지를 통해 공지하며, 이용자가 변경에 동의하지 않을 경우 서비스를 해지할 수 있습니다.                                  
+                                  부칙: 본 약관은 2024년 1월 1일부터 시행합니다.''',
+                    ),
+                    const SizedBox(height: 8),
+
+                    _StaticTermsTile(
                       title: '[필수] 홈페이지 회원약관',
                       isRequired: true,
                       agreed: _memberTermsAgreed,
+                      requireScroll: false,
                       onToggle: () => setState(() => _memberTermsAgreed = !_memberTermsAgreed),
                       content:
                         '''제1장 총칙 제1조(목적) 이 약관은 주식회사 부산은행(이하 '은행'이라 한다)과 이용 고객(이하 '회원'이라 한다)간에
@@ -161,7 +169,6 @@ class _CheckStep1TermsPageState extends ConsumerState<CheckStep1TermsPage> {
                         서비스의 이용과 관련해서는 어떠한 손해도 책임을 지지 않습니다. 제17조(준거법 및 재판권) ① 이 약관에 명시되지
                         않은 사항은 전기통신사업법 등 관계법령과 상관습에 따릅니다. ② 서비스 이용으로 발생한 분쟁에 대해 소송이 제기되는
                         경우 은행의 본사 소재지를 관할하는 법원을 관할 법원으로 합니다.'''
-
                     ),
                     const SizedBox(height: 8),
 
@@ -169,6 +176,7 @@ class _CheckStep1TermsPageState extends ConsumerState<CheckStep1TermsPage> {
                         title: '[필수] 개인정보처리취급방침',
                         isRequired: true,
                         agreed: _privacyTermsAgreed,
+                        requireScroll: false,
                         onToggle: () => setState(() => _privacyTermsAgreed = !_privacyTermsAgreed),
                         content:
                         '''㈜부산은행(이하 '당행')은 개인정보보호법 제30조에 따라 고객의 개인정보 보호 및 권익을 보호하고 개인정보와 관련한 고객의 고충을
@@ -214,9 +222,34 @@ class _CheckStep1TermsPageState extends ConsumerState<CheckStep1TermsPage> {
                       title: '[선택] 마케팅 정보 수신 동의',
                       isRequired: false,
                       agreed: _marketingAgreed,
+                      requireScroll: false,
                       onToggle: () => setState(() => _marketingAgreed = !_marketingAgreed),
                       content: '마케팅 정보 수신에 동의하시면 BNK 부산은행의 다양한 혜택과 이벤트 정보를 받아보실 수 있습니다.',
                       contentHeight: 65
+                    ),
+                    const SizedBox(height: 8),
+
+                    // 전체 동의 (홈페이지회원 + 개인정보 + 마케팅)
+                    CheckboxListTile(
+                      value: _allStaticAgreed,
+                      onChanged: (_) {
+                        final next = !_allStaticAgreed;
+                        setState(() {
+                          _memberTermsAgreed  = next;
+                          _privacyTermsAgreed = next;
+                          _marketingAgreed    = next;
+                        });
+                      },
+                      title: const Text(
+                        '위 약관 전체 동의',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: const Text(
+                        '홈페이지 회원약관, 개인정보처리취급방침, 마케팅 정보 수신',
+                        style: TextStyle(fontSize: 11),
+                      ),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      activeColor: AppColors.teal600,
                     ),
                   ],
                 );
@@ -243,21 +276,18 @@ class _CheckStep1TermsPageState extends ConsumerState<CheckStep1TermsPage> {
                       .read(termsAgreeProvider.notifier)
                       .isAllAgreed(requiredIds)
                       && _memberTermsAgreed
-                      && _privacyTermsAgreed;
+                      && _privacyTermsAgreed
+                      && _mydataAgreed;
 
                   return BnkButton(
                     label:     '다음',
                     isLoading: appState.isLoading,
                     onPressed: allRequiredAgreed
                         ? () async {
-                      final agreedTerms = terms
-                          .map((t) => {
+                      final agreedTerms = terms.map((t) => {
                         'termsId': t.termsId.toString(),
-                        'agreedYn': (agreeState[t.termsId] == true)
-                            ? 'Y'
-                            : 'N',
-                      })
-                          .toList();
+                        'agreedYn': (agreeState[t.termsId] == true) ? 'Y' : 'N',
+                      }).toList();
 
                       await appNotifier.createApplication(
                         cardId:      widget.cardId,
@@ -265,10 +295,12 @@ class _CheckStep1TermsPageState extends ConsumerState<CheckStep1TermsPage> {
                       );
 
                       if (context.mounted && appState.error == null) {
-                        context.push(
-                          '/application/check/step2',
-                          extra: widget.cardId,
-                        );
+
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (context.mounted) {
+                            context.push('/application/check/step2', extra: widget.cardId);
+                          }
+                        });
                       }
                     }
                         : null,
@@ -292,6 +324,8 @@ class _StaticTermsTile extends StatefulWidget {
   final VoidCallback onToggle;
   final String     content;
   final double     contentHeight;
+  final bool       requireScroll;
+  final VoidCallback? onScrollCompleted;
 
   const _StaticTermsTile({
     required this.title,
@@ -300,6 +334,8 @@ class _StaticTermsTile extends StatefulWidget {
     required this.onToggle,
     required this.content,
     this.contentHeight = 120,
+    this.requireScroll = false,
+    this.onScrollCompleted,
   });
 
   @override
@@ -308,30 +344,36 @@ class _StaticTermsTile extends StatefulWidget {
 
 class _StaticTermsTileState extends State<_StaticTermsTile> {
   final _scroll = ScrollController();
-  bool _reachedBottom = false;
+  bool get _reachedBottom => !widget.requireScroll || _scrolledToBottom;
+  bool _scrolledToBottom = false;
 
   @override
   void initState() {
     super.initState();
-    _scroll.addListener(_onScroll);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scroll.hasClients && _scroll.position.maxScrollExtent <= 0) {
-        setState(() => _reachedBottom = true);
-      }
-    });
+    if (widget.requireScroll) {
+      _scroll.addListener(_onScroll);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scroll.hasClients && _scroll.position.maxScrollExtent <= 0) {
+          setState(() => _scrolledToBottom = true);
+        }
+      });
+    }
   }
 
   void _onScroll() {
-    if (_reachedBottom) return;
+    if (_scrolledToBottom) return;
     final p = _scroll.position;
     if (p.pixels >= p.maxScrollExtent - 8) {
-      setState(() => _reachedBottom = true);
+      setState(() => _scrolledToBottom = true);
+      widget.onScrollCompleted?.call();
     }
   }
 
   @override
   void dispose() {
-    _scroll.removeListener(_onScroll);
+    if (widget.requireScroll) {
+      _scroll.removeListener(_onScroll);
+    }
     _scroll.dispose();
     super.dispose();
   }

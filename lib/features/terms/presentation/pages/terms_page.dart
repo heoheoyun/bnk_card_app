@@ -59,11 +59,11 @@ class TermsPage extends ConsumerWidget {
                     const Divider(),
                     ...termsList.map(
                           (t) => TermsItemTile(
-                        terms: t,
-                        agreed: agreeMap[t.termsId] ?? false,
-                        onToggle: () => ref
-                            .read(termsAgreeProvider.notifier)
-                            .toggle(t.termsId),
+                        terms:    t,
+                        agreed:   agreeMap[t.termsId] ?? false,
+                        viewed:   true,   // TermsPage는 viewed 강제 없이 바로 체크 가능하게
+                        onToggle: () => ref.read(termsAgreeProvider.notifier).toggle(t.termsId),
+                        onViewed: () {},  // TermsPage는 viewed 추적 불필요
                       ),
                     ),
                   ],

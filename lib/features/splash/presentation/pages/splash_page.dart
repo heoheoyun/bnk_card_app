@@ -50,7 +50,16 @@ class _SplashPageState extends ConsumerState<SplashPage>
       return;
     }
 
-    // 2) 쿠키 있어도 서버 세션 검증 (#3 빈 회원 차단 / 서버 꺼지면 자동 로그아웃)
+    // 2) 간편인증 설정됨 → 서버 refresh 검증을 생략하고 바로 재인증 게이트로.
+    //    세션 유효성 검증은 unlock 의 무음 refresh 에 위임한다.
+    //    (스플래시에서 검증 후 unlock 에서 또 검증하면 로그인이 두 번 일어남)
+    final quickEnabled = await QuickLoginService.instance.isAnyEnabled;
+    if (quickEnabled) {
+      if (mounted) context.go('/unlock');
+      return;
+    }
+
+    // 3) 간편인증 미설정 → 서버 세션 검증 (#3 빈 회원 차단 / 서버 꺼지면 자동 로그아웃)
     final ok = await ref.read(authDatasourceProvider).refresh();
     if (!ok) {
       await ref.read(authStateProvider.notifier).onLogout();
@@ -58,14 +67,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
       return;
     }
 
-    // 3) 세션 유효 + 간편인증 설정됨 → 재인증 게이트 (#13)
-    final quickEnabled = await QuickLoginService.instance.isAnyEnabled;
-    if (quickEnabled) {
-      if (mounted) context.go('/unlock');
-      return;
-    }
-
-    // 4) 간편인증 미설정 → 로그인 상태 확정 후 홈
+    // 4) 세션 유효 → 로그인 상태 확정 후 홈
     await ref.read(authStateProvider.notifier).onLogin();
     if (mounted) context.go('/');
   }

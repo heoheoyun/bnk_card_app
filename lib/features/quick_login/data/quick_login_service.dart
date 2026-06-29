@@ -11,6 +11,8 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:local_auth/local_auth.dart';
 import 'package:local_auth/error_codes.dart' as auth_error;
+import 'package:local_auth_android/local_auth_android.dart';
+import 'package:local_auth_darwin/local_auth_darwin.dart';
 
 import '../../../core/constants/storage_keys.dart';
 import '../../../core/storage/secure_storage.dart';
@@ -158,10 +160,34 @@ class QuickLoginService {
     return _authenticateBiometric('잠금을 해제하려면 생체인증을 진행해 주세요.');
   }
 
+  /// 생체인증 시스템 다이얼로그를 BNK 카드 앱 톤의 한글 문구로 브랜딩.
+  /// (OS 보안 정책상 다이얼로그 UI 자체는 교체 불가 — 제목/안내/버튼 문구만 커스터마이즈)
+  static const List<AuthMessages> _authMessages = [
+    AndroidAuthMessages(
+      signInTitle: 'BNK 카드 잠금 해제',
+      biometricHint: '지문 또는 얼굴로 본인 확인',
+      biometricNotRecognized: '인식하지 못했어요. 다시 시도해 주세요.',
+      biometricSuccess: '인증되었습니다.',
+      biometricRequiredTitle: '생체인증이 필요합니다',
+      cancelButton: '취소',
+      deviceCredentialsRequiredTitle: '기기 잠금 설정 필요',
+      deviceCredentialsSetupDescription: '기기 설정에서 화면 잠금을 먼저 설정해 주세요.',
+      goToSettingsButton: '설정으로 이동',
+      goToSettingsDescription: '생체인증이 등록되어 있지 않습니다. 기기 설정에서 등록해 주세요.',
+    ),
+    IOSAuthMessages(
+      cancelButton: '취소',
+      goToSettingsButton: '설정',
+      goToSettingsDescription: '생체인증을 사용하려면 기기 설정에서 등록해 주세요.',
+      lockOut: '생체인증이 잠겼습니다. 기기 비밀번호로 잠금을 해제해 주세요.',
+    ),
+  ];
+
   Future<QuickAuthResult> _authenticateBiometric(String reason) async {
     try {
       final ok = await _localAuth.authenticate(
         localizedReason: reason,
+        authMessages: _authMessages,
         options: const AuthenticationOptions(
           biometricOnly: true,
           stickyAuth: true,

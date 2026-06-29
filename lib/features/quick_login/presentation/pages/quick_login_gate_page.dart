@@ -150,38 +150,92 @@ class _QuickLoginGatePageState extends ConsumerState<QuickLoginGatePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 48),
-            const Icon(Icons.lock_outline, size: 40, color: AppColors.primary),
-            const SizedBox(height: 16),
-            const Text('간편로그인',
-                style:
-                    TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 8),
-            SizedBox(
-              height: 20,
-              child: Text(
-                _error ?? _hintFor(_active),
-                style: TextStyle(
-                  fontSize: 13,
-                  color: _error != null ? Colors.red : AppColors.gray400,
+      backgroundColor: AppColors.surface,
+      body: Column(
+        children: [
+          // ── 브랜드 헤더 (teal) ────────────────────────────────────
+          Container(
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [AppColors.teal900, AppColors.teal800],
+              ),
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
+            ),
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(Icons.credit_card,
+                          size: 30, color: AppColors.teal600),
+                    ),
+                    const SizedBox(height: 14),
+                    const Text(
+                      'BNK 카드',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      '간편인증으로 잠금을 해제하세요',
+                      style: TextStyle(color: Colors.white70, fontSize: 13),
+                    ),
+                  ],
                 ),
               ),
             ),
-            const Spacer(),
-            _buildActive(),
-            const Spacer(),
-            _buildSwitcher(),
-            TextButton(
-              onPressed: () => _toLogin(null),
-              child: const Text('비밀번호로 로그인'),
+          ),
+
+          // ── 인증 영역 ─────────────────────────────────────────────
+          Expanded(
+            child: SafeArea(
+              top: false,
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    height: 20,
+                    child: Text(
+                      _error ?? _hintFor(_active),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: _error != null ? Colors.red : AppColors.gray600,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  _buildActive(),
+                  const Spacer(),
+                  _buildSwitcher(),
+                  const SizedBox(height: 4),
+                  TextButton(
+                    onPressed: () => _toLogin(null),
+                    style: TextButton.styleFrom(
+                        foregroundColor: AppColors.gray600),
+                    child: const Text('비밀번호로 로그인'),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ),
             ),
-            const SizedBox(height: 12),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -217,10 +271,36 @@ class _QuickLoginGatePageState extends ConsumerState<QuickLoginGatePage> {
         );
       case QuickLoginMethod.biometric:
         return Center(
-          child: IconButton(
-            iconSize: 72,
-            icon: const Icon(Icons.fingerprint, color: AppColors.primary),
-            onPressed: _busy ? null : _tryBiometric,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              GestureDetector(
+                onTap: _busy ? null : _tryBiometric,
+                child: Container(
+                  width: 104,
+                  height: 104,
+                  decoration: BoxDecoration(
+                    color: AppColors.teal50,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.teal200, width: 1.5),
+                  ),
+                  child: _busy
+                      ? const Padding(
+                          padding: EdgeInsets.all(36),
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2.5, color: AppColors.teal600),
+                        )
+                      : const Icon(Icons.fingerprint,
+                          size: 56, color: AppColors.teal600),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                _busy ? '인증 중…' : '지문/얼굴로 인증',
+                style: const TextStyle(
+                    fontSize: 13, color: AppColors.gray600),
+              ),
+            ],
           ),
         );
       default:
@@ -234,14 +314,14 @@ class _QuickLoginGatePageState extends ConsumerState<QuickLoginGatePage> {
         _enabled.where((m) => m != _active).toList(growable: false);
     if (others.isEmpty) return const SizedBox.shrink();
     return Wrap(
-      spacing: 12,
+      spacing: 10,
       children: others.map((m) {
         final (icon, label) = switch (m) {
           QuickLoginMethod.pin => (Icons.dialpad, 'PIN'),
           QuickLoginMethod.pattern => (Icons.pattern, '패턴'),
           QuickLoginMethod.biometric => (Icons.fingerprint, '생체'),
         };
-        return TextButton.icon(
+        return OutlinedButton.icon(
           onPressed: () {
             setState(() {
               _active = m;
@@ -250,8 +330,15 @@ class _QuickLoginGatePageState extends ConsumerState<QuickLoginGatePage> {
             });
             if (m == QuickLoginMethod.biometric) _tryBiometric();
           },
-          icon: Icon(icon, size: 18),
-          label: Text(label),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.teal600,
+            side: const BorderSide(color: AppColors.teal200),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20)),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          ),
+          icon: Icon(icon, size: 16),
+          label: Text(label, style: const TextStyle(fontSize: 13)),
         );
       }).toList(),
     );

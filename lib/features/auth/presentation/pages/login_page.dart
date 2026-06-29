@@ -12,6 +12,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/storage_keys.dart';
+import '../../../quick_login/data/quick_login_service.dart';
 import '../providers/auth_provider.dart';
 import 'ip_verify_page.dart';
 
@@ -82,7 +83,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             methods: result.availableMethods,
           ));
     } else {
-      context.go('/');
+      // 로그인 완료(쿠키 발급됨). 간편로그인 미설정이면 첫 로그인 온보딩으로 유도.
+      final quickEnabled = await QuickLoginService.instance.isAnyEnabled;
+      if (!mounted) return;
+      if (quickEnabled) {
+        context.go('/');
+      } else {
+        context.go('/mypage/quick-login?onboarding=1');
+      }
     }
   }
 

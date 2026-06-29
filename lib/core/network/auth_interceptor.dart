@@ -24,6 +24,10 @@ class AuthInterceptor extends Interceptor {
       RequestOptions options, RequestInterceptorHandler handler) async {
     final token = await SecureStorage.read(StorageKeys.accessToken);
     if (token != null) options.headers['Authorization'] = 'Bearer $token';
+
+    // ngrok 브라우저 경고 창 건너뛰기 헤더 추가
+    options.headers['ngrok-skip-browser-warning'] = 'true';
+
     handler.next(options);
   }
 

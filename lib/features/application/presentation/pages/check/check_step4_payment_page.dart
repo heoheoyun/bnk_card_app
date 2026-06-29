@@ -233,7 +233,7 @@ class _CheckStep4PaymentPageState
                               SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  '오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+                                  "심사 요청 중 오류가 발생했습니다. 고객센터에 문의해주세요. 1588-6200",
                                   style: TextStyle(fontSize: 13, color: Colors.red),
                                 ),
                               ),

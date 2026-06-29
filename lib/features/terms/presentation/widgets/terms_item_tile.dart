@@ -3,24 +3,21 @@ import '../../data/models/terms_model.dart';
 import '../../../../core/constants/app_colors.dart';
 import 'terms_files_sheet.dart';
 
-class TermsItemTile extends StatefulWidget {
-  final TermsModel  terms;
-  final bool        agreed;
+class TermsItemTile extends StatelessWidget {  // StatefulWidget → StatelessWidget
+  final TermsModel   terms;
+  final bool         agreed;
+  final bool         viewed;        // 추가
   final VoidCallback onToggle;
+  final VoidCallback onViewed;      // 추가
 
   const TermsItemTile({
     super.key,
     required this.terms,
     required this.agreed,
+    required this.viewed,           // 추가
     required this.onToggle,
+    required this.onViewed,         // 추가
   });
-
-  @override
-  State<TermsItemTile> createState() => _TermsItemTileState();
-}
-
-class _TermsItemTileState extends State<TermsItemTile> {
-  bool _viewed = false;
 
   @override
   Widget build(BuildContext context) {
@@ -28,49 +25,37 @@ class _TermsItemTileState extends State<TermsItemTile> {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          // 체크박스
           GestureDetector(
             onTap: () {
-              if (!_viewed) {
+              if (!viewed) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('약관을 먼저 확인해 주세요.'),
-                    duration: Duration(seconds: 1),
-                  ),
+                  const SnackBar(content: Text('약관을 먼저 확인해 주세요.'), duration: Duration(seconds: 1)),
                 );
                 return;
               }
-              widget.onToggle();
+              onToggle();
             },
             child: Icon(
-              widget.agreed ? Icons.check_circle : Icons.check_circle_outline,
-              color: !_viewed
+              agreed ? Icons.check_circle : Icons.check_circle_outline,
+              color: !viewed
                   ? Colors.grey.shade200
-                  : (widget.agreed ? AppColors.primary : Colors.grey.shade400),
+                  : (agreed ? AppColors.primary : Colors.grey.shade400),
               size: 24,
             ),
           ),
           const SizedBox(width: 12),
-
-          // 필수/선택 배지 + 제목
           Expanded(
             child: Row(
               children: [
-                _RequiredBadge(required: widget.terms.required),
+                _RequiredBadge(required: terms.required),
                 const SizedBox(width: 6),
                 Expanded(
-                  child: Text(
-                    widget.terms.title,
-                    style: const TextStyle(fontSize: 14),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  child: Text(terms.title, style: const TextStyle(fontSize: 14),
+                      maxLines: 2, overflow: TextOverflow.ellipsis),
                 ),
               ],
             ),
           ),
-
-          // 보기 버튼
           TextButton(
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -78,21 +63,16 @@ class _TermsItemTileState extends State<TermsItemTile> {
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             onPressed: () async {
-              // 끝까지 스크롤 후 '확인'을 누르면 true 반환 → 그때만 동의 허용
-              final read = await TermsFilesSheet.show(
-                context,
-                widget.terms.termsId,
-                widget.terms.title,
-              );
-              if (mounted && read == true) {
-                setState(() => _viewed = true);
+              final read = await TermsFilesSheet.show(context, terms.termsId, terms.title);
+              if (read == true) {
+                onViewed();         // 부모에 알리기만 함
+                onToggle();         // 보기 완료 시 자동 체크
               }
             },
-            child: Text(
-              '보기',
+            child: Text('보기',
               style: TextStyle(
                 fontSize: 12,
-                color: _viewed ? AppColors.primary : AppColors.textMuted,
+                color: viewed ? AppColors.primary : AppColors.textMuted,
                 decoration: TextDecoration.underline,
               ),
             ),
@@ -102,6 +82,94 @@ class _TermsItemTileState extends State<TermsItemTile> {
     );
   }
 }
+//
+// class _TermsItemTileState extends State<TermsItemTile> {
+//   bool _viewed = false;
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Padding(
+//       padding: const EdgeInsets.symmetric(vertical: 4),
+//       child: Row(
+//         children: [
+//           // 체크박스
+//           GestureDetector(
+//             onTap: () {
+//               if (!_viewed) {
+//                 ScaffoldMessenger.of(context).showSnackBar(
+//                   const SnackBar(
+//                     content: Text('약관을 먼저 확인해 주세요.'),
+//                     duration: Duration(seconds: 1),
+//                   ),
+//                 );
+//                 return;
+//               }
+//               widget.onToggle();
+//             },
+//             child: Icon(
+//               widget.agreed ? Icons.check_circle : Icons.check_circle_outline,
+//               color: !_viewed
+//                   ? Colors.grey.shade200
+//                   : (widget.agreed ? AppColors.primary : Colors.grey.shade400),
+//               size: 24,
+//             ),
+//           ),
+//           const SizedBox(width: 12),
+//
+//           // 필수/선택 배지 + 제목
+//           Expanded(
+//             child: Row(
+//               children: [
+//                 _RequiredBadge(required: widget.terms.required),
+//                 const SizedBox(width: 6),
+//                 Expanded(
+//                   child: Text(
+//                     widget.terms.title,
+//                     style: const TextStyle(fontSize: 14),
+//                     maxLines: 2,
+//                     overflow: TextOverflow.ellipsis,
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           ),
+//
+//           // 보기 버튼
+//           TextButton(
+//             style: TextButton.styleFrom(
+//               padding: const EdgeInsets.symmetric(horizontal: 8),
+//               minimumSize: Size.zero,
+//               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+//             ),
+//             onPressed: () async {
+//               final read = await TermsFilesSheet.show(
+//                 context,
+//                 widget.terms.termsId,
+//                 widget.terms.title,
+//               );
+//               if (mounted && read == true) {
+//                 setState(() => _viewed = true);
+//                 if (!widget.agreed) {
+//                   WidgetsBinding.instance.addPostFrameCallback((_) {
+//                     if (mounted) widget.onToggle();
+//                   });
+//                 }
+//               }
+//             },
+//             child: Text(
+//               '보기',
+//               style: TextStyle(
+//                 fontSize: 12,
+//                 color: _viewed ? AppColors.primary : AppColors.textMuted,
+//                 decoration: TextDecoration.underline,
+//               ),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
 
 class _RequiredBadge extends StatelessWidget {
   final bool required;

@@ -92,6 +92,7 @@ class AddressSearchField extends StatelessWidget {
             const SizedBox(width: 8),
             SizedBox(
               height: 46,
+              width: 110,
               child: OutlinedButton(
                 onPressed: () => _search(context),
                 style: OutlinedButton.styleFrom(

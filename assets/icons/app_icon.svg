@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- BNK 카드 앱 아이콘 마스터 (1024). flutter_launcher_icons 용 PNG 내보내기 원본. -->
+  <rect width="1024" height="1024" rx="220" fill="#00677F"/>
+
+  <!-- 카드 본체 -->
+  <rect x="232" y="332" width="560" height="360" rx="48" fill="#FFFFFF"/>
+  <!-- IC 칩 (골드) -->
+  <rect x="300" y="420" width="130" height="96" rx="16" fill="#E2B857"/>
+  <!-- 카드번호 스트라이프 -->
+  <rect x="300" y="566" width="420" height="34" rx="12" fill="#00677F"/>
+  <rect x="300" y="616" width="300" height="34" rx="12" fill="#9FC9D3"/>
+</svg>

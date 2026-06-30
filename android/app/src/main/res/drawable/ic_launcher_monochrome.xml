@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  적응형 아이콘 모노크롬 레이어 (Android 13+ 테마 아이콘).
+  단색 실루엣 — 시스템이 알파 영역에 테마색을 입힌다.
+  카드 본체에서 IC 칩/스트라이프를 evenOdd 로 도려내 카드 형태가 드러나게 함.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#000000"
+        android:fillType="evenOdd"
+        android:pathData="M35,38 L73,38 Q78,38 78,43 L78,65 Q78,70 73,70 L35,70 Q30,70 30,65 L30,43 Q30,38 35,38 Z M37,45 L47,45 L47,53 L37,53 Z M37,59 L71,59 L71,62 L37,62 Z" />
+</vector>

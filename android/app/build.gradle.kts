@@ -24,7 +24,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.bnk_card_app"
-        minSdk = 23
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

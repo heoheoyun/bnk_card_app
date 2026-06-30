@@ -44,4 +44,16 @@ class AuthRepositoryImpl implements AuthRepository {
   }) =>
       _ds.confirmIpEmailCode(
           userId: userId, challengeToken: challengeToken, code: code, nickname: nickname);
+
+  @override Future<void> verifyIpCi({
+    required int userId,
+    required String challengeToken,
+    required String name,
+    required String residentFront,
+    required String phone,
+    String? nickname,
+  }) =>
+      _ds.verifyIpCi(
+          userId: userId, challengeToken: challengeToken,
+          name: name, residentFront: residentFront, phone: phone, nickname: nickname);
 }

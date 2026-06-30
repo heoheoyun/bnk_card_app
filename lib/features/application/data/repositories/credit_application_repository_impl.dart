@@ -24,6 +24,7 @@ class CreditApplicationRepositoryImpl implements CreditApplicationRepository {
     required String idName,
     required String idResidentNo,
     required String idAddress,
+    required String idPhone,
     required String idIssueDate,
   }) {
     return _ds.verifyIdentity(
@@ -32,6 +33,7 @@ class CreditApplicationRepositoryImpl implements CreditApplicationRepository {
       idName:       idName,
       idResidentNo: idResidentNo,
       idAddress:    idAddress,
+      idPhone:      idPhone,
       idIssueDate:  idIssueDate,
     );
   }

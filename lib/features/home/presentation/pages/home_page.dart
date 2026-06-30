@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/auth_state_provider.dart';
 import '../widgets/home_header.dart';
-import '../widgets/my_card_carousel.dart';
+import '../widgets/home_card_carousel.dart';
 import '../widgets/spending_summary_card.dart';
 import '../widgets/quick_menu_grid.dart';
 import '../widgets/home_banner.dart';
@@ -61,7 +61,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               children: [
                 if (isLoggedIn) ...[
                   const HomeHeader(),
-                  const MyCardCarousel(),
+                  const HomeCardCarousel(),
                   const SizedBox(height: 12),
                   const SpendingSummaryCard(),
                   const SizedBox(height: 8),

@@ -21,6 +21,7 @@ class CheckApplicationRequestModel {
     required String idName,
     required String idResidentNo,
     required String idAddress,
+    required String idPhone,
     required String idIssueDate,
   }) {
     return {
@@ -29,6 +30,7 @@ class CheckApplicationRequestModel {
       'idName':       idName,
       'idResidentNo': idResidentNo,
       'idAddress':    idAddress,
+      'idPhone':      idPhone,
       'idIssueDate':  idIssueDate,
     };
   }
@@ -70,6 +72,8 @@ class CheckApplicationRequestModel {
         'combinedTransitYn': paymentSnapshot.combinedTransitYn,
         'txAlertType':       paymentSnapshot.txAlertType,
         'statementMethod':   paymentSnapshot.statementMethod,
+        'deliveryAddress':   paymentSnapshot.deliveryAddress,
+        'deliveryZipcode':   paymentSnapshot.deliveryZipcode,
       },
       'linkedAccountId': linkedAccountId,
       'cardPassword':    cardPassword,

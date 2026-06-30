@@ -21,6 +21,7 @@ class CreditApplicationRequestModel {
     required String idName,
     required String idResidentNo,
     required String idAddress,
+    required String idPhone,
     required String idIssueDate,
   }) {
     return {
@@ -29,6 +30,7 @@ class CreditApplicationRequestModel {
       'idName':       idName,
       'idResidentNo': idResidentNo,
       'idAddress':    idAddress,
+      'idPhone':      idPhone,
       'idIssueDate':  idIssueDate,
     };
   }
@@ -79,6 +81,8 @@ class CreditApplicationRequestModel {
         'combinedTransitYn': paymentSnapshot.combinedTransitYn,
         'txAlertType':       paymentSnapshot.txAlertType,
         'statementMethod':   paymentSnapshot.statementMethod,
+        'deliveryAddress':   paymentSnapshot.deliveryAddress,
+        'deliveryZipcode':   paymentSnapshot.deliveryZipcode,
       },
       'requestedLimit': requestedLimit,
       'cardPassword':   cardPassword,

@@ -25,6 +25,7 @@ class _CreditStep2IdentityPageState
   String? _idName;
   String? _idResidentNo;
   String? _idAddress;
+  String? _idPhone;
   String? _idIssueDate;
 
   bool _isAdult() {
@@ -80,6 +81,7 @@ class _CreditStep2IdentityPageState
           _idName != null && _idName!.isNotEmpty &&
           _idResidentNo != null && _idResidentNo!.length == 7 &&
           _idAddress != null && _idAddress!.isNotEmpty &&
+          _idPhone != null && _idPhone!.replaceAll(RegExp(r'[^0-9]'), '').length >= 9 &&
           _idIssueDate != null && _idIssueDate!.isNotEmpty;
 
   @override
@@ -142,6 +144,7 @@ class _CreditStep2IdentityPageState
                         required idName,
                         required idResidentNo,
                         required idAddress,
+                        required idPhone,
                         required idIssueDate,
                       }) {
                         setState(() {
@@ -149,6 +152,7 @@ class _CreditStep2IdentityPageState
                           _idName      = idName;
                           _idResidentNo = idResidentNo;
                           _idAddress   = idAddress;
+                          _idPhone     = idPhone;
                           _idIssueDate = idIssueDate;
                         });
                       },
@@ -206,6 +210,7 @@ class _CreditStep2IdentityPageState
                       idName:       _idName!,
                       idResidentNo: _idResidentNo!,
                       idAddress:    _idAddress!,
+                      idPhone:      _idPhone!,
                       idIssueDate:  _idIssueDate!,
                     );
 

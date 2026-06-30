@@ -11,6 +11,7 @@ abstract class CreditApplicationRepository {
     required String idName,
     required String idResidentNo,
     required String idAddress,
+    required String idPhone,
     required String idIssueDate,
   });
 

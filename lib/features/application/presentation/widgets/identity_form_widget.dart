@@ -8,6 +8,7 @@ class IdentityFormWidget extends StatefulWidget {
   required String idName,
   required String idResidentNo,
   required String idAddress,
+  required String idPhone,
   required String idIssueDate,
   }) onChanged;
 
@@ -20,6 +21,7 @@ class IdentityFormWidget extends StatefulWidget {
 class _IdentityFormWidgetState extends State<IdentityFormWidget> {
   String _idType      = 'RESIDENT'; // RESIDENT / DRIVER
   final _nameCtrl          = TextEditingController();
+  final _phoneCtrl         = TextEditingController();
   final _residentFrontCtrl = TextEditingController();
   final _residentBackCtrl  = TextEditingController();
   final _postcodeCtrl      = TextEditingController();
@@ -30,6 +32,7 @@ class _IdentityFormWidgetState extends State<IdentityFormWidget> {
   @override
   void dispose() {
     _nameCtrl.dispose();
+    _phoneCtrl.dispose();
     _residentFrontCtrl.dispose();
     _residentBackCtrl.dispose();
     _postcodeCtrl.dispose();
@@ -44,6 +47,7 @@ class _IdentityFormWidgetState extends State<IdentityFormWidget> {
       idType:       _idType,
       idName:       _nameCtrl.text.trim(),
       idResidentNo: _residentFrontCtrl.text.trim() + _residentBackCtrl.text.trim(),
+      idPhone:      _phoneCtrl.text.trim(),
       // 도로명 주소 + 상세주소 합쳐서 전달
       idAddress:    [_addressCtrl.text.trim(), _addrDetailCtrl.text.trim()]
           .where((s) => s.isNotEmpty).join(' '),
@@ -83,6 +87,16 @@ class _IdentityFormWidgetState extends State<IdentityFormWidget> {
           hint:        '이름을 입력해 주세요',
           controller:  _nameCtrl,
           onChanged:   (_) => _notify(),
+        ),
+        const SizedBox(height: 16),
+
+        // 전화번호 (CI 구성요소 — 본인인증 대조)
+        _Field(
+          label:        '전화번호',
+          hint:         "'-' 없이 숫자만 입력 (예: 01012345678)",
+          controller:   _phoneCtrl,
+          keyboardType: TextInputType.phone,
+          onChanged:    (_) => _notify(),
         ),
         const SizedBox(height: 16),
 

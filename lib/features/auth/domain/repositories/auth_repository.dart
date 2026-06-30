@@ -25,4 +25,12 @@ abstract class AuthRepository {
     required String code,
     String? nickname,
   });
+  Future<void> verifyIpCi({
+    required int userId,
+    required String challengeToken,
+    required String name,
+    required String residentFront,
+    required String phone,
+    String? nickname,
+  });
 }

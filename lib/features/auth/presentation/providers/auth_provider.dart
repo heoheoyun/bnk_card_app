@@ -84,6 +84,26 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
     // IP 인증 후 화면 전환이 그 await 에 막혀 안 넘어가는 문제가 있었다. (#로그인 네비게이션)
   }
 
+  /// IP 인증 — CI 확인. 성공 시 쿠키 발급 완료 → 로그인 상태 전환.
+  Future<void> verifyIpCi({
+    required int userId,
+    required String challengeToken,
+    required String name,
+    required String residentFront,
+    required String phone,
+    String? nickname,
+  }) async {
+    await _ref.read(authRepositoryProvider).verifyIpCi(
+      userId: userId,
+      challengeToken: challengeToken,
+      name: name,
+      residentFront: residentFront,
+      phone: phone,
+      nickname: nickname,
+    );
+    // confirmIpEmailCode 와 동일: onLogin/네비게이션은 호출 측(IpVerifyPage)에서 처리.
+  }
+
   Future<void> logout() async {
     state = const AsyncLoading();
     await PushService.instance.unregister();

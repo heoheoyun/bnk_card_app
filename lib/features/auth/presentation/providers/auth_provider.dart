@@ -49,13 +49,11 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
     state = guarded.whenData((_) {});
 
     if (guarded is AsyncData<LoginResult>) {
-      final result = guarded.value;
-      if (!result.requireIpVerify) {
-        // 실제 로그인 완료(쿠키 발급됨)
-        await _ref.read(authStateProvider.notifier).onLogin();
-        PushService.instance.registerToken();
-      }
-      return result;
+      // 전역 로그인 상태 전환(onLogin)과 네비게이션은 호출 측(LoginPage)에서 처리한다.
+      // 여기서 onLogin()을 호출하면 authStateProvider 변경 → GoRouter 리다이렉트가
+      // LoginPage 를 즉시 언마운트시키고, 이어지는 context.go(목적지)가 mounted 가드에
+      // 막혀 '로그인 후 화면이 안 넘어가는' 레이스가 발생한다. (#로그인 네비게이션)
+      return guarded.value;
     }
     return null;
   }
@@ -81,8 +79,9 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
       code: code,
       nickname: nickname,
     );
-    await _ref.read(authStateProvider.notifier).onLogin();
-    PushService.instance.registerToken();
+    // 전역 로그인 상태 전환(onLogin)/FCM 등록/네비게이션은 호출 측(IpVerifyPage)에서 처리한다.
+    // 여기서 await onLogin() → registerToken(FCM getToken/네트워크)이 지연·행 되면
+    // IP 인증 후 화면 전환이 그 await 에 막혀 안 넘어가는 문제가 있었다. (#로그인 네비게이션)
   }
 
   Future<void> logout() async {

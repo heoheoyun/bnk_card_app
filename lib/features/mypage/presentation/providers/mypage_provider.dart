@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../application/domain/entities/user_card.dart';
 import '../../data/datasource/mypage_remote_datasource.dart';
+import '../../data/models/trusted_ip_model.dart';
 
 final mypageDatasourceProvider = Provider<MypageRemoteDatasource>(
       (_) => MypageRemoteDatasource(),
@@ -26,4 +27,10 @@ final userCardProvider =
 final monthlySpendingProvider = FutureProvider<Map<String, dynamic>>((ref) {
   final ds = ref.watch(mypageDatasourceProvider);
   return ds.getMonthlySpending();
+});
+
+/// 신뢰 기기(IP) 목록. 별명 수정/삭제 후 invalidate 로 갱신한다.
+final trustedIpsProvider = FutureProvider<List<TrustedIp>>((ref) {
+  final ds = ref.watch(mypageDatasourceProvider);
+  return ds.getTrustedIps();
 });

@@ -13,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/storage_keys.dart';
 import '../../../quick_login/data/quick_login_service.dart';
+import '../../../../core/providers/auth_state_provider.dart';
 import '../providers/auth_provider.dart';
 import 'ip_verify_page.dart';
 
@@ -75,7 +76,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     if (!mounted) return;
 
     if (result.requireIpVerify) {
-      // 미신뢰 기기 → IP 2단계 인증 화면으로
+      // 미신뢰 기기 → IP 2단계 인증 화면으로 (/ip-verify 는 비로그인 허용)
       context.go('/ip-verify',
           extra: IpVerifyArgs(
             userId: result.userId!,
@@ -84,13 +85,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           ));
     } else {
       // 로그인 완료(쿠키 발급됨). 간편로그인 미설정이면 첫 로그인 온보딩으로 유도.
+      //
+      // 목적지를 먼저 정한 뒤, 전역 로그인 상태(onLogin)를 켜고 '곧바로' 이동한다.
+      // onLogin()을 await 하지 않고 즉시 go() 하면, 상태 변경으로 예약되는
+      // GoRouter 리다이렉트(마이크로태스크)보다 먼저 현재 위치가 목적지로 바뀐다.
+      // → /login → / 로 튕기지 않고 의도한 화면(온보딩 등)으로 안정적으로 이동.
       final quickEnabled = await QuickLoginService.instance.isAnyEnabled;
       if (!mounted) return;
-      if (quickEnabled) {
-        context.go('/');
-      } else {
-        context.go('/mypage/quick-login?onboarding=1');
-      }
+      ref.read(authStateProvider.notifier).onLogin();
+      context.go(quickEnabled ? '/' : '/mypage/quick-login?onboarding=1');
     }
   }
 

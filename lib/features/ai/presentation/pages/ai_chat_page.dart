@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/widgets/bnk_app_bar.dart';
 import '../../../../shared/widgets/bnk_bottom_nav.dart';
+import '../../../../shared/widgets/home_back_scope.dart';
 import '../../data/models/chat_message_model.dart';
 import '../providers/chat_provider.dart';
 
@@ -54,7 +55,8 @@ class _AiChatPageState extends ConsumerState<AiChatPage> {
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     });
 
-    return Scaffold(
+    return HomeBackScope(
+      child: Scaffold(
       backgroundColor: AppColors.background,
       appBar: BnkAppBar(
         title: 'AI 카드 추천',
@@ -94,6 +96,7 @@ class _AiChatPageState extends ConsumerState<AiChatPage> {
         ],
       ),
       bottomNavigationBar: const BnkBottomNav(currentIndex: 2),
+      ),
     );
   }
 

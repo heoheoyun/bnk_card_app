@@ -420,7 +420,7 @@ class _ApplyBar extends ConsumerWidget {
                 shape: const CircleBorder(),
                 side: const BorderSide(color: AppColors.gray200),
               ),
-              onPressed: () => context.go('/cards/compare'),
+              onPressed: () => context.push('/cards/compare'),
               child: const Icon(Icons.compare_arrows, size: 18, color: AppColors.gray600),
             ),
           ),

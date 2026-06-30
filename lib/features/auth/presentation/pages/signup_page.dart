@@ -215,7 +215,14 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      // 회원정보 입력(step1)에서 뒤로가기 → 약관동의(step0)로, 약관(step0)에서는 페이지 pop.
+      canPop: _step == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        setState(() => _step = 0);
+      },
+      child: Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -246,6 +253,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

@@ -206,14 +206,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     TextButton(
-                      onPressed: () => context.go('/find-id'),
+                      onPressed: () => context.push('/find-id'),
                       child: const Text('아이디 찾기',
                           style: TextStyle(
                               fontSize: 12, color: AppColors.gray600)),
                     ),
                     const Text('|', style: TextStyle(color: AppColors.gray200)),
                     TextButton(
-                      onPressed: () => context.go('/reset-password'),
+                      onPressed: () => context.push('/reset-password'),
                       child: const Text('비밀번호 재설정',
                           style: TextStyle(
                               fontSize: 12, color: AppColors.gray600)),
@@ -239,7 +239,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton(
-                    onPressed: () => context.go('/signup'),
+                    onPressed: () => context.push('/signup'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.teal600,
                       side: const BorderSide(color: AppColors.teal600),

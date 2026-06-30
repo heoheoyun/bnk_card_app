@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/widgets/bnk_app_bar.dart';
 import '../../../../shared/widgets/bnk_bottom_nav.dart';
+import '../../../../shared/widgets/home_back_scope.dart';
 import '../../../card/presentation/providers/card_list_provider.dart';
 import '../../../card/presentation/widgets/card_grid_item.dart';
 import '../../../card/presentation/widgets/top3_card_section.dart';
@@ -61,7 +62,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   Widget build(BuildContext context) {
     final pagingAsync = ref.watch(cardListPagingProvider);
 
-    return Scaffold(
+    return HomeBackScope(
+      child: Scaffold(
       appBar: const BnkAppBar(title: '카드 상품', showBack: false),
       body: CustomScrollView(
         controller: _scrollCtrl,
@@ -201,6 +203,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         ],
       ),
       bottomNavigationBar: const BnkBottomNav(currentIndex: 1),
+      ),
     );
   }
 }

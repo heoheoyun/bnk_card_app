@@ -89,7 +89,7 @@ class _Top3Tile extends StatelessWidget {
     final benefit = (card.topBenefit ?? '') as String? ?? '';
 
     return InkWell(
-      onTap: () => context.go('/cards/${card.cardId}'),
+      onTap: () => context.push('/cards/${card.cardId}'),
       borderRadius: BorderRadius.circular(14),
       child: Container(
         width: 140,

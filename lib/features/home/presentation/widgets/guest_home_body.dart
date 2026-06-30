@@ -105,7 +105,7 @@ class _GuestHero extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
-              onPressed: () => context.go('/signup'),
+              onPressed: () => context.push('/signup'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.white,
                 side: const BorderSide(color: Colors.white, width: 1.5),

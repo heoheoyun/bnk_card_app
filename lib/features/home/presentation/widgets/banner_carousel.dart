@@ -25,7 +25,7 @@ class _BannerCarouselState extends State<BannerCarousel> {
           onPageChanged: (i, _) => setState(() => _current = i),
         ),
         items: widget.banners.map((b) => GestureDetector(
-          onTap: () => context.go('/cards/${b.cardId}'),
+          onTap: () => context.push('/cards/${b.cardId}'),
           child: Stack(fit: StackFit.expand, children: [
             if (b.imageUrl != null)
               CachedNetworkImage(imageUrl: b.imageUrl!, fit: BoxFit.cover)

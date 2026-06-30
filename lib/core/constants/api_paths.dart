@@ -40,6 +40,9 @@ class ApiPaths {
   static const String mySpending         = '/api/users/me/spending';
   /// 월별 카드별 실제 결제 집계 (GET ?year=&month=)
   static const String myMonthlySpending = '/api/users/me/monthly-spending';
+  /// 신뢰 기기(IP) 관리 — 목록(GET) / 별명수정(PATCH {id}) / 삭제(DELETE {id})
+  static const String trustedIps         = '/api/users/me/trusted-ips';
+  static String trustedIp(int trustId)  => '/api/users/me/trusted-ips/$trustId';
 
   // ── 알림 ─────────────────────────────────────────────────────────
   /// 내 알림 목록 + 미읽음수 (GET)

@@ -141,6 +141,13 @@ class _MyPagePageState extends ConsumerState<MyPagePage>
                     subtitle: '지문 · 간편비밀번호 · 패턴',
                     onTap: () => context.push('/mypage/quick-login'),
                   ),
+                  const _TileDivider(),
+                  _MenuTile(
+                    icon: Icons.devices_outlined,
+                    title: '신뢰 기기 관리',
+                    subtitle: '등록된 기기(IP) 확인·별명·삭제',
+                    onTap: () => context.push('/mypage/trusted-ips'),
+                  ),
                 ],
               ),
             ),

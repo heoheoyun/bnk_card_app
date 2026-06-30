@@ -79,9 +79,10 @@ class _IpVerifyPageState extends ConsumerState<IpVerifyPage> {
       );
       if (!mounted) return;
 
-      // [추가] 껐다 켜지 않아도 전역 로그인 프로바이더 상태를 true로 변경하고 FCM 토큰을 등록시킵니다.
-      await ref.read(authStateProvider.notifier).onLogin();
-
+      // 전역 로그인 상태를 켜고(awaiting 없이) 곧바로 이동한다.
+      // onLogin() 내부의 FCM 토큰 등록은 백그라운드로 진행되므로 화면 전환을 막지 않는다.
+      // (await onLogin() 으로 registerToken 을 기다리면 화면이 안 넘어가는 문제가 있었다)
+      ref.read(authStateProvider.notifier).onLogin();
       context.go('/');
     } catch (_) {
       if (!mounted) return;

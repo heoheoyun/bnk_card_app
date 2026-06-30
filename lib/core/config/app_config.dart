@@ -6,7 +6,7 @@ class AppConfig {
   /// ngrok URL https://curable-cranium-handwoven.ngrok-free.dev
   static const String baseUrl = String.fromEnvironment(
     'BASE_URL',
-    defaultValue: 'http://192.168.50.30:8088',
+    defaultValue: 'https://curable-cranium-handwoven.ngrok-free.dev',
   );
 
   static const Duration connectTimeout = Duration(seconds: 10);

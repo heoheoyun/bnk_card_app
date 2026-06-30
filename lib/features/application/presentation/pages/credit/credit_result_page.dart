@@ -31,7 +31,7 @@ class _CreditResultPageState extends ConsumerState<CreditResultPage> {
     _fetchResult();
   }
 
-  Future<void> _fetchResult() async {
+  Future<void> _fetchResult({bool isPolling = false}) async {
     final creditAppId = ref.read(creditApplicationProvider).creditAppId;
     if (creditAppId == null) {
       setState(() { _loading = false; _invalidAccess = true; });
@@ -41,14 +41,18 @@ class _CreditResultPageState extends ConsumerState<CreditResultPage> {
       final app = await ref
           .read(creditApplicationRepositoryProvider)
           .getApplication(creditAppId);
-      if (mounted) {
-        setState(() {
-          _app             = app;
-          _status          = app.applicationStatus;
-          _approvedLimit   = app.approvedLimit;
-          _rejectionReason = app.rejectionReason;
-          _loading         = false;
-        });
+      if (!mounted) return;
+      setState(() {
+        _app             = app;
+        _status          = app.applicationStatus;
+        _approvedLimit   = app.approvedLimit;
+        _rejectionReason = app.rejectionReason;
+        _loading         = false;
+      });
+      // REQUESTED(심사중) 상태면 3초 후 자동 재조회
+      if (app.applicationStatus == ApplicationStatus.requested) {
+        await Future.delayed(const Duration(seconds: 3));
+        if (mounted) _fetchResult(isPolling: true);
       }
     } catch (e) {
       if (mounted) setState(() { _loading = false; _fetchError = e.toString(); });
@@ -401,12 +405,14 @@ class _PendingView extends StatelessWidget {
                   child: const Icon(Icons.check_circle_outline, color: AppColors.teal600, size: 48),
                 ),
                 const SizedBox(height: 24),
-                const Text('신청이 완료되었습니다',
+                const Text('신청이 접수되었습니다',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.gray800)),
                 const SizedBox(height: 12),
-                Text('심사 결과는 영업일 기준 3~5일 이내에\n마이페이지에서 확인하실 수 있습니다.',
+                const Text('잠시 후 심사 결과를 알려드립니다.',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 14, color: AppColors.gray600, height: 1.6)),
+                const SizedBox(height: 24),
+                const CircularProgressIndicator(),
                 const SizedBox(height: 32),
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 32),
@@ -415,8 +421,6 @@ class _PendingView extends StatelessWidget {
                     color: AppColors.gray100, borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Column(children: [
-                    _InfoRow(label: '심사 기간', value: '영업일 3~5일'),
-                    SizedBox(height: 8),
                     _InfoRow(label: '결과 확인', value: '마이페이지 > 신청 내역'),
                     SizedBox(height: 8),
                     _InfoRow(label: '문의', value: '1588-6200'),

@@ -38,15 +38,25 @@ class _CreditStep1TermsPageState extends ConsumerState<CreditStep1TermsPage> {
     Future.microtask(() async {
       ref.read(termsAgreeProvider.notifier).reset();
 
-      final step = await ref.read(creditApplicationProvider.notifier)
-          .checkDraftAndGetStep(widget.cardId);
+      final notifier = ref.read(creditApplicationProvider.notifier);
 
-      if (!mounted) return;
+      // 이미 자동 전진을 처리했으면 다시 하지 않음 (뒤로가기 무한 바운스 방지)
+      if (notifier.resumeHandled) return;
 
-      if (step == 2) {
-        context.pushReplacement('/application/credit/step2', extra: widget.cardId);
-      } else if (step == 3) {
-        context.pushReplacement('/application/credit/step3', extra: widget.cardId);
+      try {
+        final step = await notifier.checkDraftAndGetStep(widget.cardId);
+
+        if (!mounted) return;
+
+        if (step == 2) {
+          notifier.markResumeHandled();
+          context.pushReplacement('/application/credit/step2', extra: widget.cardId);
+        } else if (step == 3) {
+          notifier.markResumeHandled();
+          context.pushReplacement('/application/credit/step3', extra: widget.cardId);
+        }
+      } catch (_) {
+        // 네트워크 오류 등 — 임시저장 확인 실패 시 step1에서 새로 시작
       }
     });
   }

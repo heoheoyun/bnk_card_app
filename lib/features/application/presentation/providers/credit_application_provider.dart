@@ -253,16 +253,6 @@ class CreditApplicationNotifier extends StateNotifier<CreditApplicationState> {
   }
 
   // STEP 4 - 결제정보 저장 후 다음 스텝 분기
-  // 기존고객 → submit / 신규고객 → STEP 5 서류
-  void nextFromStep4() {
-    if (state.isExistingCustomer) {
-      // 기존고객은 서류 없이 바로 submit 호출 가능 상태
-      state = state.copyWith(currentStep: 5);
-    } else {
-      state = state.copyWith(currentStep: 5);
-    }
-  }
-
   // step4 — API 호출 없이 state에만 저장
   void savePaymentInfo({
     required PaymentSnapshot paymentSnapshot,

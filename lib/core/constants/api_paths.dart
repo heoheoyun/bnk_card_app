@@ -38,8 +38,6 @@ class ApiPaths {
   static const String myPushToken        = '/api/users/me/push-token';
   /// [deprecated] 단순 조회용으로만 사용하던 구 경로 — 하위 호환 유지
   static const String mySpending         = '/api/users/me/spending';
-  /// 소비 패턴 조회·저장 (GET / POST)
-  static const String mySpendingPatterns = '/api/users/me/spending-patterns';
   /// 월별 카드별 실제 결제 집계 (GET ?year=&month=)
   static const String myMonthlySpending = '/api/users/me/monthly-spending';
 

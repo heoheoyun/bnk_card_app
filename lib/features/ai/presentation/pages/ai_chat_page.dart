@@ -299,7 +299,7 @@ class _TypingIndicator extends StatelessWidget {
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
-            children: List.generate(3, (i) => _Dot(delay: i * 200)),
+            children: List.generate(3, (i) => _Dot(delay: i * 300)),
           ),
         ),
       ],
@@ -322,14 +322,17 @@ class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    // Total cycle = 1200ms so each 400ms-wide interval gets an equal share
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 600),
-    )..repeat(reverse: true);
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+    final start = widget.delay / 1200;
+    final end   = (widget.delay + 400) / 1200;
     _anim = Tween(begin: 0.3, end: 1.0).animate(
       CurvedAnimation(
         parent: _ctrl,
-        curve: Interval(widget.delay / 600, 1.0, curve: Curves.easeInOut),
+        curve: Interval(start, end, curve: Curves.easeInOut),
       ),
     );
   }

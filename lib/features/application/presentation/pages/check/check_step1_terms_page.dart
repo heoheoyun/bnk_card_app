@@ -28,6 +28,7 @@ class _CheckStep1TermsPageState extends ConsumerState<CheckStep1TermsPage> {
   bool _mydataAgreed = false;
   bool _mydataScrolledToBottom = false;
   final Set<int> _viewedTermsIds = {};
+  bool _resumeHandled = false;
 
   bool get _allStaticAgreed =>
       _memberTermsAgreed && _privacyTermsAgreed && _marketingAgreed;
@@ -36,17 +37,24 @@ class _CheckStep1TermsPageState extends ConsumerState<CheckStep1TermsPage> {
   void initState() {
     super.initState();
     Future.microtask(() async {
+      if (_resumeHandled) return;
       ref.read(termsAgreeProvider.notifier).reset();
 
-      final step = await ref.read(checkApplicationProvider.notifier)
-          .checkDraftAndGetStep(widget.cardId);
+      try {
+        final step = await ref.read(checkApplicationProvider.notifier)
+            .checkDraftAndGetStep(widget.cardId);
 
-      if (!mounted) return;
+        if (!mounted) return;
 
-      if (step == 2) {
-        context.pushReplacement('/application/check/step2', extra: widget.cardId);
-      } else if (step == 3) {
-        context.pushReplacement('/application/check/step3', extra: widget.cardId);
+        if (step == 2) {
+          _resumeHandled = true;
+          context.pushReplacement('/application/check/step2', extra: widget.cardId);
+        } else if (step == 3) {
+          _resumeHandled = true;
+          context.pushReplacement('/application/check/step3', extra: widget.cardId);
+        }
+      } catch (_) {
+        // 네트워크 오류 등 — 임시저장 확인 실패 시 step1에서 새로 시작
       }
     });
   }

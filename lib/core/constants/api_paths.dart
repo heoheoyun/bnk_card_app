@@ -43,6 +43,10 @@ class ApiPaths {
   /// 신뢰 기기(IP) 관리 — 목록(GET) / 별명수정(PATCH {id}) / 삭제(DELETE {id})
   static const String trustedIps         = '/api/users/me/trusted-ips';
   static String trustedIp(int trustId)  => '/api/users/me/trusted-ips/$trustId';
+  /// 주소록/배송지 — 목록(GET)·등록(POST) / 별칭(PATCH {id}) / 기본배송지(PATCH {id}/default) / 삭제(DELETE {id})
+  static const String addresses          = '/api/users/me/addresses';
+  static String address(int addressId)   => '/api/users/me/addresses/$addressId';
+  static String addressDefault(int id)   => '/api/users/me/addresses/$id/default';
 
   // ── 알림 ─────────────────────────────────────────────────────────
   /// 내 알림 목록 + 미읽음수 (GET)

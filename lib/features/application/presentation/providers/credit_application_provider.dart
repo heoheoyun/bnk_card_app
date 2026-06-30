@@ -174,6 +174,7 @@ class CreditApplicationNotifier extends StateNotifier<CreditApplicationState> {
     required String idName,
     required String idResidentNo,
     required String idAddress,
+    required String idPhone,
     required String idIssueDate,
   }) async {
     state = state.copyWith(isLoading: true);
@@ -184,6 +185,7 @@ class CreditApplicationNotifier extends StateNotifier<CreditApplicationState> {
         idName:       idName,
         idResidentNo: idResidentNo,
         idAddress:    idAddress,
+        idPhone:      idPhone,
         idIssueDate:  idIssueDate,
       );
 

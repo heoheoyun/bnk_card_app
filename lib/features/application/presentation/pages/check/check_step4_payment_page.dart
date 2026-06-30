@@ -9,6 +9,8 @@ import '../../../domain/entities/credit_application.dart';
 import '../../../presentation/providers/check_application_provider.dart';
 import '../../../presentation/providers/account_provider.dart';
 import '../../../presentation/widgets/application_step_indicator.dart';
+import '../../../../mypage/data/models/address_model.dart';
+import '../../../../mypage/presentation/providers/mypage_provider.dart';
 
 class CheckStep4PaymentPage extends ConsumerStatefulWidget {
   final int cardId;
@@ -31,6 +33,8 @@ class _CheckStep4PaymentPageState
   final _passwordCtrl  = TextEditingController();
   final _password2Ctrl = TextEditingController();
 
+  Address? _delivery; // 선택한 배송지 (미선택 시 기본배송지 사용)
+
   @override
   void dispose() {
     _passwordCtrl.dispose();
@@ -48,6 +52,12 @@ class _CheckStep4PaymentPageState
     final appState     = ref.watch(checkApplicationProvider);
     final appNotifier  = ref.read(checkApplicationProvider.notifier);
     final accountAsync = ref.watch(myAccountsProvider);
+
+    final addrs = ref.watch(addressesProvider).valueOrNull;
+    final Address? effectiveDelivery = _delivery ??
+        (addrs == null || addrs.isEmpty
+            ? null
+            : addrs.firstWhere((a) => a.isDefault, orElse: () => addrs.first));
 
     return Scaffold(
       appBar: const BnkAppBar(title: '카드 신청'),
@@ -121,6 +131,24 @@ class _CheckStep4PaymentPageState
                             isSelected: _linkedAccountId == a.accountId,
                             onTap:      () => setState(() => _linkedAccountId = a.accountId),
                           ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // 배송지
+                      const Text('카드 배송지',
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                      const SizedBox(height: 8),
+                      _DeliveryTile(
+                        address: effectiveDelivery,
+                        onTap: () async {
+                          final picked = await context.push<Address>(
+                            '/application/delivery-select',
+                            extra: effectiveDelivery?.addressId,
+                          );
+                          if (picked != null) {
+                            setState(() => _delivery = picked);
+                          }
+                        },
                       ),
                       const SizedBox(height: 20),
 
@@ -255,7 +283,7 @@ class _CheckStep4PaymentPageState
               child: BnkButton(
                 label:     '신청 완료',
                 isLoading: appState.isLoading,
-                onPressed: _canNext
+                onPressed: (_canNext && effectiveDelivery != null)
                     ? () async {
                   await appNotifier.submitApplication(
                     paymentSnapshot: PaymentSnapshot(
@@ -263,6 +291,8 @@ class _CheckStep4PaymentPageState
                       combinedTransitYn: _combinedTransitYn,
                       txAlertType:       _txAlertType,
                       statementMethod:   _statementMethod,
+                      deliveryAddress:   effectiveDelivery.fullAddress,
+                      deliveryZipcode:   effectiveDelivery.zipcode,
                     ),
                     linkedAccountId: _linkedAccountId!,
                     cardPassword:    _passwordCtrl.text,
@@ -344,6 +374,62 @@ class _AccountTile extends StatelessWidget {
 }
 
 // ── 헬퍼 위젯 ────────────────────────────────────────────────────
+
+/// 배송지 선택 타일 — 선택된 주소를 보여주고 탭하면 배송지 선택 화면으로
+class _DeliveryTile extends StatelessWidget {
+  final Address? address;
+  final VoidCallback onTap;
+  const _DeliveryTile({required this.address, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final hasAddr = address != null;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: hasAddr ? AppColors.teal600 : AppColors.gray200,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.local_shipping_outlined,
+                size: 20,
+                color: hasAddr ? AppColors.teal600 : AppColors.gray400),
+            const SizedBox(width: 12),
+            Expanded(
+              child: hasAddr
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          address!.alias?.isNotEmpty == true
+                              ? address!.alias!
+                              : '내 주소',
+                          style: const TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(address!.fullAddress,
+                            style: const TextStyle(
+                                fontSize: 12.5, color: AppColors.gray600)),
+                      ],
+                    )
+                  : const Text('배송지를 선택해 주세요',
+                      style:
+                          TextStyle(fontSize: 13, color: AppColors.gray400)),
+            ),
+            const Icon(Icons.chevron_right, size: 18, color: AppColors.gray400),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _SelectChip extends StatelessWidget {
   final String label;

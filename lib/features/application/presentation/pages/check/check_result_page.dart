@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../shared/widgets/bnk_app_bar.dart';
 import '../../../../../shared/widgets/bnk_button.dart';
-import '../../../domain/entities/check_application.dart';
 import '../../../domain/entities/credit_application.dart' show ApplicationStatus;
 import '../../providers/check_application_provider.dart';
 

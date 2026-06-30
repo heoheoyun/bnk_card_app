@@ -3,6 +3,7 @@ import '../../../../core/constants/api_paths.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../application/domain/entities/user_card.dart';
 import '../models/trusted_ip_model.dart';
+import '../models/address_model.dart';
 
 class MypageRemoteDatasource {
   final Dio _dio = DioClient.instance;
@@ -121,6 +122,45 @@ class MypageRemoteDatasource {
   /// DELETE /api/users/me/trusted-ips/{trustId}
   Future<void> deleteTrustedIp(int trustId) =>
       _dio.delete(ApiPaths.trustedIp(trustId));
+
+  // ── 주소록(배송지) 관리 ─────────────────────────────────────────
+  /// GET /api/users/me/addresses
+  Future<List<Address>> getAddresses() async {
+    final res = await _dio.get(ApiPaths.addresses);
+    final raw = res.data['data'] as List? ?? const [];
+    return raw
+        .map((e) => Address.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+  }
+
+  /// POST /api/users/me/addresses
+  Future<void> addAddress({
+    String? alias,
+    String? zipcode,
+    required String address,
+    String? addressDetail,
+    bool setDefault = false,
+  }) =>
+      _dio.post(ApiPaths.addresses, data: {
+        if (alias != null && alias.isNotEmpty) 'alias': alias,
+        if (zipcode != null && zipcode.isNotEmpty) 'zipcode': zipcode,
+        'address': address,
+        if (addressDetail != null && addressDetail.isNotEmpty)
+          'addressDetail': addressDetail,
+        'setDefault': setDefault,
+      });
+
+  /// PATCH /api/users/me/addresses/{addressId}  body { alias }
+  Future<void> updateAddressAlias(int addressId, String alias) =>
+      _dio.patch(ApiPaths.address(addressId), data: {'alias': alias});
+
+  /// PATCH /api/users/me/addresses/{addressId}/default
+  Future<void> setDefaultAddress(int addressId) =>
+      _dio.patch(ApiPaths.addressDefault(addressId));
+
+  /// DELETE /api/users/me/addresses/{addressId}
+  Future<void> deleteAddress(int addressId) =>
+      _dio.delete(ApiPaths.address(addressId));
 
   Future<Map<String, dynamic>> getMonthlySpending({int? year, int? month}) async {
     final res = await _dio.get(

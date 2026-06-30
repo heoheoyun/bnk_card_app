@@ -26,7 +26,6 @@ class _CreditStep1TermsPageState extends ConsumerState<CreditStep1TermsPage> {
   bool _privacyTermsAgreed = false;
   bool _marketingAgreed    = false;
   bool _mydataAgreed = false;
-  bool _mydataScrolledToBottom = false;
   final Set<int> _viewedTermsIds = {};
 
   bool get _allStaticAgreed =>
@@ -121,7 +120,6 @@ class _CreditStep1TermsPageState extends ConsumerState<CreditStep1TermsPage> {
                       agreed: _mydataAgreed,
                       requireScroll: true,
                       onToggle: () => setState(() => _mydataAgreed = !_mydataAgreed),
-                      onScrollCompleted: () => setState(() => _mydataScrolledToBottom = true),
                       contentHeight: 150,
                       content: '''제1조(목적) 본 약관은 주식회사 부산은행(이하 '은행')이 제공하는 마이데이터(본인신용정보관리업) 서비스 이용과 관련하여 은행과 이용자 간의 권리·의무 및 책임사항을 규정함을 목적으로 합니다.
                                   제2조(정의) ① '마이데이터 서비스'란 신용정보의 이용 및 보호에 관한 법률 제22조의9에 따라 이용자의 개인신용정보를 통합 조회하고 관리할 수 있도록 지원하는 서비스를 말합니다. ② '전송요구'란 이용자가 금융기관 등 보유기관에 자신의 개인신용정보를 은행에 전송하도록 요구하는 것을 말합니다.                                
@@ -335,7 +333,6 @@ class _StaticTermsTile extends StatefulWidget {
   final String     content;
   final double     contentHeight;
   final bool       requireScroll;
-  final VoidCallback? onScrollCompleted;
 
   const _StaticTermsTile({
     required this.title,
@@ -345,7 +342,6 @@ class _StaticTermsTile extends StatefulWidget {
     required this.content,
     this.contentHeight = 120,
     this.requireScroll = false,
-    this.onScrollCompleted,
   });
 
   @override
@@ -375,7 +371,6 @@ class _StaticTermsTileState extends State<_StaticTermsTile> {
     final p = _scroll.position;
     if (p.pixels >= p.maxScrollExtent - 8) {
       setState(() => _scrolledToBottom = true);
-      widget.onScrollCompleted?.call();
     }
   }
 

@@ -57,6 +57,12 @@ class PaymentSnapshot {
   /// 청구서 방식 EMAIL / APP / PAPER
   final String? statementMethod;
 
+  /// 카드 배송지 (주소록에서 선택한 전체 주소)
+  final String? deliveryAddress;
+
+  /// 카드 배송지 우편번호
+  final String? deliveryZipcode;
+
   const PaymentSnapshot({
     this.cardBrand,
     this.cardDesignId,
@@ -64,6 +70,8 @@ class PaymentSnapshot {
     this.combinedTransitYn,
     this.txAlertType,
     this.statementMethod,
+    this.deliveryAddress,
+    this.deliveryZipcode,
   });
 }
 

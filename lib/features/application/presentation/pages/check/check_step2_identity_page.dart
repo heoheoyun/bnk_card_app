@@ -25,6 +25,7 @@ class _CheckStep2IdentityPageState
   String? _idName;
   String? _idResidentNo;
   String? _idAddress;
+  String? _idPhone;
   String? _idIssueDate;
 
   bool get _canNext =>
@@ -32,6 +33,7 @@ class _CheckStep2IdentityPageState
           _idName != null && _idName!.isNotEmpty &&
           _idResidentNo != null && _idResidentNo!.length == 7 &&
           _idAddress != null && _idAddress!.isNotEmpty &&
+          _idPhone != null && _idPhone!.replaceAll(RegExp(r'[^0-9]'), '').length >= 9 &&
           _idIssueDate != null && _idIssueDate!.isNotEmpty;
 
   /// 주민번호(앞6+성별코드1)에서 생년월일(yyyy-MM-dd) 파생 — 한도 산정용
@@ -109,6 +111,7 @@ class _CheckStep2IdentityPageState
                         required idName,
                         required idResidentNo,
                         required idAddress,
+                        required idPhone,
                         required idIssueDate,
                       }) {
                         setState(() {
@@ -116,6 +119,7 @@ class _CheckStep2IdentityPageState
                           _idName       = idName;
                           _idResidentNo = idResidentNo;
                           _idAddress    = idAddress;
+                          _idPhone      = idPhone;
                           _idIssueDate  = idIssueDate;
                         });
                       },
@@ -162,6 +166,7 @@ class _CheckStep2IdentityPageState
                       idName:       _idName!,
                       idResidentNo: _idResidentNo!,
                       idAddress:    _idAddress!,
+                      idPhone:      _idPhone!,
                       idIssueDate:  _idIssueDate!,
                     );
 

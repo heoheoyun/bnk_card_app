@@ -45,10 +45,12 @@ import '../../features/mypage/presentation/pages/my_card_detail_page.dart';
 import '../../features/mypage/presentation/pages/address_ci_verify_page.dart';
 import '../../features/mypage/presentation/pages/spending_input_page.dart';
 import '../../features/mypage/presentation/pages/trusted_ips_page.dart';
+import '../../features/mypage/presentation/pages/address_book_page.dart';
 
 // ── Account ───────────────────────────────────────────────────────
 import '../../features/application/presentation/pages/account_create_page.dart';
 import '../../features/application/presentation/pages/my_accounts_page.dart';
+import '../../features/application/presentation/pages/delivery_address_select_page.dart';
 
 // ── Application (신용) ───────────────────────────────────────────
 import '../../features/application/presentation/pages/credit/credit_reviewing_page.dart';
@@ -142,6 +144,13 @@ import '../../features/application/presentation/pages/check/check_result_page.da
         path: '/accounts/create',
         builder: (_, __) => const AccountCreatePage(),
       ),
+      // ── 카드 배송지 선택 (신청 플로우에서 push, 선택 결과를 pop 으로 반환) ──
+      GoRoute(
+        path: '/application/delivery-select',
+        builder: (_, state) => DeliveryAddressSelectPage(
+          selectedAddressId: state.extra as int?,
+        ),
+      ),
       // ── 카드 ───────────────────────────────────────────────────
       // /cards/compare 를 /cards/:id 보다 먼저 선언해야 충돌 없음
       GoRoute(
@@ -204,6 +213,12 @@ import '../../features/application/presentation/pages/check/check_result_page.da
       GoRoute(
         path: '/mypage/trusted-ips',
         builder: (_, __) => const TrustedIpsPage(),
+      ),
+
+      // ── 배송지(주소록) 관리 ────────────────────────────────────
+      GoRoute(
+        path: '/mypage/addresses',
+        builder: (_, __) => const AddressBookPage(),
       ),
 
       // ── 소비 패턴 ──────────────────────────────────────────────

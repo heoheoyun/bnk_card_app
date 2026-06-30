@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../application/domain/entities/user_card.dart';
 import '../../data/datasource/mypage_remote_datasource.dart';
 import '../../data/models/trusted_ip_model.dart';
+import '../../data/models/address_model.dart';
 
 final mypageDatasourceProvider = Provider<MypageRemoteDatasource>(
       (_) => MypageRemoteDatasource(),
@@ -33,4 +34,10 @@ final monthlySpendingProvider = FutureProvider<Map<String, dynamic>>((ref) {
 final trustedIpsProvider = FutureProvider<List<TrustedIp>>((ref) {
   final ds = ref.watch(mypageDatasourceProvider);
   return ds.getTrustedIps();
+});
+
+/// 주소록(배송지) 목록. 등록/수정/삭제 후 invalidate 로 갱신한다.
+final addressesProvider = FutureProvider<List<Address>>((ref) {
+  final ds = ref.watch(mypageDatasourceProvider);
+  return ds.getAddresses();
 });

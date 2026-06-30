@@ -16,6 +16,7 @@ import '../../../../core/providers/auth_state_provider.dart';
 import '../../../../core/push/push_service.dart';
 import '../../../../shared/widgets/bnk_app_bar.dart';
 import '../../../../shared/widgets/bnk_bottom_nav.dart';
+import '../../../../shared/widgets/home_back_scope.dart';
 import '../providers/mypage_provider.dart';
 
 
@@ -66,7 +67,8 @@ class _MyPagePageState extends ConsumerState<MyPagePage>
     final maskedPhone = info['maskedPhone'] as String? ?? '';
     final initial = name.isNotEmpty ? name.substring(0, 1) : '?';
 
-    return Scaffold(
+    return HomeBackScope(
+      child: Scaffold(
       backgroundColor: AppColors.background,
       appBar: BnkAppBar(
         title: '마이페이지',
@@ -213,6 +215,7 @@ class _MyPagePageState extends ConsumerState<MyPagePage>
         ),
       ),
       bottomNavigationBar: const BnkBottomNav(currentIndex: 3),
+      ),
     );
   }
 

@@ -14,7 +14,7 @@ class AiCardResultCard extends StatelessWidget {
     margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     child: InkWell(
-      onTap: () => context.go('/cards/${card['cardId']}'),
+      onTap: () => context.push('/cards/${card['cardId']}'),
       borderRadius: BorderRadius.circular(12),
       child: Padding(
         padding: const EdgeInsets.all(14),

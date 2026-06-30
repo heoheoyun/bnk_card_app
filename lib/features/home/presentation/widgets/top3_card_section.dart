@@ -46,7 +46,7 @@ class _Top3CardTile extends StatelessWidget {
     title: Text(card['cardName'] as String? ?? ''),
     subtitle: Text(FormatUtil.wonOrFree((card['annualFeeDomestic'] as int? ?? 0))),
     trailing: const Icon(Icons.chevron_right),
-    onTap: () => context.go('/cards/${card['cardId']}'),
+    onTap: () => context.push('/cards/${card['cardId']}'),
     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
     tileColor: rank == 1 ? AppColors.primary.withValues(alpha: 0.04) : null,
   );

@@ -17,7 +17,7 @@ class CardCompareBottomBar extends ConsumerWidget {
         const Spacer(),
         ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: AppColors.primary),
-          onPressed: ids.length >= 2 ? () => context.go('/cards/compare') : null,
+          onPressed: ids.length >= 2 ? () => context.push('/cards/compare') : null,
           child: const Text('비교하기'),
         ),
       ]),

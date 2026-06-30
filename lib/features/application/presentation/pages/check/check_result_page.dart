@@ -21,6 +21,8 @@ class _CheckResultPageState extends ConsumerState<CheckResultPage> {
   ApplicationStatus? _status;
   String?            _rejectionReason;
   bool               _loading = true;
+  bool               _invalidAccess = false;
+  String?            _fetchError;
 
   @override
   void initState() {
@@ -31,7 +33,7 @@ class _CheckResultPageState extends ConsumerState<CheckResultPage> {
   Future<void> _fetchResult() async {
     final checkAppId = ref.read(checkApplicationProvider).checkAppId;
     if (checkAppId == null) {
-      setState(() => _loading = false);
+      setState(() { _loading = false; _invalidAccess = true; });
       return;
     }
     try {
@@ -45,20 +47,20 @@ class _CheckResultPageState extends ConsumerState<CheckResultPage> {
           _loading         = false;
         });
       }
-    } catch (_) {
-      if (mounted) setState(() => _loading = false);
+    } catch (e) {
+      if (mounted) setState(() { _loading = false; _fetchError = e.toString(); });
     }
   }
 
   Future<void> _retryScreening() async {
     final checkAppId = ref.read(checkApplicationProvider).checkAppId;
     if (checkAppId == null) return;
-    setState(() => _loading = true);
+    setState(() { _loading = true; _fetchError = null; });
     try {
       await ref.read(checkApplicationRepositoryProvider).retryScreening(checkAppId);
       await _fetchResult();
-    } catch (_) {
-      if (mounted) setState(() => _loading = false);
+    } catch (e) {
+      if (mounted) setState(() { _loading = false; _fetchError = e.toString(); });
     }
   }
 
@@ -76,6 +78,35 @@ class _CheckResultPageState extends ConsumerState<CheckResultPage> {
   }
 
   Widget _buildBody(BuildContext context) {
+    if (_invalidAccess) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: Color(0xFF9CA3AF)),
+            const SizedBox(height: 16),
+            const Text('잘못된 접근입니다', style: TextStyle(fontSize: 16, color: Color(0xFF6B7280))),
+            const SizedBox(height: 24),
+            TextButton(onPressed: () => context.go('/'), child: const Text('홈으로')),
+          ],
+        ),
+      );
+    }
+    if (_fetchError != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.wifi_off_outlined, size: 48, color: Color(0xFF9CA3AF)),
+            const SizedBox(height: 16),
+            const Text('결과를 불러오지 못했습니다', style: TextStyle(fontSize: 16, color: Color(0xFF6B7280))),
+            const SizedBox(height: 8),
+            TextButton(onPressed: _fetchResult, child: const Text('다시 시도')),
+            TextButton(onPressed: () => context.go('/mypage'), child: const Text('마이페이지로')),
+          ],
+        ),
+      );
+    }
     return switch (_status) {
       ApplicationStatus.issued || ApplicationStatus.approved => _IssuedView(
           cardId: widget.cardId,

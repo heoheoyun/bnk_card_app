@@ -22,6 +22,8 @@ class _CreditResultPageState extends ConsumerState<CreditResultPage> {
   String?             _rejectionReason;
   CreditApplication?  _app;
   bool                _loading = true;
+  bool                _invalidAccess = false;
+  String?             _fetchError;
 
   @override
   void initState() {
@@ -32,7 +34,7 @@ class _CreditResultPageState extends ConsumerState<CreditResultPage> {
   Future<void> _fetchResult() async {
     final creditAppId = ref.read(creditApplicationProvider).creditAppId;
     if (creditAppId == null) {
-      setState(() => _loading = false);
+      setState(() { _loading = false; _invalidAccess = true; });
       return;
     }
     try {
@@ -48,8 +50,8 @@ class _CreditResultPageState extends ConsumerState<CreditResultPage> {
           _loading         = false;
         });
       }
-    } catch (_) {
-      if (mounted) setState(() => _loading = false);
+    } catch (e) {
+      if (mounted) setState(() { _loading = false; _fetchError = e.toString(); });
     }
   }
 
@@ -67,6 +69,35 @@ class _CreditResultPageState extends ConsumerState<CreditResultPage> {
   }
 
   Widget _buildBody(BuildContext context) {
+    if (_invalidAccess) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: AppColors.gray400),
+            const SizedBox(height: 16),
+            const Text('잘못된 접근입니다', style: TextStyle(fontSize: 16, color: AppColors.gray600)),
+            const SizedBox(height: 24),
+            TextButton(onPressed: () => context.go('/'), child: const Text('홈으로')),
+          ],
+        ),
+      );
+    }
+    if (_fetchError != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.wifi_off_outlined, size: 48, color: AppColors.gray400),
+            const SizedBox(height: 16),
+            const Text('결과를 불러오지 못했습니다', style: TextStyle(fontSize: 16, color: AppColors.gray600)),
+            const SizedBox(height: 8),
+            TextButton(onPressed: _fetchResult, child: const Text('다시 시도')),
+            TextButton(onPressed: () => context.go('/mypage'), child: const Text('마이페이지로')),
+          ],
+        ),
+      );
+    }
     return switch (_status) {
       ApplicationStatus.issued || ApplicationStatus.approved => _IssuedView(
           cardId:        widget.cardId,
@@ -91,12 +122,12 @@ class _CreditResultPageState extends ConsumerState<CreditResultPage> {
   Future<void> _retryScreening() async {
     final creditAppId = ref.read(creditApplicationProvider).creditAppId;
     if (creditAppId == null) return;
-    setState(() => _loading = true);
+    setState(() { _loading = true; _fetchError = null; });
     try {
       await ref.read(creditApplicationRepositoryProvider).retryScreening(creditAppId);
       await _fetchResult();
-    } catch (_) {
-      if (mounted) setState(() => _loading = false);
+    } catch (e) {
+      if (mounted) setState(() { _loading = false; _fetchError = e.toString(); });
     }
   }
 }

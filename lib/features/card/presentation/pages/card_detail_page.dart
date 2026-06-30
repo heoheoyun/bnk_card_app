@@ -12,6 +12,7 @@ import '../../domain/entities/card_detail.dart';
 import '../providers/card_detail_provider.dart';
 import '../providers/card_compare_provider.dart';
 import '../widgets/card_terms_section.dart';
+import '../../../application/presentation/providers/credit_application_provider.dart';
 class CardDetailPage extends ConsumerWidget {
   final int cardId;
   const CardDetailPage({super.key, required this.cardId});
@@ -396,13 +397,13 @@ class _AccordionTileState extends State<_AccordionTile> {
 
 // ── 하단 신청 바 ──────────────────────────────────────────────────
 
-class _ApplyBar extends StatelessWidget {
+class _ApplyBar extends ConsumerWidget {
   final int cardId;
   final CardDetail? card;
   const _ApplyBar({required this.cardId, this.card});
 
   @override
-  Widget build(BuildContext context) => SafeArea(
+  Widget build(BuildContext context, WidgetRef ref) => SafeArea(
     child: Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -436,6 +437,7 @@ class _ApplyBar extends StatelessWidget {
               onPressed: () {
                 if (card == null) return;
                 if (card!.cardType == 'CREDIT') {
+                  ref.read(creditApplicationProvider.notifier).beginNewSession();
                   context.push('/application/credit/step1', extra: cardId);
                 } else {
                   context.push('/application/check/step1', extra: cardId);

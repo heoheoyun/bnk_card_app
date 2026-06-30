@@ -209,7 +209,6 @@ class CreditApplicationNotifier extends StateNotifier<CreditApplicationState> {
   // step3 폼이 비어 보이지 않도록 한다. (직업/소득 등 나머지는 step3에서 입력)
   void prefillApplicantFromIdentity({
     required String name,
-    required String address,
     String? birthDate,
   }) {
     final base = state.draftApplicantSnapshot ??
@@ -218,7 +217,7 @@ class CreditApplicationNotifier extends StateNotifier<CreditApplicationState> {
         );
     state = state.copyWith(
       draftApplicantSnapshot:
-      base.copyWith(name: name, address: address, birthDate: birthDate),
+      base.copyWith(name: name, birthDate: birthDate),
     );
   }
 

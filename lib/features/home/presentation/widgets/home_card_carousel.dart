@@ -23,7 +23,7 @@ class _HomeCardCarouselState extends ConsumerState<HomeCardCarousel> {
   final _controller = PageController(viewportFraction: 0.86);
   int _page = 0;
 
-  static const double _cardHeight = 196; // 신용카드 비율(≈1.586:1) 기준
+  static const double _cardHeight = 168; // 신용카드 비율(≈1.586:1) 기준, 살짝 축소
 
   @override
   void dispose() {

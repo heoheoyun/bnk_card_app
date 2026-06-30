@@ -193,7 +193,6 @@ class CheckApplicationNotifier extends StateNotifier<CheckApplicationState> {
 
   void prefillApplicantFromIdentity({
     required String name,
-    required String address,
     String? birthDate,
   }) {
     final base = state.draftApplicantSnapshot ??
@@ -202,7 +201,7 @@ class CheckApplicationNotifier extends StateNotifier<CheckApplicationState> {
         );
     state = state.copyWith(
       draftApplicantSnapshot:
-      base.copyWith(name: name, address: address, birthDate: birthDate),
+      base.copyWith(name: name, birthDate: birthDate),
     );
   }
 }

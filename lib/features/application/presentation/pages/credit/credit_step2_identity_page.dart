@@ -215,7 +215,6 @@ class _CreditStep2IdentityPageState
                     // (creditApplicationProvider 에 아래 메서드 + CreditApplicantSnapshot.copyWith 필요)
                     appNotifier.prefillApplicantFromIdentity(
                       name:      _idName!,
-                      address:   _idAddress!,
                       birthDate: _birthDateFromResidentNo(_idResidentNo),
                     );
 

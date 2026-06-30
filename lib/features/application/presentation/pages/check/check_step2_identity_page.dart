@@ -170,7 +170,6 @@ class _CheckStep2IdentityPageState
                       // step3 신청정보 폼에 자동 반영될 수 있도록 snapshot 채움
                       appNotifier.prefillApplicantFromIdentity(
                         name:      _idName!,
-                        address:   _idAddress!,
                         birthDate: _birthDateFromResidentNo(_idResidentNo),
                       );
                       ScaffoldMessenger.of(context).showSnackBar(

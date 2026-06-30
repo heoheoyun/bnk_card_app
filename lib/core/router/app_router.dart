@@ -44,6 +44,7 @@ import '../../features/mypage/presentation/pages/mypage_page.dart';
 import '../../features/mypage/presentation/pages/my_card_detail_page.dart';
 import '../../features/mypage/presentation/pages/address_ci_verify_page.dart';
 import '../../features/mypage/presentation/pages/spending_input_page.dart';
+import '../../features/mypage/presentation/pages/trusted_ips_page.dart';
 
 // ── Account ───────────────────────────────────────────────────────
 import '../../features/application/presentation/pages/account_create_page.dart';
@@ -197,6 +198,12 @@ import '../../features/application/presentation/pages/check/check_result_page.da
       GoRoute(
         path: '/mypage/address-verify',
         builder: (_, __) => const AddressCiVerifyPage(),
+      ),
+
+      // ── 신뢰 기기(IP) 관리 ─────────────────────────────────────
+      GoRoute(
+        path: '/mypage/trusted-ips',
+        builder: (_, __) => const TrustedIpsPage(),
       ),
 
       // ── 소비 패턴 ──────────────────────────────────────────────

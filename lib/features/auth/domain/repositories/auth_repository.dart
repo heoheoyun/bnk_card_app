@@ -4,7 +4,6 @@ import '../../data/models/signup_request_model.dart';
 abstract class AuthRepository {
   Future<void> sendVerifyCode(String email);
   Future<void> verifyEmail(String email, String code);
-  Future<bool> verifyStatus(String email);
   Future<int> signup(SignupRequestModel req);
 
   Future<LoginResult> login(String email, String password);

@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import '../../../../core/constants/api_paths.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../application/domain/entities/user_card.dart';
-import '../models/trusted_ip_model.dart';
+import '../models/trusted_device_model.dart';
 import '../models/address_model.dart';
 
 class MypageRemoteDatasource {
@@ -105,23 +105,23 @@ class MypageRemoteDatasource {
     return (res.data['data'] as num?)?.toInt() ?? 0;
   }
 
-  // ── 신뢰 기기(IP) 관리 ─────────────────────────────────────────
-  /// GET /api/users/me/trusted-ips → 등록된 신뢰 기기 목록
-  Future<List<TrustedIp>> getTrustedIps() async {
-    final res = await _dio.get(ApiPaths.trustedIps);
+  // ── 신뢰 기기 관리 ─────────────────────────────────────────────
+  /// GET /api/users/me/trusted-devices → 등록된 신뢰 기기 목록
+  Future<List<TrustedDevice>> getTrustedDevices() async {
+    final res = await _dio.get(ApiPaths.trustedDevices);
     final raw = res.data['data'] as List? ?? const [];
     return raw
-        .map((e) => TrustedIp.fromJson(Map<String, dynamic>.from(e as Map)))
+        .map((e) => TrustedDevice.fromJson(Map<String, dynamic>.from(e as Map)))
         .toList();
   }
 
-  /// PATCH /api/users/me/trusted-ips/{trustId}  body { nickname }
-  Future<void> updateTrustedIpNickname(int trustId, String nickname) =>
-      _dio.patch(ApiPaths.trustedIp(trustId), data: {'nickname': nickname});
+  /// PATCH /api/users/me/trusted-devices/{deviceTrustId}  body { deviceName }
+  Future<void> updateTrustedDeviceName(int deviceTrustId, String deviceName) =>
+      _dio.patch(ApiPaths.trustedDevice(deviceTrustId), data: {'deviceName': deviceName});
 
-  /// DELETE /api/users/me/trusted-ips/{trustId}
-  Future<void> deleteTrustedIp(int trustId) =>
-      _dio.delete(ApiPaths.trustedIp(trustId));
+  /// DELETE /api/users/me/trusted-devices/{deviceTrustId}
+  Future<void> deleteTrustedDevice(int deviceTrustId) =>
+      _dio.delete(ApiPaths.trustedDevice(deviceTrustId));
 
   // ── 주소록(배송지) 관리 ─────────────────────────────────────────
   /// GET /api/users/me/addresses

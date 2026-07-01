@@ -10,6 +10,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override Future<void> sendVerifyCode(String email) => _ds.sendVerifyCode(email);
   @override Future<void> verifyEmail(String email, String code) => _ds.verifyEmail(email, code);
+  @override Future<bool> verifyStatus(String email) => _ds.verifyStatus(email);
 
   @override Future<int> signup(SignupRequestModel req) => _ds.signup(req);
 
@@ -30,30 +31,27 @@ class AuthRepositoryImpl implements AuthRepository {
   @override Future<void> resetPassword(String email, String token, String newPassword) =>
       _ds.resetPassword(email, token, newPassword);
 
-  @override Future<void> sendIpEmailCode({
-    required int userId,
+  @override Future<void> sendDeviceEmailCode({
     required String challengeToken,
   }) =>
-      _ds.sendIpEmailCode(userId: userId, challengeToken: challengeToken);
+      _ds.sendDeviceEmailCode(challengeToken: challengeToken);
 
-  @override Future<void> confirmIpEmailCode({
-    required int userId,
+  @override Future<void> confirmDeviceEmailCode({
     required String challengeToken,
     required String code,
-    String? nickname,
+    String? deviceName,
   }) =>
-      _ds.confirmIpEmailCode(
-          userId: userId, challengeToken: challengeToken, code: code, nickname: nickname);
+      _ds.confirmDeviceEmailCode(
+          challengeToken: challengeToken, code: code, deviceName: deviceName);
 
-  @override Future<void> verifyIpCi({
-    required int userId,
+  @override Future<void> verifyDeviceCi({
     required String challengeToken,
     required String name,
     required String residentFront,
     required String phone,
-    String? nickname,
+    String? deviceName,
   }) =>
-      _ds.verifyIpCi(
-          userId: userId, challengeToken: challengeToken,
-          name: name, residentFront: residentFront, phone: phone, nickname: nickname);
+      _ds.verifyDeviceCi(
+          challengeToken: challengeToken,
+          name: name, residentFront: residentFront, phone: phone, deviceName: deviceName);
 }

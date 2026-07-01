@@ -1,6 +1,9 @@
-// IP 2단계 인증 화면 (이메일 코드 / CI).
-// 로그인 응답이 requireIpVerify=true 일 때 '/ip-verify' 로 진입.
+// 새 기기 인증 화면 (이메일 코드 / CI).
+// 로그인 응답이 requireDeviceVerify=true 일 때 '/device-verify' 로 진입.
 // availableMethods 에 EMAIL / CI 가 내려오며, 둘 다 있으면 사용자가 방식을 고른다.
+//
+// challengeToken 은 서버가 발급한 불투명 토큰이며, userId·기기명은 서버가
+// 토큰에서 도출한다(클라이언트가 다시 보내지 않는다).
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,28 +11,28 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../providers/auth_provider.dart';
-import '../../../../core/providers/auth_state_provider.dart'; // authStateProvider 위치에 맞게 경로 확인
+import '../widgets/own_device_dialog.dart';
+import '../../../../core/providers/auth_state_provider.dart';
+import '../../../quick_login/data/quick_login_service.dart';
 
-class IpVerifyArgs {
-  final int userId;
+class DeviceVerifyArgs {
   final String challengeToken;
   final List<String> methods;
-  const IpVerifyArgs({
-    required this.userId,
+  const DeviceVerifyArgs({
     required this.challengeToken,
     required this.methods,
   });
 }
 
-class IpVerifyPage extends ConsumerStatefulWidget {
-  final IpVerifyArgs args;
-  const IpVerifyPage({super.key, required this.args});
+class DeviceVerifyPage extends ConsumerStatefulWidget {
+  final DeviceVerifyArgs args;
+  const DeviceVerifyPage({super.key, required this.args});
 
   @override
-  ConsumerState<IpVerifyPage> createState() => _IpVerifyPageState();
+  ConsumerState<DeviceVerifyPage> createState() => _DeviceVerifyPageState();
 }
 
-class _IpVerifyPageState extends ConsumerState<IpVerifyPage> {
+class _DeviceVerifyPageState extends ConsumerState<DeviceVerifyPage> {
   // 이메일 방식
   final _codeCtrl = TextEditingController();
   bool _sent = false;
@@ -48,10 +51,9 @@ class _IpVerifyPageState extends ConsumerState<IpVerifyPage> {
   void initState() {
     super.initState();
     // 가능한 방식 중 이메일을 기본값으로(둘 다 없으면 첫 항목).
+    // 예전 화면은 진입 즉시 코드를 자동 발송했으나, CI로 인증할 사용자에게는
+    // 불필요한 메일이 발송되어 어색했다. 이제 사용자가 '코드 받기'를 눌러야 발송한다.
     _method = _hasEmail ? 'EMAIL' : (widget.args.methods.isNotEmpty ? widget.args.methods.first : 'EMAIL');
-    if (_method == 'EMAIL') {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _sendCode());
-    }
   }
 
   @override
@@ -66,18 +68,15 @@ class _IpVerifyPageState extends ConsumerState<IpVerifyPage> {
   void _switchMethod(String m) {
     if (_method == m || _busy) return;
     setState(() => _method = m);
-    // 이메일로 전환했고 아직 코드를 안 보냈으면 1회 발송
-    if (m == 'EMAIL' && !_sent) _sendCode();
   }
 
   Future<void> _sendCode() async {
     if (_busy) return;
     setState(() => _busy = true);
     try {
-      await ref.read(authProvider.notifier).sendIpEmailCode(
-        userId: widget.args.userId,
-        challengeToken: widget.args.challengeToken,
-      );
+      await ref.read(authProvider.notifier).sendDeviceEmailCode(
+            challengeToken: widget.args.challengeToken,
+          );
       if (!mounted) return;
       setState(() => _sent = true);
       _snack('인증 코드를 이메일로 보냈습니다. (10분 유효)');
@@ -96,13 +95,11 @@ class _IpVerifyPageState extends ConsumerState<IpVerifyPage> {
     }
     setState(() => _busy = true);
     try {
-      await ref.read(authProvider.notifier).confirmIpEmailCode(
-        userId: widget.args.userId,
-        challengeToken: widget.args.challengeToken,
-        code: code,
-        nickname: '내 기기',
-      );
-      _onAuthSuccess();
+      await ref.read(authProvider.notifier).confirmDeviceEmailCode(
+            challengeToken: widget.args.challengeToken,
+            code: code,
+          );
+      await _onAuthSuccess();
     } catch (_) {
       if (!mounted) return;
       _snack('인증에 실패했습니다. 코드를 확인해 주세요.');
@@ -120,15 +117,13 @@ class _IpVerifyPageState extends ConsumerState<IpVerifyPage> {
     }
     setState(() => _busy = true);
     try {
-      await ref.read(authProvider.notifier).verifyIpCi(
-        userId: widget.args.userId,
-        challengeToken: widget.args.challengeToken,
-        name: name,
-        residentFront: resident,
-        phone: phone,
-        nickname: '내 기기',
-      );
-      _onAuthSuccess();
+      await ref.read(authProvider.notifier).verifyDeviceCi(
+            challengeToken: widget.args.challengeToken,
+            name: name,
+            residentFront: resident,
+            phone: phone,
+          );
+      await _onAuthSuccess();
     } catch (_) {
       if (!mounted) return;
       _snack('본인확인에 실패했습니다. 입력 정보를 확인해 주세요.');
@@ -136,12 +131,23 @@ class _IpVerifyPageState extends ConsumerState<IpVerifyPage> {
     }
   }
 
-  void _onAuthSuccess() {
+  Future<void> _onAuthSuccess() async {
     if (!mounted) return;
+
+    // 이메일/CI로 신뢰가 확정된 뒤 '본인 기기?'를 물어, 예인 경우에만
+    // 생체·간편로그인 온보딩으로 유도한다. 기기 신뢰는 두 경우 모두 유지된다.
+    final quickEnabled = await QuickLoginService.instance.isAnyEnabled;
+    if (!mounted) return;
+    String dest = '/';
+    if (!quickEnabled) {
+      final ownDevice = await showOwnDeviceDialog(context);
+      if (!mounted) return;
+      if (ownDevice) dest = '/mypage/quick-login?onboarding=1';
+    }
     // 전역 로그인 상태를 켜고(awaiting 없이) 곧바로 이동한다.
     // onLogin() 내부의 FCM 토큰 등록은 백그라운드로 진행되므로 화면 전환을 막지 않는다.
     ref.read(authStateProvider.notifier).onLogin();
-    context.go('/');
+    context.go(dest);
   }
 
   void _snack(String m) {

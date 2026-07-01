@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -41,6 +43,9 @@ class _SignupPageState extends ConsumerState<SignupPage> {
   bool _isVerifyingCode  = false;
   bool _isSubmitting     = false;
 
+  /// 매직링크(원터치 인증) 완료를 감지하는 폴링 타이머.
+  Timer? _pollTimer;
+
   String? _selectedJob;
   String? _selectedIncome;
 
@@ -63,6 +68,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
     _addressCtrl.dispose();
     _postcodeCtrl.dispose();
     _addrDetailCtrl.dispose();
+    _pollTimer?.cancel();
     super.dispose();
   }
 
@@ -84,12 +90,42 @@ class _SignupPageState extends ConsumerState<SignupPage> {
     setState(() => _isSendingCode = true);
     try {
       await ref.read(authRepositoryProvider).sendVerifyCode(_emailCtrl.text.trim());
-      if (mounted) _snack('인증코드를 발송했습니다. 메일을 확인해주세요.');
+      if (mounted) {
+        _snack('인증코드를 발송했습니다. 메일의 코드 입력 또는 "원터치 인증" 버튼을 이용하세요.');
+        _startPolling(); // 메일의 원터치 인증 버튼을 누르면 자동으로 인증 완료 처리
+      }
     } catch (_) {
       if (mounted) _snack('인증코드 발송에 실패했습니다.');
     } finally {
       if (mounted) setState(() => _isSendingCode = false);
     }
+  }
+
+  /// 매직링크(원터치 인증) 완료를 3초 간격으로 폴링한다.
+  /// 사용자가 메일의 버튼을 누르면 서버 인증 플래그가 켜지고, 앱이 이를 감지해
+  /// 코드 입력 없이 자동으로 인증 완료 상태로 전환한다. (최대 5분)
+  void _startPolling() {
+    _pollTimer?.cancel();
+    final email = _emailCtrl.text.trim();
+    if (email.isEmpty) return;
+    var ticks = 0;
+    _pollTimer = Timer.periodic(const Duration(seconds: 3), (t) async {
+      ticks++;
+      if (!mounted || _emailVerified || ticks > 100) {
+        t.cancel();
+        return;
+      }
+      try {
+        final ok = await ref.read(authRepositoryProvider).verifyStatus(email);
+        if (ok && mounted && !_emailVerified) {
+          t.cancel();
+          setState(() => _emailVerified = true);
+          _snack('이메일 인증이 완료되었습니다.');
+        }
+      } catch (_) {
+        // 폴링 실패는 조용히 무시하고 다음 주기에 재시도
+      }
+    });
   }
 
   Future<void> _verifyCode() async {

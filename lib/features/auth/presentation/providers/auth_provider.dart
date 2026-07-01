@@ -41,8 +41,8 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
 
   /// 로그인. 성공/실패는 [state]에, 분기 정보는 반환값으로 전달.
   ///  - null  → 실패(에러)
-  ///  - result.requireIpVerify=true  → IP 인증 화면으로
-  ///  - result.requireIpVerify=false → 쿠키 발급 완료, 홈으로
+  ///  - result.requireDeviceVerify=true  → 새 기기 인증 화면으로
+  ///  - result.requireDeviceVerify=false → 쿠키 발급 완료, 홈으로
   Future<LoginResult?> login(String email, String password) async {
     state = const AsyncLoading();
     final guarded = await AsyncValue.guard(() => _loginUsecase(email, password));
@@ -58,50 +58,45 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
     return null;
   }
 
-  /// IP 인증 — 이메일 코드 발송
-  Future<void> sendIpEmailCode({
-    required int userId,
+  /// 새 기기 인증 — 이메일 코드 발송
+  Future<void> sendDeviceEmailCode({
     required String challengeToken,
   }) =>
       _ref.read(authRepositoryProvider)
-          .sendIpEmailCode(userId: userId, challengeToken: challengeToken);
+          .sendDeviceEmailCode(challengeToken: challengeToken);
 
-  /// IP 인증 — 이메일 코드 확인. 성공 시 쿠키 발급 완료 → 로그인 상태 전환.
-  Future<void> confirmIpEmailCode({
-    required int userId,
+  /// 새 기기 인증 — 이메일 코드 확인. 성공 시 쿠키 발급 완료 → 로그인 상태 전환.
+  Future<void> confirmDeviceEmailCode({
     required String challengeToken,
     required String code,
-    String? nickname,
+    String? deviceName,
   }) async {
-    await _ref.read(authRepositoryProvider).confirmIpEmailCode(
-      userId: userId,
+    await _ref.read(authRepositoryProvider).confirmDeviceEmailCode(
       challengeToken: challengeToken,
       code: code,
-      nickname: nickname,
+      deviceName: deviceName,
     );
-    // 전역 로그인 상태 전환(onLogin)/FCM 등록/네비게이션은 호출 측(IpVerifyPage)에서 처리한다.
+    // 전역 로그인 상태 전환(onLogin)/FCM 등록/네비게이션은 호출 측(DeviceVerifyPage)에서 처리한다.
     // 여기서 await onLogin() → registerToken(FCM getToken/네트워크)이 지연·행 되면
-    // IP 인증 후 화면 전환이 그 await 에 막혀 안 넘어가는 문제가 있었다. (#로그인 네비게이션)
+    // 인증 후 화면 전환이 그 await 에 막혀 안 넘어가는 문제가 있었다. (#로그인 네비게이션)
   }
 
-  /// IP 인증 — CI 확인. 성공 시 쿠키 발급 완료 → 로그인 상태 전환.
-  Future<void> verifyIpCi({
-    required int userId,
+  /// 새 기기 인증 — CI 확인. 성공 시 쿠키 발급 완료 → 로그인 상태 전환.
+  Future<void> verifyDeviceCi({
     required String challengeToken,
     required String name,
     required String residentFront,
     required String phone,
-    String? nickname,
+    String? deviceName,
   }) async {
-    await _ref.read(authRepositoryProvider).verifyIpCi(
-      userId: userId,
+    await _ref.read(authRepositoryProvider).verifyDeviceCi(
       challengeToken: challengeToken,
       name: name,
       residentFront: residentFront,
       phone: phone,
-      nickname: nickname,
+      deviceName: deviceName,
     );
-    // confirmIpEmailCode 와 동일: onLogin/네비게이션은 호출 측(IpVerifyPage)에서 처리.
+    // confirmDeviceEmailCode 와 동일: onLogin/네비게이션은 호출 측(DeviceVerifyPage)에서 처리.
   }
 
   Future<void> logout() async {

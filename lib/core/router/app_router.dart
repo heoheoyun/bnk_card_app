@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../providers/auth_state_provider.dart';
 import '../providers/router_notifier.dart';
 import 'route_guards.dart';
-import '../../features/auth/presentation/pages/ip_verify_page.dart';
+import '../../features/auth/presentation/pages/device_verify_page.dart';
 
 // ── Splash ───────────────────────────────────────────────────────
 import '../../features/splash/presentation/pages/splash_page.dart';
@@ -44,7 +44,7 @@ import '../../features/mypage/presentation/pages/mypage_page.dart';
 import '../../features/mypage/presentation/pages/my_card_detail_page.dart';
 import '../../features/mypage/presentation/pages/address_ci_verify_page.dart';
 import '../../features/mypage/presentation/pages/spending_input_page.dart';
-import '../../features/mypage/presentation/pages/trusted_ips_page.dart';
+import '../../features/mypage/presentation/pages/trusted_devices_page.dart';
 import '../../features/mypage/presentation/pages/address_book_page.dart';
 
 // ── Account ───────────────────────────────────────────────────────
@@ -209,10 +209,10 @@ import '../../features/application/presentation/pages/check/check_result_page.da
         builder: (_, __) => const AddressCiVerifyPage(),
       ),
 
-      // ── 신뢰 기기(IP) 관리 ─────────────────────────────────────
+      // ── 신뢰 기기 관리 ─────────────────────────────────────────
       GoRoute(
-        path: '/mypage/trusted-ips',
-        builder: (_, __) => const TrustedIpsPage(),
+        path: '/mypage/trusted-devices',
+        builder: (_, __) => const TrustedDevicesPage(),
       ),
 
       // ── 배송지(주소록) 관리 ────────────────────────────────────
@@ -303,8 +303,8 @@ import '../../features/application/presentation/pages/check/check_result_page.da
         ),
       ),
       GoRoute(
-        path: '/ip-verify',
-        builder: (_, state) => IpVerifyPage(args: state.extra as IpVerifyArgs),
+        path: '/device-verify',
+        builder: (_, state) => DeviceVerifyPage(args: state.extra as DeviceVerifyArgs),
       ),
     ],
   );

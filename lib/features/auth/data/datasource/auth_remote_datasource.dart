@@ -18,14 +18,6 @@ class AuthRemoteDatasource {
   Future<void> verifyEmail(String email, String code) =>
       _dio.post(ApiPaths.verifyEmail, data: {'email': email, 'code': code});
 
-  /// 매직링크(원터치) 인증 완료 여부 조회 — 가입 화면 폴링용.
-  Future<bool> verifyStatus(String email) async {
-    final res = await _dio.get(ApiPaths.verifyStatus,
-        queryParameters: {'email': email});
-    final data = res.data is Map ? res.data['data'] : null;
-    return data is Map && data['verified'] == true;
-  }
-
   Future<int> signup(SignupRequestModel req) async {
     // 가입 기기를 최초 신뢰 기기로 등록하기 위해 기기 컨텍스트를 함께 전송한다.
     final dev = await DeviceIdService.instance.current();

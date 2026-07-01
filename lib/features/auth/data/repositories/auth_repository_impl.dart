@@ -10,7 +10,6 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override Future<void> sendVerifyCode(String email) => _ds.sendVerifyCode(email);
   @override Future<void> verifyEmail(String email, String code) => _ds.verifyEmail(email, code);
-  @override Future<bool> verifyStatus(String email) => _ds.verifyStatus(email);
 
   @override Future<int> signup(SignupRequestModel req) => _ds.signup(req);
 

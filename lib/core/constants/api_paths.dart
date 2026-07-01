@@ -11,8 +11,6 @@ class ApiPaths {
   static const String findId          = '/api/auth/find-id';
   static const String findPassword    = '/api/auth/find-password';
   static const String resetPassword   = '/api/auth/reset-password';
-  /// 매직링크 인증 완료 여부 폴링 (GET ?email=)
-  static const String verifyStatus    = '/api/auth/verify-status';
 
   // ── 홈 ──────────────────────────────────────────────────────────
   static const String homeBanners     = '/api/home/banners';

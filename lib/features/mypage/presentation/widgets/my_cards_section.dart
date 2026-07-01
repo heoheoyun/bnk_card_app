@@ -238,6 +238,7 @@ class _AppliedList extends StatelessWidget {
         'APPROVED' => '승인완료',
         'REJECTED' => '반려',
         'ISSUED' => '발급완료',
+        'SCREENING_FAILED' => '심사요청 실패',
         _ => s,
       };
 

@@ -65,6 +65,24 @@ class AuthRemoteDatasource {
         if (nickname != null) 'nickname': nickname,
       });
 
+  /// IP 인증 — CI(이름+주민앞6+전화번호) 확인. 성공 시 서버가 Set-Cookie 로 로그인 쿠키 발급.
+  Future<void> verifyIpCi({
+    required int userId,
+    required String challengeToken,
+    required String name,
+    required String residentFront,
+    required String phone,
+    String? nickname,
+  }) =>
+      _dio.post(ApiPaths.ipVerifyCi, data: {
+        'userId': userId,
+        'challengeToken': challengeToken,
+        'name': name,
+        'residentFront': residentFront,
+        'phone': phone,
+        if (nickname != null) 'nickname': nickname,
+      });
+
   Future<void> logout() async {
     try {
       await _dio.post(ApiPaths.logout);

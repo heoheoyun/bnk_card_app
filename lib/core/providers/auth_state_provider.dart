@@ -6,6 +6,7 @@ import '../push/push_service.dart';
 import 'dart:convert';
 import '../network/cookie_store.dart';
 import '../../features/quick_login/data/quick_login_service.dart';
+import 'session_reset.dart';
 
 /// 앱 전역 로그인 상태 Notifier.
 ///
@@ -17,7 +18,8 @@ import '../../features/quick_login/data/quick_login_service.dart';
 ///
 /// GoRouter [RouterNotifier] 가 이 상태를 구독하여 상태 변경 시 redirect 를 재평가한다.
 class AuthStateNotifier extends StateNotifier<bool> {
-  AuthStateNotifier() : super(false) {
+  final Ref _ref;
+  AuthStateNotifier(this._ref) : super(false) {
     _init();
   }
 
@@ -30,6 +32,8 @@ class AuthStateNotifier extends StateNotifier<bool> {
 
   /// 로그인 성공(또는 스플래시에서 세션 검증 성공) 후 호출
   Future<void> onLogin() async {
+    // 직전 사용자(또는 콜드스타트 캐시)의 데이터가 새 계정 화면에 남지 않도록 먼저 무효화.
+    invalidateUserScopedData(_ref);
     state = true;
     // FCM 토큰을 서버에 등록 (실패해도 로그인 흐름에 영향 없음)
     await PushService.instance.registerToken();
@@ -50,6 +54,8 @@ class AuthStateNotifier extends StateNotifier<bool> {
       await SecureStorage.deleteAll();
     }
     await LocalStorage.remove(StorageKeys.isLoggedIn);
+    // 로그아웃 시에도 캐시된 사용자 데이터를 비워, 다음 계정 로그인 전까지 잔존하지 않게 한다.
+    invalidateUserScopedData(_ref);
     state = false;
   }
 
@@ -63,7 +69,7 @@ class AuthStateNotifier extends StateNotifier<bool> {
 
 final authStateProvider =
 StateNotifierProvider<AuthStateNotifier, bool>(
-      (_) => AuthStateNotifier(),
+      (ref) => AuthStateNotifier(ref),
 );
 
 /// JWT 만료 여부 판정 유틸 (필요 시 사용).

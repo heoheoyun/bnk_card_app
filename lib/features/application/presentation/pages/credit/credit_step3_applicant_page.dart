@@ -9,7 +9,8 @@ import '../../../domain/entities/credit_application.dart';
 import '../../../presentation/providers/credit_application_provider.dart';
 import '../../../presentation/providers/account_provider.dart';
 import '../../../presentation/widgets/application_step_indicator.dart';
-import 'package:bnk_card_app/shared/widgets/address_search_field.dart';
+import '../../../../mypage/presentation/providers/mypage_provider.dart';
+import '../../../../mypage/data/models/address_model.dart';
 
 class CreditStep3ApplicantPage extends ConsumerStatefulWidget {
   final int cardId;
@@ -23,13 +24,13 @@ class CreditStep3ApplicantPage extends ConsumerStatefulWidget {
 class _CreditStep3ApplicantPageState
     extends ConsumerState<CreditStep3ApplicantPage> {
 
-  final _nameCtrl    = TextEditingController();
   final _nameEnCtrl  = TextEditingController();
-  final _mobileCtrl  = TextEditingController();
-  final _addressCtrl = TextEditingController();
-  final _postcodeCtrl   = TextEditingController();
-  final _addrDetailCtrl = TextEditingController();
   final _emailCtrl   = TextEditingController();
+
+  // 프로필에서 자동으로 채워지는 값 (UI 미노출)
+  String _autoName    = '';
+  String _autoMobile  = '';
+  String _autoAddress = '';
 
   String? _incomeType;
   String? _healthInsuranceType;
@@ -42,21 +43,28 @@ class _CreditStep3ApplicantPageState
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
+    Future.microtask(() async {
+      // 이름·휴대폰: 내 정보에서 자동 조회
+      final myInfo = await ref.read(myInfoProvider.future).catchError((_) => <String, dynamic>{});
+      // 주소: 기본 주소에서 자동 조회
+      final addresses = await ref.read(addressesProvider.future).catchError((_) => <Address>[]);
+      final defaultAddr = addresses.where((a) => a.isDefault).firstOrNull ?? (addresses.isNotEmpty ? addresses.first : null);
+
       final appState = ref.read(creditApplicationProvider);
       final draft    = appState.draftApplicantSnapshot;
-      if (draft == null) return;
 
+      if (!mounted) return;
       setState(() {
-        _nameCtrl.text    = draft.name;
-        _nameEnCtrl.text  = draft.nameEn ?? '';
-        _mobileCtrl.text  = draft.mobileNo;
-        _addressCtrl.text = draft.address;
-        _emailCtrl.text   = draft.email;
-        _incomeType          = draft.incomeType;
-        _healthInsuranceType = draft.healthInsuranceType;
-        _hasRealEstate       = draft.hasRealEstate ?? 'N';
-        _hasOwnVehicle       = draft.hasOwnVehicle ?? 'N';
+        _autoName   = myInfo['name']  as String? ?? '';
+        _autoMobile = myInfo['phone'] as String? ?? '';
+        _autoAddress = defaultAddr?.fullAddress ?? '';
+
+        _nameEnCtrl.text  = draft?.nameEn ?? '';
+        _emailCtrl.text   = draft?.email  ?? '';
+        _incomeType          = draft?.incomeType;
+        _healthInsuranceType = draft?.healthInsuranceType;
+        _hasRealEstate       = draft?.hasRealEstate ?? 'N';
+        _hasOwnVehicle       = draft?.hasOwnVehicle ?? 'N';
         _annualIncomeBand    = appState.draftAnnualIncomeBand;
         _creditScoreBand     = appState.draftCreditScoreBand;
         _linkedAccountId     = appState.draftLinkedAccountId;
@@ -64,23 +72,16 @@ class _CreditStep3ApplicantPageState
     });
   }
 
-
   @override
   void dispose() {
-    _nameCtrl.dispose();
     _nameEnCtrl.dispose();
-    _mobileCtrl.dispose();
-    _addressCtrl.dispose();
-    _postcodeCtrl.dispose();
-    _addrDetailCtrl.dispose();
     _emailCtrl.dispose();
     super.dispose();
   }
 
   bool get _canNext =>
-      _nameCtrl.text.isNotEmpty &&
-          _mobileCtrl.text.isNotEmpty &&
-          _addressCtrl.text.isNotEmpty &&
+      _autoName.isNotEmpty &&
+          _autoMobile.isNotEmpty &&
           _emailCtrl.text.isNotEmpty &&
           _incomeType != null &&
           _healthInsuranceType != null &&
@@ -93,6 +94,8 @@ class _CreditStep3ApplicantPageState
     final appState     = ref.watch(creditApplicationProvider);
     final appNotifier  = ref.read(creditApplicationProvider.notifier);
     final accountAsync = ref.watch(myAccountsProvider);
+    ref.watch(myInfoProvider);       // 이름·휴대폰 자동채움 트리거
+    ref.watch(addressesProvider);    // 기본주소 자동채움 트리거
 
     return Scaffold(
       appBar: const BnkAppBar(title: '카드 신청', showBack: false),
@@ -147,32 +150,26 @@ class _CreditStep3ApplicantPageState
                         '기본정보',
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                       ),
-                      const SizedBox(height: 24),
-
-                      // 이름
-                      _Field(label: '이름', controller: _nameCtrl,
-                          hint: '이름을 입력해 주세요', onChanged: (_) => setState(() {})),
                       const SizedBox(height: 16),
+
+                      // 이름·휴대폰·주소는 프로필에서 자동 입력됨 — 안내 문구만 표시
+                      if (_autoName.isNotEmpty) ...[
+                        _InfoRow(label: '이름', value: _autoName),
+                        const SizedBox(height: 10),
+                        _InfoRow(label: '휴대폰', value: _autoMobile),
+                        if (_autoAddress.isNotEmpty) ...[
+                          const SizedBox(height: 10),
+                          _InfoRow(label: '주소', value: _autoAddress),
+                        ],
+                        const SizedBox(height: 20),
+                        const Divider(),
+                        const SizedBox(height: 20),
+                      ],
 
                       // 영문 이름
-                      _Field(label: '영문 이름', controller: _nameEnCtrl,
+                      _Field(label: '영문 이름 (선택)', controller: _nameEnCtrl,
                           hint: 'HONG GILDONG', onChanged: (_) => setState(() {})),
                       const SizedBox(height: 16),
-
-                      // 휴대폰 번호
-                      _Field(label: '휴대폰 번호', controller: _mobileCtrl,
-                          hint: '-없이 숫자만 입력',
-                          keyboardType: TextInputType.phone,
-                          onChanged: (_) => setState(() {})),
-                      const SizedBox(height: 16),
-
-                      // 주소
-                      AddressSearchField(
-                        postcodeController: _postcodeCtrl,
-                        addressController:  _addressCtrl,
-                        detailController:   _addrDetailCtrl,
-                        onChanged: () => setState(() {}),
-                      ),
 
                       // 이메일
                       _Field(label: '이메일', controller: _emailCtrl,
@@ -319,13 +316,12 @@ class _CreditStep3ApplicantPageState
                     ? () async {
                   await appNotifier.saveApplicantInfo(
                     applicantSnapshot: CreditApplicantSnapshot(
-                      name:                _nameCtrl.text.trim(),
+                      name:                _autoName,
                       nameEn:              _nameEnCtrl.text.trim().isEmpty
                           ? null
                           : _nameEnCtrl.text.trim(),
-                      mobileNo:            _mobileCtrl.text.trim(),
-                      address: [_addressCtrl.text.trim(), _addrDetailCtrl.text.trim()]
-                          .where((s) => s.isNotEmpty).join(' '),
+                      mobileNo:            _autoMobile,
+                      address:             _autoAddress,
                       email:               _emailCtrl.text.trim(),
                       incomeType:          _incomeType,
                       healthInsuranceType: _healthInsuranceType,
@@ -558,6 +554,33 @@ class _AccountTile extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ── 자동입력된 정보 표시용 읽기전용 행 ──────────────────────────────
+class _InfoRow extends StatelessWidget {
+  final String label;
+  final String value;
+  const _InfoRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 56,
+          child: Text(label,
+              style: const TextStyle(fontSize: 13, color: AppColors.gray600)),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(value,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500,
+                  color: AppColors.gray800)),
+        ),
+      ],
     );
   }
 }

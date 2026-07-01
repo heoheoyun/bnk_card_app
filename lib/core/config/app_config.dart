@@ -8,7 +8,7 @@ class AppConfig {
   static const String baseUrl = String.fromEnvironment(
     'BASE_URL',
     // 맥북용 ngrok 터널 (원래: curable-cranium-handwoven)
-    defaultValue: 'https://saturate-swimsuit-overhand.ngrok-free.dev',
+    defaultValue: 'https://curable-cranium-handwoven.ngrok-free.dev',
 
   );
 

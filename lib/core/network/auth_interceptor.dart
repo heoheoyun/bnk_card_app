@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
 import '../constants/api_paths.dart';
-import '../constants/storage_keys.dart';
 import '../storage/secure_storage.dart';
 
 /// 401 발생 시 access token 을 1회만 재발급(single-flight)하고,
@@ -11,20 +10,21 @@ import '../storage/secure_storage.dart';
 ///  - 동시에 401 이 여러 개 터지면 첫 요청만 refresh, 나머지는 그냥 에러로 떨어짐
 ///  - refresh 가 연달아 폭주하거나 후속 요청이 무더기로 실패
 /// → Completer 로 묶어 "진행 중이면 그 결과를 await" 하도록 변경.
+///
+/// 인증은 전부 쿠키(access_token/refresh_token) 기반이라 CookieManager 가
+/// 요청마다 자동으로 첨부/저장한다. refresh 도 SecureStorage 가 아니라
+/// 쿠키에 실린 refresh_token 으로 서버가 판단하므로, 여기서는 그냥
+/// /api/auth/refresh 를 호출해 새 Set-Cookie 를 받기만 하면 된다.
 class AuthInterceptor extends Interceptor {
   final Dio _dio;
   AuthInterceptor(this._dio);
 
   /// 진행 중인 refresh 가 있으면 이 Completer 가 non-null.
-  /// 성공 시 새 access token 문자열로 complete, 실패 시 completeError.
-  Completer<String>? _refreshing;
+  Completer<void>? _refreshing;
 
   @override
   void onRequest(
       RequestOptions options, RequestInterceptorHandler handler) async {
-    final token = await SecureStorage.read(StorageKeys.accessToken);
-    if (token != null) options.headers['Authorization'] = 'Bearer $token';
-
     // ngrok 브라우저 경고 창 건너뛰기 헤더 추가
     options.headers['ngrok-skip-browser-warning'] = 'true';
 
@@ -47,27 +47,26 @@ class AuthInterceptor extends Interceptor {
     try {
       // single-flight: 진행 중인 refresh 가 있으면 그 결과를 기다리고,
       // 없으면 내가 새로 시작한다.
-      final newToken = await _ensureRefreshed();
+      await _ensureRefreshed();
 
-      // 새 토큰으로 원요청 재시도
-      final opts = err.requestOptions;
-      opts.headers['Authorization'] = 'Bearer $newToken';
-      handler.resolve(await _dio.fetch(opts));
+      // 갱신된 쿠키로 원요청 재시도 (CookieManager 가 자동 첨부)
+      handler.resolve(await _dio.fetch(err.requestOptions));
     } catch (_) {
-      // refresh 실패 → 세션 정리 후 원에러 전달
-      await SecureStorage.deleteAll();
+      // refresh 실패 → 세션(쿠키/토큰)만 정리하고 간편로그인 설정은 보존.
+      // (간편로그인 PIN/패턴/생체 설정은 access token 재발급 실패와 무관하다)
+      await SecureStorage.deleteSessionOnly();
       handler.next(err);
     }
   }
 
-  /// 진행 중인 refresh 가 있으면 공유, 없으면 시작. 새 access token 반환.
-  Future<String> _ensureRefreshed() {
+  /// 진행 중인 refresh 가 있으면 공유, 없으면 시작.
+  Future<void> _ensureRefreshed() {
     final inflight = _refreshing;
     if (inflight != null) return inflight.future;
 
-    final completer = _refreshing = Completer<String>();
-    _doRefresh().then((token) {
-      completer.complete(token);
+    final completer = _refreshing = Completer<void>();
+    _doRefresh().then((_) {
+      completer.complete();
     }).catchError((e, st) {
       completer.completeError(e, st);
     }).whenComplete(() {
@@ -76,24 +75,7 @@ class AuthInterceptor extends Interceptor {
     return completer.future;
   }
 
-  /// 실제 refresh 호출 1회. 성공 시 새 access token 을 저장하고 반환.
-  Future<String> _doRefresh() async {
-    final rt = await SecureStorage.read(StorageKeys.refreshToken);
-    if (rt == null) throw Exception('no refresh token');
-
-    final res = await _dio.post(
-      ApiPaths.refresh,
-      options: Options(headers: {'Cookie': 'refresh_token=$rt'}),
-    );
-
-    final setCookie = res.headers['set-cookie']?.first ?? '';
-    final match = RegExp(r'access_token=([^;]+)').firstMatch(setCookie);
-    if (match == null) {
-      throw Exception('refresh 응답에 access_token 이 없습니다.');
-    }
-
-    final newToken = match.group(1)!;
-    await SecureStorage.write(StorageKeys.accessToken, newToken);
-    return newToken;
-  }
+  /// 실제 refresh 호출 1회. refresh_token 쿠키는 CookieManager 가 자동으로
+  /// 실어 보내고, 응답의 Set-Cookie(access_token) 도 자동으로 저장된다.
+  Future<void> _doRefresh() => _dio.post(ApiPaths.refresh);
 }

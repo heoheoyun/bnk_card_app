@@ -120,6 +120,16 @@ class _SignupPageState extends ConsumerState<SignupPage> {
     }
   }
 
+  /// 주민번호 앞 6자리(YYMMDD) + 성별코드 → 생년월일(yyyy-MM-dd) 유도.
+  /// 웹 본인인증 모달(identity-verify.js)과 동일한 규칙.
+  String? _deriveBirthDate(String residentFront, String genderCode) {
+    if (residentFront.length != 6 || genderCode.isEmpty) return null;
+    final century = ['3', '4', '7', '8'].contains(genderCode) ? '20' : '19';
+    return '$century${residentFront.substring(0, 2)}-'
+        '${residentFront.substring(2, 4)}-'
+        '${residentFront.substring(4, 6)}';
+  }
+
   Future<void> _submit() async {
     if (!_emailVerified) { _snack('이메일 인증을 완료해주세요.'); return; }
     if (!_pwValid)       { _snack('비밀번호 조건을 확인해주세요.'); return; }
@@ -158,17 +168,21 @@ class _SignupPageState extends ConsumerState<SignupPage> {
         return;
       }
 
+      final residentFront = _residentFrontCtrl.text.trim();
+      final genderCode    = _genderCodeCtrl.text.trim();
+
       final req = SignupRequestModel(
         email:           _emailCtrl.text.trim(),
         password:        _pwCtrl.text,
         name:            _nameCtrl.text.trim(),
         phone:           _phoneCtrl.text.trim(),
         agreedTermsIds:  agreedTermsIds,
-        residentFront:   _residentFrontCtrl.text.trim(),
-        genderCode:      _genderCodeCtrl.text.trim(),
+        residentFront:   residentFront,
+        genderCode:      genderCode,
         address: [_addressCtrl.text.trim(), _addrDetailCtrl.text.trim()]
             .where((s) => s.isNotEmpty)
             .join(' '),
+        birthDate:       _deriveBirthDate(residentFront, genderCode),
         marketingAgree:  _agreeMarketing,
         job:             _selectedJob,
         incomeLevelCode: _selectedIncome,

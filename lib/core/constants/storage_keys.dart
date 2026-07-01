@@ -10,6 +10,10 @@ class StorageKeys {
   static const String chatSessionId = 'chat_session_id';
   static const String lastEmail     = 'last_email';
 
+  /// 신뢰 기기 판정용 영구 기기 식별자(UUID). 로그아웃해도 보존되어야
+  /// 같은 기기가 매번 '새 기기'로 인식되지 않는다. (SharedPreferences 저장)
+  static const String deviceId      = 'device_id';
+
   // ── 간편로그인(Quick Login) ──────────────────────────────────
   /// 지문/얼굴 등 생체인증 사용 여부 ('true' / 'false')
   static const String biometricEnabled = 'biometric_enabled';

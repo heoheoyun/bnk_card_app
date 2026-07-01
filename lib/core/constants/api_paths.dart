@@ -11,6 +11,8 @@ class ApiPaths {
   static const String findId          = '/api/auth/find-id';
   static const String findPassword    = '/api/auth/find-password';
   static const String resetPassword   = '/api/auth/reset-password';
+  /// 매직링크 인증 완료 여부 폴링 (GET ?email=)
+  static const String verifyStatus    = '/api/auth/verify-status';
 
   // ── 홈 ──────────────────────────────────────────────────────────
   static const String homeBanners     = '/api/home/banners';
@@ -40,9 +42,9 @@ class ApiPaths {
   static const String mySpending         = '/api/users/me/spending';
   /// 월별 카드별 실제 결제 집계 (GET ?year=&month=)
   static const String myMonthlySpending = '/api/users/me/monthly-spending';
-  /// 신뢰 기기(IP) 관리 — 목록(GET) / 별명수정(PATCH {id}) / 삭제(DELETE {id})
-  static const String trustedIps         = '/api/users/me/trusted-ips';
-  static String trustedIp(int trustId)  => '/api/users/me/trusted-ips/$trustId';
+  /// 신뢰 기기 관리 — 목록(GET) / 이름수정(PATCH {id}) / 삭제(DELETE {id})
+  static const String trustedDevices             = '/api/users/me/trusted-devices';
+  static String trustedDevice(int deviceTrustId) => '/api/users/me/trusted-devices/$deviceTrustId';
   /// 주소록/배송지 — 목록(GET)·등록(POST) / 별칭(PATCH {id}) / 기본배송지(PATCH {id}/default) / 삭제(DELETE {id})
   static const String addresses          = '/api/users/me/addresses';
   static String address(int addressId)   => '/api/users/me/addresses/$addressId';
@@ -80,10 +82,10 @@ class ApiPaths {
   static const String creditApplicationDraft = '/api/applications/credit/draft';
   static const String checkApplicationDraft  = '/api/applications/check/draft';
 
-  // ── IP 2단계 인증 ────────────────────────────────────────────────
-  static const String ipVerifyEmailSend    = '/api/auth/ip-verify/email/send';
-  static const String ipVerifyEmailConfirm = '/api/auth/ip-verify/email/confirm';
-  static const String ipVerifyCi           = '/api/auth/ip-verify/ci';
+  // ── 새 기기 인증 ─────────────────────────────────────────────────
+  static const String deviceVerifyEmailSend    = '/api/auth/device-verify/email/send';
+  static const String deviceVerifyEmailConfirm = '/api/auth/device-verify/email/confirm';
+  static const String deviceVerifyCi           = '/api/auth/device-verify/ci';
 
 
 

@@ -17,7 +17,7 @@ void invalidateUserScopedData(Ref ref) {
   ref.invalidate(myInfoProvider);
   ref.invalidate(myCardsProvider);
   ref.invalidate(monthlySpendingProvider);
-  ref.invalidate(trustedIpsProvider);
+  ref.invalidate(trustedDevicesProvider);
   ref.invalidate(addressesProvider);
   // 홈
   ref.invalidate(homeBannersProvider);

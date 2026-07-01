@@ -129,8 +129,8 @@ class _MyPagePageState extends ConsumerState<MyPagePage> {
                   _MenuTile(
                     icon: Icons.devices_outlined,
                     title: '신뢰 기기 관리',
-                    subtitle: '등록된 기기(IP) 확인·별명·삭제',
-                    onTap: () => context.push('/mypage/trusted-ips'),
+                    subtitle: '등록된 기기 확인·이름·삭제',
+                    onTap: () => context.push('/mypage/trusted-devices'),
                   ),
                   const _TileDivider(),
                   _MenuTile(

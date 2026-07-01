@@ -4,6 +4,7 @@ import '../../data/models/signup_request_model.dart';
 abstract class AuthRepository {
   Future<void> sendVerifyCode(String email);
   Future<void> verifyEmail(String email, String code);
+  Future<bool> verifyStatus(String email);
   Future<int> signup(SignupRequestModel req);
 
   Future<LoginResult> login(String email, String password);
@@ -14,23 +15,20 @@ abstract class AuthRepository {
   Future<void> findPassword(String email, String name);
   Future<void> resetPassword(String email, String token, String newPassword);
 
-  // IP 2단계 인증
-  Future<void> sendIpEmailCode({
-    required int userId,
+  // 새 기기 인증 (challengeToken 은 서버가 발급한 불투명 토큰, userId는 서버가 도출)
+  Future<void> sendDeviceEmailCode({
     required String challengeToken,
   });
-  Future<void> confirmIpEmailCode({
-    required int userId,
+  Future<void> confirmDeviceEmailCode({
     required String challengeToken,
     required String code,
-    String? nickname,
+    String? deviceName,
   });
-  Future<void> verifyIpCi({
-    required int userId,
+  Future<void> verifyDeviceCi({
     required String challengeToken,
     required String name,
     required String residentFront,
     required String phone,
-    String? nickname,
+    String? deviceName,
   });
 }

@@ -15,7 +15,8 @@ import '../../../../core/constants/storage_keys.dart';
 import '../../../quick_login/data/quick_login_service.dart';
 import '../../../../core/providers/auth_state_provider.dart';
 import '../providers/auth_provider.dart';
-import 'ip_verify_page.dart';
+import '../widgets/own_device_dialog.dart';
+import 'device_verify_page.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -75,11 +76,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     await prefs.setString(StorageKeys.lastEmail, email);
     if (!mounted) return;
 
-    if (result.requireIpVerify) {
-      // 미신뢰 기기 → IP 2단계 인증 화면으로 (/ip-verify 는 비로그인 허용)
-      context.go('/ip-verify',
-          extra: IpVerifyArgs(
-            userId: result.userId!,
+    if (result.requireDeviceVerify) {
+      // 미신뢰 기기 → 새 기기 인증 화면으로 (/device-verify 는 비로그인 허용)
+      context.go('/device-verify',
+          extra: DeviceVerifyArgs(
             challengeToken: result.challengeToken!,
             methods: result.availableMethods,
           ));
@@ -92,8 +92,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       // → /login → / 로 튕기지 않고 의도한 화면(온보딩 등)으로 안정적으로 이동.
       final quickEnabled = await QuickLoginService.instance.isAnyEnabled;
       if (!mounted) return;
+
+      // 간편로그인 미설정이면 '본인 기기?'를 물어, 예인 경우에만 생체·간편로그인
+      // 온보딩으로 유도한다. (아니오/이미 설정됨 → 홈)
+      String dest = '/';
+      if (!quickEnabled) {
+        final ownDevice = await showOwnDeviceDialog(context);
+        if (!mounted) return;
+        if (ownDevice) dest = '/mypage/quick-login?onboarding=1';
+      }
       ref.read(authStateProvider.notifier).onLogin();
-      context.go(quickEnabled ? '/' : '/mypage/quick-login?onboarding=1');
+      context.go(dest);
     }
   }
 
